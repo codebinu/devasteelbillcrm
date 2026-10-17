@@ -1,0 +1,814 @@
+
+=======================================================================================
+2026-03-05 22:36:19:7285
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:36:31:3594
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:36:35:9140
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:36:42:2690
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:36:52:7188
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:36:57:0384
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:37:07:2809
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:39:03:5877
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:39:10:8689
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:39:15:6267
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:39:20:0226
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:39:34:5557
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:39:42:7456
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:39:47:2526
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:40:07:0003
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:40:22:4040
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:40:54:0214
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:41:09:5416
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:41:13:1395
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:45:35:9615
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:45:41:9782
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:47:52:3520
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 22:47:56:7846
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 23:17:51:9851
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 23:22:49:3521
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 23:28:55:9961
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 23:29:02:2939
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 23:39:35:6172
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 23:44:48:5013
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 23:44:54:9270
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 23:53:38:6101
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 23:53:47:8569
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-06 00:03:37:0013
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-06 00:03:47:2440
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-06 00:04:04:6348
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-06 00:04:08:6623
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================
+
+=======================================================================================
+2026-03-06 00:06:54:7229
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at appSalesman.upload_and_sync(Dictionary`2 sync_data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 2104
+
+-------------------------------
+Message:Incorrect datetime value: '00-00-0000' for column 'cust_followup_date' at row 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+DATA:{"user_id":"29","check_in_count":"0","new_registration_count":"1","credit_debit_count":"0","new_order_count":"1","sales_items_count":"1","check_in_data":"","new_registration_data":"[{ \"cust_id\" :\"166\",\"cust_name\" :\"NEW PASONS SUPERMARKET LLC\",\"cust_address\" :\"32 3b St - Al Qusais - Al Qusais 1 - Dubai - United Arab Emirates\",\"cust_city\" :\"AL QUSAIS\",\"cust_state\" :\"3\",\"cust_country\" :\"1\",\"cust_phone\" :\"042200111\",\"cust_phone1\" :\"0568582111\",\"cust_email\" :\"Pasons@gmail.com\",\"cust_amount\" :\"283.5\",\"cust_joined_date\" :\"2025-04-18 10:05 AM\",\"cust_type\" :\"2\",\"max_creditamt\" :\"15000.00\",\"max_creditperiod\" :\"60\",\"new_custtype\" :\"4\",\"new_creditamt\" :\"0\",\"new_creditperiod\" :\"0\",\"cust_latitude\" :\"25.2712409\",\"cust_longitude\" :\"55.3773575\",\"cust_image\" :\"2025041810004229.jpg\",\"cust_note\" :\"\",\"cust_status\" :\"1\",\"cust_followup_date\" :\"00-00-0000\",\"cust_reg_id\" :\"1003\",\"location_id\" :\"1\",\"cust_cat_id\" :\"8\",\"cust_tax_reg_id\" :\"100568721300003\",\"img_updated\" :\"0\",\"is_new_registration\" :\"0\",\"cust_action_type\" :\"2\" }]","credit_debit_data":"","sales_master_data":"[{ \"sm_id\" :\"2026030609344629\",\"sessionId\" :\"2026030609344629\",\"sm_date\" :\"2026-03-06 09:36:04\",\"sm_cash_amt\" :\"0.00\",\"sm_wallet_amt\" :\"0\",\"sm_chq_amt\" :\"0\",\"sm_chq_date\" :\"0\",\"sm_bank\" :\"0\",\"sm_chq_no\" :\"0\",\"branch_tax_method\" :\"1\",\"branch_tax_inclusive\" :\"0\",\"branch\" :\"4\",\"sm_userid\" :\"29\",\"cust_id\" :\"11\",\"sm_delivery_status\" :\"3\",\"sm_specialnote\" :\"\",\"sm_latitude\" :\"0\",\"sm_longitude\" :\"0\",\"sm_order_type\" :\"1\",\"sm_payment_type\" :\"1\",\"sm_total\" :\"624.75\",\"sm_discount_rate\" :\"0\",\"sm_discount_amount\" :\"0\",\"sm_netamount\" :\"624.75\",\"total_balance\" :\"624.75\",\"total_paid\" :\"0.00\",\"sm_tax_amount\" :\"29.75\",\"sm_action_type\" :\"0\",\"customer_status\" :\"0\",\"sm_price_class\" :\"1\",\"is_new_registration\" :\"0\",\"invoice_no\" :\"null\",\"prefix\" :\"null\",\"serial\" :\"null\",\"suffix\" :\"null\",\"sm_type\" :\"1\" }]","sales_item_data":"[{ \"sm_id\" :\"2026030609344629\",\"itbs_id\" :\"504\",\"itm_name\" :\"TRUE CHOICE SUFRA ROLL STD 7x6x15 SHEETS(100x100)_BAG\",\"si_org_price\" :\"40\",\"si_price\" :\"35\",\"si_qty\" :\"17\",\"si_discount_rate\" :\"0.00\",\"si_foc\" :\"0\",\"si_approval_status\" :\"0\",\"itm_type\" :\"1\",\"si_itm_type\" :\"0\" }]","time_zone":"Arabian Standard Time","ss_decimal_accuracy":"2","last_device_db_updated":"2026-03-05 09:23:41","password":"kousar@123","device_id":"unknown"}
+
+=======================================================================================

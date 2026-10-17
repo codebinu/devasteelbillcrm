@@ -1,0 +1,903 @@
+
+=======================================================================================
+2026-01-30 06:58:56:0204
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-01-30 07:11:28:5352
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-01-30 07:23:04:4303
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-01-30 07:26:58:1927
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-01-30 07:44:38:1226
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-01-30 07:46:18:6999
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-02 23:44:21:0558
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-03 03:57:48:0559
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-03 04:35:09:4275
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-03 11:23:09:3178
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-03 11:32:05:4468
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-03 23:50:00:6260
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-04 23:25:12:4828
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-05 06:34:07:4051
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-06 06:06:40:6381
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-09 07:22:12:7103
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-09 08:50:38:3768
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-10 03:01:36:7031
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-10 03:06:20:1013
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-10 06:18:16:7477
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-10 06:22:46:5478
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-11 00:48:44:4777
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-17 01:58:50:5426
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-18 04:58:29:7089
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-18 05:03:39:7476
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-19 11:16:32:0674
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-20 01:25:49:3449
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 231
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-20 01:26:20:9637
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 231
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-20 02:40:43:2090
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-20 05:25:48:8020
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-20 05:28:13:1202
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-20 07:09:23:7157
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-23 08:00:34:2828
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-23 08:03:50:4877
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-23 08:10:37:4422
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-24 01:19:52:0066
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-01 03:56:28:9905
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 231
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-01 03:57:47:2793
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 231
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-01 03:58:08:0944
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 231
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-05 02:43:07:6643
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-08 22:15:57:0604
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-08 22:17:29:2096
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-10 09:12:52:7312
+-------------------------------
+StackTrace:   at System.Web.AspNetSynchronizationContext.OperationStarted()
+   at System.Runtime.CompilerServices.AsyncVoidMethodBuilder.Create()
+   at appSalesman.Send_Push_Message_to_user(String deviceToken, String message)
+   at appSalesman.Send_Push_Notification(String type, String action_ref_id) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\app_Salesman.aspx.cs:line 194
+
+-------------------------------
+Message:An asynchronous operation cannot be started at this time. Asynchronous operations may only be started within an asynchronous handler or module or during certain events in the Page lifecycle. If this exception occurred while executing a Page, ensure that the Page is marked <%@ Page Async="true" %>. This exception may also indicate an attempt to call an "async void" method, which is generally unsupported within ASP.NET request processing. Instead, the asynchronous method should return a Task, and the caller should await it.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Web
+
+-------------------------------
+
+=======================================================================================

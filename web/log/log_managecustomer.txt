@@ -1,0 +1,57 @@
+
+=======================================================================================
+2026-10-07 15:48:07:3064
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.SelectScalarForTransaction(String strQuery) in C:\BinuDrive\OneDrive LT\SI\Invoiceme\Trueline\FinalCorrected codeIn server(Live)\InvoiceMe\commonfunction\mySqlConnection.cs:line 362
+   at Web_Customer_managecustomers.AddCustomer(String actionType, String CustomerId, String CustomerName, String CustomerType, String Address, String City, String State, String Phone, String PhoneOne, String Email, String country, String note, Int32 creditamount, Int32 creditperiod, Int32 userid, Int32 status, Int32 userType, String trnNo, String regId, String place, String category, String sessionId, String customerUserCretaed, String cust_pan, String cust_pin) in c:\BinuDrive\OneDrive LT\SI\Invoiceme\Devasteal\code\Web\InvoiceMe\web\Web_Customer\managecustomers.aspx.cs:line 168
+
+-------------------------------
+Message:Field 'cust_latitude' doesn't have a default value
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-10-07 15:48:11:9278
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.SelectScalarForTransaction(String strQuery) in C:\BinuDrive\OneDrive LT\SI\Invoiceme\Trueline\FinalCorrected codeIn server(Live)\InvoiceMe\commonfunction\mySqlConnection.cs:line 362
+   at Web_Customer_managecustomers.AddCustomer(String actionType, String CustomerId, String CustomerName, String CustomerType, String Address, String City, String State, String Phone, String PhoneOne, String Email, String country, String note, Int32 creditamount, Int32 creditperiod, Int32 userid, Int32 status, Int32 userType, String trnNo, String regId, String place, String category, String sessionId, String customerUserCretaed, String cust_pan, String cust_pin) in c:\BinuDrive\OneDrive LT\SI\Invoiceme\Devasteal\code\Web\InvoiceMe\web\Web_Customer\managecustomers.aspx.cs:line 168
+
+-------------------------------
+Message:Field 'cust_latitude' doesn't have a default value
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-10-07 15:52:40:5398
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.SelectScalarForTransaction(String strQuery) in C:\BinuDrive\OneDrive LT\SI\Invoiceme\Trueline\FinalCorrected codeIn server(Live)\InvoiceMe\commonfunction\mySqlConnection.cs:line 362
+   at Web_Customer_managecustomers.AddCustomer(String actionType, String CustomerId, String CustomerName, String CustomerType, String Address, String City, String State, String Phone, String PhoneOne, String Email, String country, String note, Int32 creditamount, Int32 creditperiod, Int32 userid, Int32 status, Int32 userType, String trnNo, String regId, String place, String category, String sessionId, String customerUserCretaed, String cust_pan, String cust_pin) in c:\BinuDrive\OneDrive LT\SI\Invoiceme\Devasteal\code\Web\InvoiceMe\web\Web_Customer\managecustomers.aspx.cs:line 168
+
+-------------------------------
+Message:Field 'cust_latitude' doesn't have a default value
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================

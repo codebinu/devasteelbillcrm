@@ -1,0 +1,608 @@
+
+=======================================================================================
+2026-01-29 12:50:51:2760
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-01-29 12:50:56:5166
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:44:45:5268
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:45:00:4863
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:45:04:2976
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:45:09:8899
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:45:14:4723
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:45:34:4751
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:45:49:5907
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:45:58:4421
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:46:44:1043
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:46:51:8742
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:47:26:0816
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:47:31:5709
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:47:48:4468
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:48:32:3290
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:54:53:9560
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:55:07:8163
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 04:55:17:2487
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 05:01:38:3286
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 05:01:40:5875
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 05:02:25:7164
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 05:25:15:0362
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-02-14 05:25:27:3316
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 176
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 28
+
+-------------------------------
+Message:Unable to connect to any of the specified MySQL hosts
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-06 00:18:08:4163
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.SelectQueryForTransaction(MySqlCommand cmd) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 368
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 41
+
+-------------------------------
+Message:Table 'u611891957_trueline.tbl_user_details' doesn't exist
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-06 00:18:16:0060
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.SelectQueryForTransaction(MySqlCommand cmd) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 368
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 41
+
+-------------------------------
+Message:Table 'u611891957_trueline.tbl_user_details' doesn't exist
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-06 00:18:23:6461
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.SelectQueryForTransaction(MySqlCommand cmd) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 368
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 41
+
+-------------------------------
+Message:Table 'u611891957_trueline.tbl_user_details' doesn't exist
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-06 00:18:44:0715
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.SelectQueryForTransaction(MySqlCommand cmd) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 368
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 41
+
+-------------------------------
+Message:Table 'u611891957_trueline.tbl_user_details' doesn't exist
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-06 00:18:49:9186
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.SelectQueryForTransaction(MySqlCommand cmd) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 368
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 41
+
+-------------------------------
+Message:Table 'u611891957_trueline.tbl_user_details' doesn't exist
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-06 00:19:01:3884
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.SelectQueryForTransaction(MySqlCommand cmd) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 368
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 41
+
+-------------------------------
+Message:Table 'u611891957_trueline.tbl_user_details' doesn't exist
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-06 00:19:13:5024
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.SelectQueryForTransaction(MySqlCommand cmd) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 368
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 41
+
+-------------------------------
+Message:Table 'u611891957_trueline.tbl_user_details' doesn't exist
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-06 00:19:26:9809
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.SelectQueryForTransaction(MySqlCommand cmd) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 368
+   at login.mainLogin(String username, String password) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\login.aspx.cs:line 41
+
+-------------------------------
+Message:Table 'u611891957_trueline.tbl_user_details' doesn't exist
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================

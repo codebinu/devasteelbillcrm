@@ -1,0 +1,19 @@
+
+=======================================================================================
+2026-03-13 07:14:41:1903
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.ExecuteQueryForTransaction(String strQuery) in C:\OneDrive\Binu\SI\Invoiceme\Trueline\InvoiceMe\commonfunction\mySqlConnection.cs:line 223
+   at Web_Customer_addCreditEntry.insertWalletHistory(Dictionary`2 data) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\Web_Customer\addCreditEntry.aspx.cs:line 140
+
+-------------------------------
+Message:You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '' at line 1
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================

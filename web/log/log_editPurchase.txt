@@ -1,0 +1,200 @@
+
+=======================================================================================
+2026-03-04 02:22:37:6240
+-------------------------------
+StackTrace:   at System.Data.RBTree`1.GetNodeByIndex(Int32 userIndex)
+   at System.Data.DataRowCollection.get_Item(Int32 index)
+   at web_purchase_editPurchase.editPurchaseEntry(Dictionary`2 filters, String tableString) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\web_purchase\editPurchase.aspx.cs:line 524
+
+-------------------------------
+Message:There is no row at position 3.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Data
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-04 02:22:47:1203
+-------------------------------
+StackTrace:   at System.Data.RBTree`1.GetNodeByIndex(Int32 userIndex)
+   at System.Data.DataRowCollection.get_Item(Int32 index)
+   at web_purchase_editPurchase.editPurchaseEntry(Dictionary`2 filters, String tableString) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\web_purchase\editPurchase.aspx.cs:line 524
+
+-------------------------------
+Message:There is no row at position 3.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Data
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-04 02:23:04:2265
+-------------------------------
+StackTrace:   at System.Data.RBTree`1.GetNodeByIndex(Int32 userIndex)
+   at System.Data.DataRowCollection.get_Item(Int32 index)
+   at web_purchase_editPurchase.editPurchaseEntry(Dictionary`2 filters, String tableString) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\web_purchase\editPurchase.aspx.cs:line 524
+
+-------------------------------
+Message:There is no row at position 3.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Data
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-04 02:31:09:5243
+-------------------------------
+StackTrace:   at System.Data.RBTree`1.GetNodeByIndex(Int32 userIndex)
+   at System.Data.DataRowCollection.get_Item(Int32 index)
+   at web_purchase_editPurchase.editPurchaseEntry(Dictionary`2 filters, String tableString) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\web_purchase\editPurchase.aspx.cs:line 524
+
+-------------------------------
+Message:There is no row at position 3.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Data
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-04 02:31:22:2591
+-------------------------------
+StackTrace:   at System.Data.RBTree`1.GetNodeByIndex(Int32 userIndex)
+   at System.Data.DataRowCollection.get_Item(Int32 index)
+   at web_purchase_editPurchase.editPurchaseEntry(Dictionary`2 filters, String tableString) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\web_purchase\editPurchase.aspx.cs:line 524
+
+-------------------------------
+Message:There is no row at position 2.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Data
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-04 02:32:13:6667
+-------------------------------
+StackTrace:   at System.Data.RBTree`1.GetNodeByIndex(Int32 userIndex)
+   at System.Data.DataRowCollection.get_Item(Int32 index)
+   at web_purchase_editPurchase.editPurchaseEntry(Dictionary`2 filters, String tableString) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\web_purchase\editPurchase.aspx.cs:line 524
+
+-------------------------------
+Message:There is no row at position 3.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Data
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-04 02:34:47:8089
+-------------------------------
+StackTrace:   at System.Data.RBTree`1.GetNodeByIndex(Int32 userIndex)
+   at System.Data.DataRowCollection.get_Item(Int32 index)
+   at web_purchase_editPurchase.editPurchaseEntry(Dictionary`2 filters, String tableString) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\web_purchase\editPurchase.aspx.cs:line 524
+
+-------------------------------
+Message:There is no row at position 3.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Data
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-04 02:38:22:4309
+-------------------------------
+StackTrace:   at System.Data.RBTree`1.GetNodeByIndex(Int32 userIndex)
+   at System.Data.DataRowCollection.get_Item(Int32 index)
+   at web_purchase_editPurchase.editPurchaseEntry(Dictionary`2 filters, String tableString) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\web_purchase\editPurchase.aspx.cs:line 524
+
+-------------------------------
+Message:There is no row at position 3.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Data
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-04 02:38:39:5885
+-------------------------------
+StackTrace:   at System.Data.RBTree`1.GetNodeByIndex(Int32 userIndex)
+   at System.Data.DataRowCollection.get_Item(Int32 index)
+   at web_purchase_editPurchase.editPurchaseEntry(Dictionary`2 filters, String tableString) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\web_purchase\editPurchase.aspx.cs:line 524
+
+-------------------------------
+Message:There is no row at position 3.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Data
+
+-------------------------------
+
+=======================================================================================
+
+=======================================================================================
+2026-03-04 02:38:44:8692
+-------------------------------
+StackTrace:   at System.Data.RBTree`1.GetNodeByIndex(Int32 userIndex)
+   at System.Data.DataRowCollection.get_Item(Int32 index)
+   at web_purchase_editPurchase.editPurchaseEntry(Dictionary`2 filters, String tableString) in g:\pleskvhosts\billcrm.com\trueline.billcrm.in\web_purchase\editPurchase.aspx.cs:line 524
+
+-------------------------------
+Message:There is no row at position 3.
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:System.Data
+
+-------------------------------
+
+=======================================================================================
