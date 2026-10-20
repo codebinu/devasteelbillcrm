@@ -577,8 +577,64 @@
             });
         }
 
+        // Function to create new item / auto-populate Item Name & Printing Name from specs
+        function createNewItempopulate() {
+            var specSelectors = [
+                "#comboSpecItem",
+                "#comboSpecPitch",
+                "#comboSpecCrust",
+                "#comboSpecBrand",
+                "#comboSpecThickness",
+                "#comboSpecColour",
+                "#comboSpecCoating",
+                "#comboSpecYieldStrength",
+                "#comboSpecWidth",
+                "#comboSpecMachine"
+            ];
+
+            var specParts = [];
+            for (var i = 0; i < specSelectors.length; i++) {
+                var combo = $(specSelectors[i]);
+                var val = combo.val();
+                if (val && val != "-1" && val != "0" && val != "") {
+                    var text = $.trim(combo.find("option:selected").text());
+                    if (text && text.indexOf("--") !== 0) {
+                        specParts.push(text.replace(/\s+/g, ' '));
+                    }
+                }
+            }
+
+            if (specParts.length > 0) {
+                var generatedName = specParts.join(" ");
+                $("#txtitemname").val(generatedName);
+                $("#txtPrintingName").val(generatedName);
+
+                // Set form action to insert mode
+                itemid = 0;
+                $("#btnservMasterAction").html("<div class='btn btn-success fl mybtnstyl' onclick='javascript:addItemDetails(\"insert\",0);'>SAVE</div>");
+
+                // Scroll smoothly to txtitemname and focus it so user can edit before saving
+                if ($("#txtitemname").length) {
+                    $('html, body').animate({
+                        scrollTop: $("#txtitemname").offset().top - 120
+                    }, 400);
+                    $("#txtitemname").focus();
+                }
+            } else {
+                clearform();
+                alert("Please select the Item Technical Specifications first to populate Item Name and Printing Name.");
+                if ($("#comboSpecItem").length) {
+                    $('html, body').animate({
+                        scrollTop: $("#comboSpecItem").offset().top - 120
+                    }, 400);
+                    $("#comboSpecItem").focus();
+                }
+            }
+        }
+
         //function for clearform
         function clearform() {
+            itemid = 0;
             $("#btnservMasterAction").html("<div class='btn btn-success fl mybtnstyl' onclick='javascript:addItemDetails(\"insert\",0);'>SAVE</div>");
             $("#txtitemcode").val('');
            // $("#comboBrandtype").val(-1);
@@ -1038,7 +1094,10 @@ color: red;
                             <div class="col-md-6 col-xs-5">
                             <label style="font-weight: bold; font-size: 16px;">Item Master</label>
                             </div>
-                            <div class="col-md-6 col-xs-5"><div onclick="javascript:clearform();" class="btn btn-primary btn-xs pull-right" style=" margin-top:5px"><label style="color: #fff; margin-right: 5px; font-size: 14px;" class="fa fa-plus-square"></label>Create New Item</div></div>
+                          
+                            <div class="col-md-6 col-xs-5"><div onclick="javascript:clearform();" class="btn btn-primary btn-xs pull-right" style=" margin-top:5px" title="Create New Item"><label style="color: #fff; margin-right: 5px; font-size: 14px;" class="fa fa-plus-square"></label>Create New Item</div></div>
+
+                            
                         </div>
 
                     </nav>
@@ -1075,127 +1134,157 @@ color: red;
                                 <div class="x_content">
                                     <br />
                                     <form id="demo-form2" data-parsley-validate class="form-horizontal form-label-left">
-                                         <div class="form-group">
-                                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">
-                                                Item Type<span class="required">*</span>
-                                            </label>
-                                              <div class="col-md-6 col-sm-6 col-xs-12">
-                                                <select class="form-control" id="comboItemtype" onchange="showDivCoupon()">
-                                                    <option value="-1">--Type--</option>
-                                                    <option value="1">Product</option>
-                                                    <option value="2">Service</option>
-                                                    <option value="3">Package</option>
-                                                    
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div id="divCoupon" style="display:none;">
-                                            <div class="form-group">
-                                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">
-                                                Choose Item<span class="required">*</span>
-                                            </label>
-                                                <div class="col-md-6 col-sm-6 col-xs-12">
-                                                  <input type="text" id="txtAutoitemName" placeholder="Search Item" required="required" class="form-control col-md-7 col-xs-12">
-                                            </div>
-
-                                                <div class="col-md-2 col-sm-6 col-xs-4" onclick="javascript:searchItems();" style="padding-right:0px;">
-                                                <div class="" style="font-size: 28px;" data-toggle="modal" title="Add Item">
-                                                    <label class="fa fa-shopping-cart" style="color: #ff6a00; cursor: pointer;"></label>
-                                                    <label class="fa fa-plus-circle" style="font-size: 20px; cursor: pointer; position: relative; margin-left: -12px;"></label>
+                                        <!-- Section 1: Item Technical Specifications -->
+                                        <div class="col-md-12 col-sm-12 col-xs-12" style="margin-top: 15px; margin-bottom: 12px; padding: 0;">
+                                            <div style="background: #f7f9fa; border-left: 4px solid #3498DB; padding: 8px 12px; border-radius: 2px;">
+                                                <label style="font-size: 14px; font-weight: bold; color: #2A3F54; margin: 0;">
+                                                    <i class="fa fa-sliders" style="color: #3498DB; margin-right: 6px;"></i>Item Technical Specifications
+                                                </label>
+                                                <div class="pull-right">
+                                                    <a href="itemmasterspec.aspx" target="_blank" class="btn btn-default btn-xs" style="margin-right: 5px;">
+                                                        <i class="fa fa-external-link"></i> Manage Spec Values
+                                                    </a>
+                                                    <button type="button" class="btn btn-info btn-xs" onclick="loadSpecDropdowns();" title="Refresh Specifications" style="margin-right: 5px;">
+                                                        <i class="fa fa-refresh"></i> Refresh Specs
+                                                    </button>
+                                                   <%-- pop up for show offer items 
+                                                    <button type="button" class="btn btn-primary btn-xs" onclick="createNewItem();" title="Create New Item / Populate Name from Specifications">
+                                                        <i class="fa fa-plus-square"></i> Create New Item
+                                                    </button>
+                                                    --%>
                                                 </div>
-
-                                            </div>
-
-                                        </div>
-                                           <div class="form-group">
-                                            <label class="control-label col-md-3 col-sm-3 col-xs-12" for="first-name">
-                                                Redeem Count<span class="required">*</span>
-                                            </label>
-                                              <div class="col-md-6 col-sm-6 col-xs-12">
-                                                <input type="text" id="txtitemqty" placeholder="Enter Count" required="required" class="form-control col-md-7 col-xs-12">
                                             </div>
                                         </div>
 
-                                             <%-- pop up for show normal items --%>
-                                            <div class="container">
-
-
-                                                <div class="modal fade" id="popupItems" role="dialog">
-                                                    <div class="modal-dialog modal-lg" style="">
-
-                                                        <!-- Modal content-->
-                                                        <div class="modal-content">
-                                                            <div class="modal-header">
-                                                                <button type="button" class="close" onclick="javascript:popupclose('popupItems');">&times;</button>
-                                                                <div class="col-md-7 col-sm-6 col-xs-6">
-                                                                    <h4 class="modal-title">Items<span class="badge" style="color: #fff; margin-left: 5px; background: #d00101; padding-left: 5px; padding-right: 5px;" id="lblItemTotalrecords">0</span></h4>
-                                                                </div>
-                                                                <div class="col-md-4 col-sm-4 col-xs-12">                                                 
-                                                                   
-                                                                    <div class="col-md-10 col-sm-12 col-xs-12">
-                                                                        
-                                                                        <div class="" onclick="javascript:searchItems();" style="float:right;">
-                                                                            <button class="btn btn-primary mybtnstyl" type="reset">
-                                                                                <li class="fa fa-refresh" style="margin-right: 5px;"></li>
-                                                                                Reset
-                                                                            </button>
-                                                                        </div>
-                                                                        <div class="" onclick="javascript:searchOrderitem(1);">
-                                                                            <button type="button" class="btn btn-success mybtnstyl" style="float:right;">
-                                                                                <li class="fa fa-search" style="margin-right: 5px;"></li>
-                                                                                Search
-                                                                            </button>
-                                                                        </div>
-                                                                        </div>
-                                                                         <div class="col-md-2 col-sm-12 col-xs-3">
-                                                                            <select id="txtpospageno" onchange="javascript:searchOrderitem(1);"  name="datatable-checkbox_length" aria-controls="datatable-checkbox" class=" input-sm">
-                                                                               <option value="25">25</option>
-                                                                                 <option value="50">50</option>
-                                                                                <option value="100">100</option>
-                                                                                <option value="250">250</option>
-                                                                                <option value="500">500</option>
-                                                                            </select>
-                                                                        </div>
-                                                                </div>
-                                                            </div>
-                                                            <div class="col-md-12 col-sm-12 col-xs-12" style="overflow-x: auto;">
-                                                                <div class="x_content">
-
-                                                                    <table id="tablePos" class="table table-striped table-bordered" style="table-layout: auto;">
-                                                                        <thead>
-                                                                            <tr>
-                                                                                <th>Code</th>
-                                                                                <th>Name</th>
-                                                                           
-
-                                                                            </tr>
-
-
-                                                                            <tr>
-                                                                                <td>
-                                                                                    <input type="text" class="form-control" id="searchposContent1" style="width: 80px; padding-right: 2px;" /></td>
-                                                                                <td>
-                                                                                    <input type="text" id="searchposContent2" class="form-control" /></td>
-                                                                                
-
-                                                                            </tr>
-                                                                        </thead>
-                                                                        <tbody>
-                                                                        </tbody>
-                                                                    </table>
-                                                                </div>
-                                                            </div>
-                                                            <div class="clearfix"></div>
-                                                        </div>
-
+                                        <div class="row">
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Spec Item</label>
+                                                    <div class="col-md-8 col-sm-8 col-xs-12">
+                                                        <select class="form-control" id="comboSpecItem">
+                                                            <option value="-1">--Select Spec Item--</option>
+                                                        </select>
                                                     </div>
                                                 </div>
-
                                             </div>
-
-                                            <%-- pop up for show offer items --%>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Pitch</label>
+                                                    <div class="col-md-8 col-sm-8 col-xs-12">
+                                                        <select class="form-control" id="comboSpecPitch">
+                                                            <option value="-1">--Select Pitch--</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
-                                           
+
+                                        <div class="row">
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Crust</label>
+                                                    <div class="col-md-8 col-sm-8 col-xs-12">
+                                                        <select class="form-control" id="comboSpecCrust">
+                                                            <option value="-1">--Select Crust--</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Spec Brand</label>
+                                                    <div class="col-md-8 col-sm-8 col-xs-12">
+                                                        <select class="form-control" id="comboSpecBrand">
+                                                            <option value="-1">--Select Spec Brand--</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Thickness</label>
+                                                    <div class="col-md-8 col-sm-8 col-xs-12">
+                                                        <select class="form-control" id="comboSpecThickness">
+                                                            <option value="-1">--Select Thickness--</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Colour</label>
+                                                    <div class="col-md-8 col-sm-8 col-xs-12">
+                                                        <select class="form-control" id="comboSpecColour">
+                                                            <option value="-1">--Select Colour--</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Coating</label>
+                                                    <div class="col-md-8 col-sm-8 col-xs-12">
+                                                        <select class="form-control" id="comboSpecCoating">
+                                                            <option value="-1">--Select Coating--</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Yield Strength</label>
+                                                    <div class="col-md-8 col-sm-8 col-xs-12">
+                                                        <select class="form-control" id="comboSpecYieldStrength">
+                                                            <option value="-1">--Select Yield Strength--</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="row">
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Width</label>
+                                                    <div class="col-md-8 col-sm-8 col-xs-12">
+                                                        <select class="form-control" id="comboSpecWidth">
+                                                            <option value="-1">--Select Width--</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Machine</label>
+                                                    <div class="col-md-8 col-sm-8 col-xs-12">
+                                                        <select class="form-control" id="comboSpecMachine">
+                                                            <option value="-1">--Select Machine--</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section 2: Basic Item Details -->
+                                        <div class="col-md-12 col-sm-12 col-xs-12" style="margin-top: 15px; margin-bottom: 12px; padding: 0;">
+                                            <div style="background: #f7f9fa; border-left: 4px solid #f39c12; padding: 8px 12px; border-radius: 2px;">
+                                                <label style="font-size: 14px; font-weight: bold; color: #2A3F54; margin: 0;">
+                                                    <i class="fa fa-tag" style="color: #f39c12; margin-right: 6px;"></i>Basic Item Details
+                                                </label>
+                                                <div class="pull-right">
+                                                    <button type="button" class="btn btn-primary btn-xs" onclick="createNewItempopulate();" title="Populate Item Name and Printing Name based on Technical Specifications">
+                                                        <i class="fa fa-plus-square" style="margin-right: 4px;"></i>Auto Populate Item name
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                         <div class="row">
                                             <div class="col-md-6 col-sm-6 col-xs-12">
                                                 <div class="form-group">
@@ -1226,7 +1315,7 @@ color: red;
                                                         Item Name<span class="required">*</span>
                                                     </label>
                                                     <div class="col-md-8 col-sm-8 col-xs-12">
-                                                        <input type="text" id="txtitemname" placeholder="Enter Item Name" required="required" class="form-control">
+                                                        <textarea id="txtitemname" class="form-control" rows="2" placeholder="Enter Item Name" required="required" style="resize: vertical;"></textarea>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1236,7 +1325,7 @@ color: red;
                                                         Printing Name
                                                     </label>
                                                     <div class="col-md-8 col-sm-8 col-xs-12">
-                                                        <input type="text" id="txtPrintingName" placeholder="Printing Name (as on invoice/bill)" class="form-control">
+                                                        <textarea id="txtPrintingName" class="form-control" rows="2" placeholder="Printing Name (as on invoice/bill)" style="resize: vertical;"></textarea>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1305,20 +1394,126 @@ color: red;
                                             </div>
                                         </div>--%>
 
-                                        <!-- Section 1: Inventory & Units Configuration (Tally / ERP) -->
+                                        <div class="row">
+                                            <div class="col-md-6 col-sm-6 col-xs-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12" for="comboItemtype">
+                                                        Item Type<span class="required">*</span>
+                                                    </label>
+                                                    <div class="col-md-8 col-sm-8 col-xs-12">
+                                                        <select class="form-control" id="comboItemtype" onchange="showDivCoupon()">
+                                                            <option value="-1">--Type--</option>
+                                                            <option value="1">Product</option>
+                                                            <option value="2">Service</option>
+                                                            <option value="3">Package</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div id="divCoupon" style="display:none;">
+                                            <div class="row">
+                                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label class="control-label col-md-4 col-sm-4 col-xs-12" for="txtAutoitemName">
+                                                            Choose Item<span class="required">*</span>
+                                                        </label>
+                                                        <div class="col-md-7 col-sm-7 col-xs-10">
+                                                            <input type="text" id="txtAutoitemName" placeholder="Search Item" required="required" class="form-control">
+                                                        </div>
+                                                        <div class="col-md-1 col-sm-1 col-xs-2" onclick="javascript:searchItems();" style="padding-left:0px;">
+                                                            <div style="font-size: 24px; cursor: pointer;" data-toggle="modal" title="Add Item">
+                                                                <label class="fa fa-shopping-cart" style="color: #ff6a00; cursor: pointer;"></label>
+                                                                <label class="fa fa-plus-circle" style="font-size: 16px; cursor: pointer; position: relative; margin-left: -10px;"></label>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6 col-sm-6 col-xs-12">
+                                                    <div class="form-group">
+                                                        <label class="control-label col-md-4 col-sm-4 col-xs-12" for="txtitemqty">
+                                                            Redeem Count<span class="required">*</span>
+                                                        </label>
+                                                        <div class="col-md-8 col-sm-8 col-xs-12">
+                                                            <input type="text" id="txtitemqty" placeholder="Enter Count" required="required" class="form-control">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <%-- pop up for show normal items --%>
+                                            <div class="container">
+                                                <div class="modal fade" id="popupItems" role="dialog">
+                                                    <div class="modal-dialog modal-lg">
+                                                        <!-- Modal content-->
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <button type="button" class="close" onclick="javascript:popupclose('popupItems');">&times;</button>
+                                                                <div class="col-md-7 col-sm-6 col-xs-6">
+                                                                    <h4 class="modal-title">Items<span class="badge" style="color: #fff; margin-left: 5px; background: #d00101; padding-left: 5px; padding-right: 5px;" id="lblItemTotalrecords">0</span></h4>
+                                                                </div>
+                                                                <div class="col-md-4 col-sm-4 col-xs-12">                                                 
+                                                                    <div class="col-md-10 col-sm-12 col-xs-12">
+                                                                        <div class="" onclick="javascript:searchItems();" style="float:right;">
+                                                                            <button class="btn btn-primary mybtnstyl" type="reset">
+                                                                                <li class="fa fa-refresh" style="margin-right: 5px;"></li>
+                                                                                Reset
+                                                                            </button>
+                                                                        </div>
+                                                                        <div class="" onclick="javascript:searchOrderitem(1);">
+                                                                            <button type="button" class="btn btn-success mybtnstyl" style="float:right;">
+                                                                                <li class="fa fa-search" style="margin-right: 5px;"></li>
+                                                                                Search
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="col-md-2 col-sm-12 col-xs-3">
+                                                                        <select id="txtpospageno" onchange="javascript:searchOrderitem(1);" name="datatable-checkbox_length" aria-controls="datatable-checkbox" class=" input-sm">
+                                                                            <option value="25">25</option>
+                                                                            <option value="50">50</option>
+                                                                            <option value="100">100</option>
+                                                                            <option value="250">250</option>
+                                                                            <option value="500">500</option>
+                                                                        </select>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                            <div class="col-md-12 col-sm-12 col-xs-12" style="overflow-x: auto;">
+                                                                <div class="x_content">
+                                                                    <table id="tablePos" class="table table-striped table-bordered" style="table-layout: auto;">
+                                                                        <thead>
+                                                                            <tr>
+                                                                                <th>Code</th>
+                                                                                <th>Name</th>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <td>
+                                                                                    <input type="text" class="form-control" id="searchposContent1" style="width: 80px; padding-right: 2px;" /></td>
+                                                                                <td>
+                                                                                    <input type="text" id="searchposContent2" class="form-control" /></td>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            </div>
+                                                            <div class="clearfix"></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <%-- pop up for show offer items --%>
+                                        </div>
+
+
+                                        <!-- Section 3: Inventory & Units Configuration (Tally / ERP) -->
                                         <div class="col-md-12 col-sm-12 col-xs-12" style="margin-top: 15px; margin-bottom: 12px; padding: 0;">
                                             <div style="background: #f7f9fa; border-left: 4px solid #1ABB9C; padding: 8px 12px; border-radius: 2px;">
                                                 <label style="font-size: 14px; font-weight: bold; color: #2A3F54; margin: 0;">
                                                     <i class="fa fa-cubes" style="color: #1ABB9C; margin-right: 6px;"></i>Inventory & Units Configuration (Tally / ERP)
                                                 </label>
-                                                <div class="pull-right">
-                                                    <a href="itemmasterspec.aspx" target="_blank" class="btn btn-default btn-xs" style="margin-right: 5px;">
-                                                        <i class="fa fa-external-link"></i> Manage Spec Values
-                                                    </a>
-                                                    <button type="button" class="btn btn-info btn-xs" onclick="loadSpecDropdowns();" title="Refresh Specifications">
-                                                        <i class="fa fa-refresh"></i> Refresh Specs
-                                                    </button>
-                                                </div>
                                             </div>
                                         </div>
 
@@ -1443,130 +1638,6 @@ color: red;
                                             </div>
                                         </div>
 
-                                        <!-- Section 2: Item Technical Specifications -->
-                                        <div class="col-md-12 col-sm-12 col-xs-12" style="margin-top: 15px; margin-bottom: 12px; padding: 0;">
-                                            <div style="background: #f7f9fa; border-left: 4px solid #3498DB; padding: 8px 12px; border-radius: 2px;">
-                                                <label style="font-size: 14px; font-weight: bold; color: #2A3F54; margin: 0;">
-                                                    <i class="fa fa-sliders" style="color: #3498DB; margin-right: 6px;"></i>Item Technical Specifications
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <div class="row">
-                                            <div class="col-md-6 col-sm-6 col-xs-12">
-                                                <div class="form-group">
-                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Spec Item</label>
-                                                    <div class="col-md-8 col-sm-8 col-xs-12">
-                                                        <select class="form-control" id="comboSpecItem">
-                                                            <option value="-1">--Select Spec Item--</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6 col-sm-6 col-xs-12">
-                                                <div class="form-group">
-                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Spec Brand</label>
-                                                    <div class="col-md-8 col-sm-8 col-xs-12">
-                                                        <select class="form-control" id="comboSpecBrand">
-                                                            <option value="-1">--Select Spec Brand--</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="row">
-                                            <div class="col-md-6 col-sm-6 col-xs-12">
-                                                <div class="form-group">
-                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Thickness</label>
-                                                    <div class="col-md-8 col-sm-8 col-xs-12">
-                                                        <select class="form-control" id="comboSpecThickness">
-                                                            <option value="-1">--Select Thickness--</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6 col-sm-6 col-xs-12">
-                                                <div class="form-group">
-                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Colour</label>
-                                                    <div class="col-md-8 col-sm-8 col-xs-12">
-                                                        <select class="form-control" id="comboSpecColour">
-                                                            <option value="-1">--Select Colour--</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="row">
-                                            <div class="col-md-6 col-sm-6 col-xs-12">
-                                                <div class="form-group">
-                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Coating</label>
-                                                    <div class="col-md-8 col-sm-8 col-xs-12">
-                                                        <select class="form-control" id="comboSpecCoating">
-                                                            <option value="-1">--Select Coating--</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6 col-sm-6 col-xs-12">
-                                                <div class="form-group">
-                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Yield Strength</label>
-                                                    <div class="col-md-8 col-sm-8 col-xs-12">
-                                                        <select class="form-control" id="comboSpecYieldStrength">
-                                                            <option value="-1">--Select Yield Strength--</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="row">
-                                            <div class="col-md-6 col-sm-6 col-xs-12">
-                                                <div class="form-group">
-                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Pitch</label>
-                                                    <div class="col-md-8 col-sm-8 col-xs-12">
-                                                        <select class="form-control" id="comboSpecPitch">
-                                                            <option value="-1">--Select Pitch--</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6 col-sm-6 col-xs-12">
-                                                <div class="form-group">
-                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Crust</label>
-                                                    <div class="col-md-8 col-sm-8 col-xs-12">
-                                                        <select class="form-control" id="comboSpecCrust">
-                                                            <option value="-1">--Select Crust--</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="row">
-                                            <div class="col-md-6 col-sm-6 col-xs-12">
-                                                <div class="form-group">
-                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Width</label>
-                                                    <div class="col-md-8 col-sm-8 col-xs-12">
-                                                        <select class="form-control" id="comboSpecWidth">
-                                                            <option value="-1">--Select Width--</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="col-md-6 col-sm-6 col-xs-12">
-                                                <div class="form-group">
-                                                    <label class="control-label col-md-4 col-sm-4 col-xs-12">Machine</label>
-                                                    <div class="col-md-8 col-sm-8 col-xs-12">
-                                                        <select class="form-control" id="comboSpecMachine">
-                                                            <option value="-1">--Select Machine--</option>
-                                                        </select>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-
                                     </form>
 
                                     <div class="clearfix"></div>
@@ -1649,10 +1720,14 @@ color: red;
                                             <ul class="nav navbar-right panel_toolbox" style="min-width:auto; margin-top:2px;">
                                                 <li>
                                                     <select class="input-sm" id="txtpageno" onchange="javascript:searchitemlist(1);">
+                                                         <option value="10">10</option>
                                                         <option value="25">25</option>
                                                         <option value="50">50</option>
                                                         <option value="100">100</option>
                                                         <option value="500">500</option>
+                                                       <option value="1000">1000</option>
+                                                        <option value="5000">5000</option>
+                                                        <option value="100000">100000</option>
                                                     </select>
                                                 </li>
                                             </ul>
