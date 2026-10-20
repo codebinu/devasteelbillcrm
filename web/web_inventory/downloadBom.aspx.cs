@@ -18,8 +18,6 @@ public partial class web_inventory_downloadBom : System.Web.UI.Page
         out_m.itm_code AS 'Output Item Code',
         out_m.itm_name AS 'Output Item Name',
         COALESCE(out_m.itsv_printing_name, '') AS 'Output Printing Name',
-        COALESCE(b_out.brand_name, '') AS 'Output Brand',
-        COALESCE(c_out.cat_name, '') AS 'Output Category',
         b.itmbi_serialno AS 'Component S.No',
         b.itm_id_input AS 'Component Item ID',
         in_m.itm_code AS 'Component Item Code',
@@ -29,8 +27,6 @@ public partial class web_inventory_downloadBom : System.Web.UI.Page
         COALESCE(u.tum_name, '') AS 'Component UOM'
     FROM tbl_item_master_bom b
     JOIN tbl_item_master out_m ON out_m.itm_id = b.itm_id_output
-    LEFT JOIN tbl_item_brand b_out ON b_out.brand_id = out_m.itm_brand_id
-    LEFT JOIN tbl_item_category c_out ON c_out.cat_id = out_m.itm_category_id
     JOIN tbl_item_master in_m ON in_m.itm_id = b.itm_id_input
     LEFT JOIN tbl_item_uom u ON u.tum_id = b.tum_id
     ORDER BY b.itm_id_output DESC, b.itmbi_serialno ASC";

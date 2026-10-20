@@ -160,7 +160,6 @@
             $("#lblOutputCode").text(item.code || '-');
             $("#lblOutputName").text(item.name || '-');
             $("#lblOutputPrintingName").text(item.printingName || item.name || '-');
-            $("#lblOutputBrandCat").text((item.brandName || '') + (item.catName ? " / " + item.catName : ''));
             $("#lblOutputUom").text(item.uomName || '-');
             $("#divOutputItemInfo").slideDown(200);
 
@@ -184,7 +183,14 @@
                 "<td style='text-align:center; font-weight:bold;' class='comp-sno'></td>" +
                 "<td>" +
                     "<input type='hidden' id='hdnCompItemId_" + idx + "' value='" + itmId + "' />" +
-                    "<input type='text' id='txtCompItemSearch_" + idx + "' class='form-control input-sm comp-item-input' placeholder='Type Item Code or Name...' value='" + itmText.replace(/'/g, "&#39;") + "' style='font-size:12px;' />" +
+                    "<div class='input-group' style='margin-bottom: 2px;'>" +
+                        "<input type='text' id='txtCompItemSearch_" + idx + "' class='form-control input-sm comp-item-input' placeholder='Type Item Code or Name...' value='" + itmText.replace(/'/g, "&#39;") + "' style='font-size:12px;' />" +
+                        "<span class='input-group-btn'>" +
+                            "<button type='button' class='btn btn-primary btn-sm' onclick='openItemMasterSearchModalForComponent(" + idx + ");' title='Search Component from Item Master with Specifications' style='padding: 4px 10px; height: 30px;'>" +
+                                "<i class='fa fa-search'></i>" +
+                            "</button>" +
+                        "</span>" +
+                    "</div>" +
                     "<div id='lblCompDetail_" + idx + "' style='font-size:11px; color:#555; margin-top:2px; display:" + (itmId > 0 ? "block" : "none") + ";'>" +
                         "<i class='fa fa-check-circle' style='color:#16a34a;'></i> <span id='spanCompName_" + idx + "'>" + itmText.replace(/'/g, "&#39;") + "</span>" +
                     "</div>" +
@@ -272,7 +278,6 @@
             $("#lblOutputCode").text('-');
             $("#lblOutputName").text('-');
             $("#lblOutputPrintingName").text('-');
-            $("#lblOutputBrandCat").text('-');
             $("#lblOutputUom").text('-');
             $("#divOutputItemInfo").hide();
             $("#tblBomComponents tbody").html('');
@@ -481,7 +486,6 @@
                     $("#lblOutputCode").text(out.itm_code || '-');
                     $("#lblOutputName").text(out.itm_name || '-');
                     $("#lblOutputPrintingName").text(out.itsv_printing_name || out.itm_name || '-');
-                    $("#lblOutputBrandCat").text((out.brand_name || '') + (out.cat_name ? " / " + out.cat_name : ''));
                     $("#lblOutputUom").text(out.uom_name || '-');
                     $("#divOutputItemInfo").show();
 
@@ -626,6 +630,206 @@
                 }
             });
         }
+
+        // ==========================================
+        // ITEM MASTER MODAL SEARCH WITH SPECIFICATIONS
+        // ==========================================
+        var modalSpecFiltersLoaded = false;
+        var modalItemsCache = [];
+        var modalTarget = "output"; // "output" or component row idx (number)
+
+        function openItemMasterSearchModal() {
+            modalTarget = "output";
+            $("#modalItemSearchTitleText").text("Item Master Search (Select Output Item by Specifications)");
+            var initialSearch = $("#txtOutputItemSearch").val() || "";
+            if (initialSearch.indexOf(" - ") > -1) {
+                initialSearch = initialSearch.split(" - ")[0].trim();
+            }
+            $("#txtModalSearchQuery").val(initialSearch);
+
+            if (!modalSpecFiltersLoaded) {
+                loadModalSpecFilters();
+            }
+            $("#modalItemMasterSearch").modal('show');
+            setTimeout(function () {
+                $("#txtModalSearchQuery").focus();
+            }, 300);
+            searchModalItems(1);
+        }
+
+        function openItemMasterSearchModalForComponent(rowIdx) {
+            modalTarget = parseInt(rowIdx);
+            $("#modalItemSearchTitleText").text("Item Master Search (Select Component / Raw Material Item - Row #" + rowIdx + ")");
+            var initialSearch = $("#txtCompItemSearch_" + rowIdx).val() || "";
+            if (initialSearch.indexOf(" - ") > -1) {
+                initialSearch = initialSearch.split(" - ")[0].trim();
+            }
+            $("#txtModalSearchQuery").val(initialSearch);
+
+            if (!modalSpecFiltersLoaded) {
+                loadModalSpecFilters();
+            }
+            $("#modalItemMasterSearch").modal('show');
+            setTimeout(function () {
+                $("#txtModalSearchQuery").focus();
+            }, 300);
+            searchModalItems(1);
+        }
+
+        function loadModalSpecFilters() {
+            $.ajax({
+                type: "POST",
+                url: "billofmaterial.aspx/loadItemMasterSpecFilters",
+                data: "{}",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    if (msg.d) {
+                        var d = JSON.parse(msg.d);
+                        if (d.specItem) $("#comboModalSpecItem").html(d.specItem);
+                        if (d.specBrand) $("#comboModalSpecBrand").html(d.specBrand);
+                        if (d.specThickness) $("#comboModalSpecThickness").html(d.specThickness);
+                        if (d.specColour) $("#comboModalSpecColour").html(d.specColour);
+                        if (d.specMachine) $("#comboModalSpecMachine").html(d.specMachine);
+                        if (d.uom) $("#comboModalUom").html(d.uom);
+                        modalSpecFiltersLoaded = true;
+                    }
+                }
+            });
+        }
+
+        function resetModalFilters() {
+            $("#txtModalSearchQuery").val('');
+            $("#comboModalSpecItem").val('-1');
+            $("#comboModalSpecBrand").val('-1');
+            $("#comboModalSpecThickness").val('-1');
+            $("#comboModalSpecColour").val('-1');
+            $("#comboModalSpecMachine").val('-1');
+            $("#comboModalUom").val('-1');
+            searchModalItems(1);
+        }
+
+        function searchModalItems(page) {
+            var filters = {};
+            var s = $("#txtModalSearchQuery").val();
+            if (s && s.trim() !== "") filters.search = s.trim();
+
+            var si = $("#comboModalSpecItem").val();
+            if (si && si !== "-1") filters.specItem = si;
+
+            var sb = $("#comboModalSpecBrand").val();
+            if (sb && sb !== "-1") filters.specBrand = sb;
+
+            var st = $("#comboModalSpecThickness").val();
+            if (st && st !== "-1") filters.specThickness = st;
+
+            var sc = $("#comboModalSpecColour").val();
+            if (sc && sc !== "-1") filters.specColour = sc;
+
+            var sm = $("#comboModalSpecMachine").val();
+            if (sm && sm !== "-1") filters.specMachine = sm;
+
+            var uom = $("#comboModalUom").val();
+            if (uom && uom !== "-1") filters.uom = uom;
+
+            var perpage = parseInt($("#selModalPerPage").val()) || 25;
+
+            $("#tableModalItemMaster tbody").html('<tr><td colspan="7" style="padding:25px; text-align:center; color:#73879C;"><i class="fa fa-spinner fa-spin fa-2x"></i><br/>Loading items with specifications...</td></tr>');
+
+            $.ajax({
+                type: "POST",
+                url: "billofmaterial.aspx/searchItemMasterWithSpec",
+                data: JSON.stringify({ page: page, filters: filters, perpage: perpage }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    if (msg.d === "N" || !msg.d) {
+                        $("#tableModalItemMaster tbody").html('<tr><td colspan="7" style="padding:25px; text-align:center; font-weight:bold; color:#73879C;"><i class="fa fa-info-circle"></i> No items found matching the selected filters.</td></tr>');
+                        $("#modalItemPaginateDiv").html('');
+                        $("#lblModalItemTotalRecords").text('0');
+                        modalItemsCache = [];
+                    } else {
+                        var res = JSON.parse(msg.d);
+                        $("#lblModalItemTotalRecords").text(res.count);
+                        modalItemsCache = res.data;
+                        var htm = "";
+                        var startSno = (page - 1) * perpage;
+
+                        $.each(res.data, function (i, item) {
+                            var specs = [];
+                            if (item.spec_item_name) specs.push("<span class='tag-pill' style='background:#e0f2fe; color:#0369a1; border-color:#bae6fd;'><b>Item:</b> " + item.spec_item_name + "</span>");
+                            if (item.spec_pitch_name) specs.push("<span class='tag-pill'><b>Pitch:</b> " + item.spec_pitch_name + "</span>");
+                            if (item.spec_crust_name) specs.push("<span class='tag-pill'><b>Crust:</b> " + item.spec_crust_name + "</span>");
+                            if (item.spec_brand_name) specs.push("<span class='tag-pill' style='background:#fef3c7; color:#92400e; border-color:#fde68a;'><b>Brand:</b> " + item.spec_brand_name + "</span>");
+                            if (item.spec_thickness_name) specs.push("<span class='tag-pill' style='background:#f3e8ff; color:#6b21a8; border-color:#e9d5ff;'><b>Thick:</b> " + item.spec_thickness_name + "</span>");
+                            if (item.spec_colour_name) specs.push("<span class='tag-pill' style='background:#fee2e2; color:#991b1b; border-color:#fecaca;'><b>Colour:</b> " + item.spec_colour_name + "</span>");
+                            if (item.spec_coating_name) specs.push("<span class='tag-pill'><b>Coating:</b> " + item.spec_coating_name + "</span>");
+                            if (item.spec_yield_name) specs.push("<span class='tag-pill'><b>Yield:</b> " + item.spec_yield_name + "</span>");
+                            if (item.spec_width_name) specs.push("<span class='tag-pill'><b>Width:</b> " + item.spec_width_name + "</span>");
+                            if (item.spec_machine_name) specs.push("<span class='tag-pill'><b>Machine:</b> " + item.spec_machine_name + "</span>");
+
+                            var specsHtml = specs.length > 0 ? specs.join(' ') : "<span style='color:#9ca3af;'>-</span>";
+
+                            htm += "<tr style='vertical-align:middle;'>";
+                            htm += "<td style='text-align:center; font-weight:bold; vertical-align:middle;'>" + (startSno + i + 1) + "</td>";
+                            htm += "<td style='vertical-align:middle;'><b>" + (item.itm_code || '-') + "</b></td>";
+                            htm += "<td style='vertical-align:middle; color:#475569;'>" + (item.itsv_part_no || '-') + "</td>";
+                            htm += "<td style='vertical-align:middle;'><b>" + item.itm_name + "</b>" +
+                                   (item.itsv_printing_name && item.itsv_printing_name !== item.itm_name ? "<br/><small style='color:#73879C;'>Print: " + item.itsv_printing_name + "</small>" : "") +
+                                   "</td>";
+                            htm += "<td style='vertical-align:middle;'>" + specsHtml + "</td>";
+                            htm += "<td style='text-align:center; vertical-align:middle;'><span class='badge' style='background:#26b99a; font-size:11px;'>" + (item.uom_name || '-') + "</span></td>";
+                            htm += "<td style='text-align:center; vertical-align:middle;'>" +
+                                   "<button type='button' class='btn btn-success btn-xs' onclick='chooseModalItem(" + i + ");' style='font-weight:bold; padding:4px 10px;'>" +
+                                   "<i class='fa fa-check'></i> Select" +
+                                   "</button>" +
+                                   "</td>";
+                            htm += "</tr>";
+                        });
+
+                        $("#tableModalItemMaster tbody").html(htm);
+                        $("#modalItemPaginateDiv").html(paginate(res.count, perpage, page, "searchModalItems"));
+                    }
+                },
+                error: function () {
+                    $("#tableModalItemMaster tbody").html('<tr><td colspan="7" style="padding:25px; text-align:center; color:#dc2626;"><i class="fa fa-exclamation-triangle"></i> Error loading items. Please try again.</td></tr>');
+                }
+            });
+        }
+
+        function chooseModalItem(index) {
+            if (!modalItemsCache || !modalItemsCache[index]) return;
+            var itm = modalItemsCache[index];
+
+            if (modalTarget === "output") {
+                selectOutputItem({
+                    id: itm.itm_id,
+                    code: itm.itm_code,
+                    name: itm.itm_name,
+                    printingName: itm.itsv_printing_name,
+                    uomId: itm.uom_id,
+                    uomName: itm.uom_name
+                });
+            } else {
+                var rowIdx = modalTarget;
+                $("#hdnCompItemId_" + rowIdx).val(itm.itm_id);
+                var fullText = itm.itm_code + " - " + itm.itm_name;
+                $("#txtCompItemSearch_" + rowIdx).val(fullText);
+                $("#spanCompName_" + rowIdx).text(fullText);
+                $("#lblCompDetail_" + rowIdx).show();
+                if (itm.uom_id && itm.uom_id > 0) {
+                    $("#comboCompUom_" + rowIdx).val(itm.uom_id);
+                }
+                setTimeout(function () {
+                    $("#txtCompQty_" + rowIdx).focus().select();
+                }, 350);
+            }
+            $("#modalItemMasterSearch").modal('hide');
+        }
+
+        function chooseModalOutputItem(index) {
+            chooseModalItem(index);
+        }
     </script>
 </head>
 <body class="nav-md">
@@ -705,8 +909,8 @@
                                                 <div class="input-group" style="margin-bottom: 0px;">
                                                     <input type="text" id="txtOutputItemSearch" class="form-control" placeholder="Search Finished Good / Produced Item (Type Code or Name)..." style="font-size: 13px;" />
                                                     <span class="input-group-btn">
-                                                        <button type="button" class="btn btn-primary" onclick="$('#txtOutputItemSearch').focus();" title="Search Item">
-                                                            <i class="fa fa-search"></i>
+                                                        <button type="button" class="btn btn-primary" id="btnSearchItemMasterModal" onclick="javascript:openItemMasterSearchModal();" title="Search Item Master with Specifications" style="padding: 6px 14px; font-weight: bold;">
+                                                            <i class="fa fa-search" style="margin-right: 5px;"></i> Search Item Master
                                                         </button>
                                                     </span>
                                                 </div>
@@ -717,16 +921,13 @@
                                                         <div class="col-md-3 col-sm-6 col-xs-12" style="padding: 2px 5px;">
                                                             <b>Item Code:</b> <span id="lblOutputCode" style="color: #1e3a8a; font-weight: bold;">-</span>
                                                         </div>
-                                                        <div class="col-md-5 col-sm-6 col-xs-12" style="padding: 2px 5px;">
+                                                        <div class="col-md-4 col-sm-6 col-xs-12" style="padding: 2px 5px;">
                                                             <b>Item Name:</b> <span id="lblOutputName" style="color: #1e3a8a; font-weight: bold;">-</span>
                                                         </div>
-                                                        <div class="col-md-4 col-sm-6 col-xs-12" style="padding: 2px 5px;">
+                                                        <div class="col-md-3 col-sm-6 col-xs-12" style="padding: 2px 5px;">
                                                             <b>Printing Name:</b> <span id="lblOutputPrintingName">-</span>
                                                         </div>
-                                                        <div class="col-md-4 col-sm-6 col-xs-12" style="padding: 2px 5px;">
-                                                            <b>Brand / Category:</b> <span id="lblOutputBrandCat">-</span>
-                                                        </div>
-                                                        <div class="col-md-4 col-sm-6 col-xs-12" style="padding: 2px 5px;">
+                                                        <div class="col-md-2 col-sm-6 col-xs-12" style="padding: 2px 5px;">
                                                             <b>Base / Sales UOM:</b> <span id="lblOutputUom" class="badge" style="background:#26b99a; font-size:11px;">-</span>
                                                         </div>
                                                     </div>
@@ -917,6 +1118,119 @@
                             </div>
                         </div>
                         <div class="modal-footer" style="padding: 10px 15px;">
+                            <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MODAL: ITEM MASTER SEARCH WITH TECHNICAL SPECIFICATIONS -->
+            <div class="modal fade" id="modalItemMasterSearch" tabindex="-1" role="dialog" aria-hidden="true" style="z-index: 1500;">
+                <div class="modal-dialog" style="width: 94%; max-width: 1250px;">
+                    <div class="modal-content">
+                        <div class="modal-header" style="background: #2A3F54; color: white; padding: 12px 18px;">
+                            <button type="button" class="close" data-dismiss="modal" style="color: white; opacity: 0.9; font-size: 24px;">&times;</button>
+                            <h4 class="modal-title" style="font-size: 15px; font-weight: bold;">
+                                <i class="fa fa-sliders" style="margin-right: 8px; color: #1ABB9C;"></i><span id="modalItemSearchTitleText">Item Master Search (Select by Specifications)</span>
+                                <span class="badge" style="background: #1ABB9C; margin-left: 10px; font-size: 12px;" id="lblModalItemTotalRecords">0</span>
+                            </h4>
+                        </div>
+                        <div class="modal-body" style="padding: 15px; background: #fdfdfd;">
+                            <!-- Filter Section -->
+                            <div class="well" style="padding: 12px; margin-bottom: 12px; background: #ffffff; border: 1px solid #e5e7eb; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                                <div class="row">
+                                    <div class="col-md-3 col-sm-6 col-xs-12 form-group" style="margin-bottom: 8px;">
+                                        <label style="font-size: 11px; margin-bottom: 2px; color: #4b5563; font-weight: 600;">Search Text (Code / Name / Part No)</label>
+                                        <input type="text" class="form-control input-sm" id="txtModalSearchQuery" placeholder="Type Code, Name, Part No..." onkeypress="if(event.which==13){searchModalItems(1);return false;}" />
+                                    </div>
+                                    <div class="col-md-2 col-sm-3 col-xs-6 form-group" style="margin-bottom: 8px;">
+                                        <label style="font-size: 11px; margin-bottom: 2px; color: #4b5563; font-weight: 600;">Spec Item</label>
+                                        <select class="form-control input-sm" id="comboModalSpecItem" onchange="searchModalItems(1);">
+                                            <option value="-1">--All Spec Items--</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 col-sm-3 col-xs-6 form-group" style="margin-bottom: 8px;">
+                                        <label style="font-size: 11px; margin-bottom: 2px; color: #4b5563; font-weight: 600;">Spec Brand</label>
+                                        <select class="form-control input-sm" id="comboModalSpecBrand" onchange="searchModalItems(1);">
+                                            <option value="-1">--All Spec Brands--</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 col-sm-3 col-xs-6 form-group" style="margin-bottom: 8px;">
+                                        <label style="font-size: 11px; margin-bottom: 2px; color: #4b5563; font-weight: 600;">Thickness</label>
+                                        <select class="form-control input-sm" id="comboModalSpecThickness" onchange="searchModalItems(1);">
+                                            <option value="-1">--All Thickness--</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-1 col-sm-3 col-xs-6 form-group" style="margin-bottom: 8px;">
+                                        <label style="font-size: 11px; margin-bottom: 2px; color: #4b5563; font-weight: 600;">Per Page</label>
+                                        <select class="form-control input-sm" id="selModalPerPage" onchange="searchModalItems(1);">
+                                            <option value="10">10</option>
+                                            <option value="25" selected="selected">25</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2 col-sm-6 col-xs-12 form-group" style="margin-bottom: 8px; padding-top: 19px;">
+                                        <button type="button" class="btn btn-success btn-sm" onclick="searchModalItems(1);" style="font-weight: bold;">
+                                            <i class="fa fa-search"></i> Search
+                                        </button>
+                                        <button type="button" class="btn btn-default btn-sm" onclick="resetModalFilters();" style="margin-left: 4px;">
+                                            <i class="fa fa-refresh"></i> Reset
+                                        </button>
+                                        <button type="button" class="btn btn-link btn-sm" onclick="$('#divModalMoreFilters').slideToggle(150);" style="padding: 0 5px; font-size: 11px; text-decoration: none;">
+                                            <i class="fa fa-filter"></i> More...
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- Additional Spec Filters Collapsible Row -->
+                                <div id="divModalMoreFilters" style="display: none; padding-top: 8px; border-top: 1px dashed #e2e8f0; margin-top: 4px;">
+                                    <div class="row">
+                                        <div class="col-md-3 col-sm-4 col-xs-12 form-group" style="margin-bottom: 4px;">
+                                            <label style="font-size: 11px; margin-bottom: 2px; color: #73879C;">Spec Colour</label>
+                                            <select class="form-control input-sm" id="comboModalSpecColour" onchange="searchModalItems(1);">
+                                                <option value="-1">--All Colours--</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 col-sm-4 col-xs-12 form-group" style="margin-bottom: 4px;">
+                                            <label style="font-size: 11px; margin-bottom: 2px; color: #73879C;">Spec Machine</label>
+                                            <select class="form-control input-sm" id="comboModalSpecMachine" onchange="searchModalItems(1);">
+                                                <option value="-1">--All Machines--</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3 col-sm-4 col-xs-12 form-group" style="margin-bottom: 4px;">
+                                            <label style="font-size: 11px; margin-bottom: 2px; color: #73879C;">Sales UOM</label>
+                                            <select class="form-control input-sm" id="comboModalUom" onchange="searchModalItems(1);">
+                                                <option value="-1">--All UOM--</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Table Section -->
+                            <div class="table-responsive" style="max-height: 480px; overflow-y: auto; border: 1px solid #e6e9ed;">
+                                <table id="tableModalItemMaster" class="table table-striped table-bordered jambo_table" style="margin-bottom: 0; font-size: 12px; table-layout: auto;">
+                                    <thead style="background-color: #f1eeee; color: #525252; position: sticky; top: 0; z-index: 2;">
+                                        <tr>
+                                            <th style="width: 40px; text-align: center;">#</th>
+                                            <th style="width: 120px;">Item Code</th>
+                                            <th style="width: 110px;">Part No</th>
+                                            <th style="width: 250px;">Item Name / Printing Name</th>
+                                            <th>Technical Specifications</th>
+                                            <th style="width: 90px; text-align: center;">Sales UOM</th>
+                                            <th style="width: 80px; text-align: center;">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Dynamic Rows -->
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <!-- Pagination Section -->
+                            <div id="modalItemPaginateDiv" style="text-align: center; margin-top: 10px;"></div>
+                        </div>
+                        <div class="modal-footer" style="padding: 10px 15px; background: #f8fafc;">
                             <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Close</button>
                         </div>
                     </div>

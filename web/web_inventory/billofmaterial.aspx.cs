@@ -363,8 +363,6 @@ public partial class web_inventory_billofmaterial : System.Web.UI.Page
                 out_m.itm_code AS 'Output Item Code',
                 out_m.itm_name AS 'Output Item Name',
                 COALESCE(out_m.itsv_printing_name, '') AS 'Output Printing Name',
-                COALESCE(b_out.brand_name, '') AS 'Output Brand',
-                COALESCE(c_out.cat_name, '') AS 'Output Category',
                 b.itmbi_serialno AS 'Component S.No',
                 b.itm_id_input AS 'Component Item ID',
                 in_m.itm_code AS 'Component Item Code',
@@ -374,8 +372,6 @@ public partial class web_inventory_billofmaterial : System.Web.UI.Page
                 COALESCE(u.tum_name, '') AS 'Component UOM'
             FROM tbl_item_master_bom b
             JOIN tbl_item_master out_m ON out_m.itm_id = b.itm_id_output
-            LEFT JOIN tbl_item_brand b_out ON b_out.brand_id = out_m.itm_brand_id
-            LEFT JOIN tbl_item_category c_out ON c_out.cat_id = out_m.itm_category_id
             JOIN tbl_item_master in_m ON in_m.itm_id = b.itm_id_input
             LEFT JOIN tbl_item_uom u ON u.tum_id = b.tum_id "
             + query_condition + @"
@@ -387,6 +383,178 @@ public partial class web_inventory_billofmaterial : System.Web.UI.Page
         catch (Exception ex)
         {
             return ex.Message;
+        }
+    }
+
+    // Load specification filter dropdown options for Item Master search modal
+    [WebMethod]
+    public static string loadItemMasterSpecFilters()
+    {
+        try
+        {
+            mySqlConnection db = new mySqlConnection();
+            string query = "SELECT itsv_id, itst_id, itst_name, itsv_seq, itsv_name " +
+                           "FROM tbl_item_master_spe_values " +
+                           "WHERE itst_id IN (3, 5, 9, 10, 15) " +
+                           "ORDER BY itst_id ASC, itsv_seq ASC, itsv_name ASC";
+            DataTable dt = db.SelectQuery(query);
+            Dictionary<string, StringBuilder> dict = new Dictionary<string, StringBuilder>();
+
+            dict["specItem"] = new StringBuilder("<option value='-1'>--All Spec Items--</option>");
+            dict["specBrand"] = new StringBuilder("<option value='-1'>--All Spec Brands--</option>");
+            dict["specThickness"] = new StringBuilder("<option value='-1'>--All Thickness--</option>");
+            dict["specColour"] = new StringBuilder("<option value='-1'>--All Colours--</option>");
+            dict["specMachine"] = new StringBuilder("<option value='-1'>--All Machines--</option>");
+            dict["uom"] = new StringBuilder("<option value='-1'>--All UOM--</option>");
+
+            string uomQuery = "SELECT tum_id, tum_name FROM tbl_item_uom ORDER BY tum_id ASC";
+            DataTable dtUom = db.SelectQuery(uomQuery);
+            if (dtUom != null && dtUom.Rows.Count > 0)
+            {
+                foreach (DataRow uRow in dtUom.Rows)
+                {
+                    string tumId = uRow["tum_id"].ToString();
+                    string tumName = HttpUtility.HtmlEncode(uRow["tum_name"].ToString());
+                    dict["uom"].Append("<option value='" + tumId + "'>" + tumName + "</option>");
+                }
+            }
+
+            if (dt != null && dt.Rows.Count > 0)
+            {
+                foreach (DataRow row in dt.Rows)
+                {
+                    int typeId = Convert.ToInt32(row["itst_id"]);
+                    string valId = row["itsv_id"].ToString();
+                    string valName = HttpUtility.HtmlEncode(row["itsv_name"].ToString());
+                    string opt = "<option value='" + valId + "'>" + valName + "</option>";
+
+                    switch (typeId)
+                    {
+                        case 3: // brand
+                            dict["specBrand"].Append(opt);
+                            break;
+                        case 5: // colour
+                            dict["specColour"].Append(opt);
+                            break;
+                        case 9: // item
+                            dict["specItem"].Append(opt);
+                            break;
+                        case 10: // machine
+                            dict["specMachine"].Append(opt);
+                            break;
+                        case 15: // thickness
+                            dict["specThickness"].Append(opt);
+                            break;
+                    }
+                }
+            }
+
+            Dictionary<string, string> result = new Dictionary<string, string>();
+            foreach (var kvp in dict)
+            {
+                result[kvp.Key] = kvp.Value.ToString();
+            }
+            return JsonConvert.SerializeObject(result);
+        }
+        catch (Exception ex)
+        {
+            return JsonConvert.SerializeObject(new { error = ex.Message });
+        }
+    }
+
+    // Search item master with specifications for modal selection
+    [WebMethod]
+    public static string searchItemMasterWithSpec(int page, Dictionary<string, string> filters, int perpage)
+    {
+        try
+        {
+            mySqlConnection db = new mySqlConnection();
+            string query_condition = " WHERE 1=1";
+            if (filters != null && filters.Count > 0)
+            {
+                if (filters.ContainsKey("search") && !string.IsNullOrWhiteSpace(filters["search"]))
+                {
+                    string s = filters["search"].Trim().Replace("'", "''");
+                    query_condition += " AND (im.itm_code LIKE '%" + s + "%' OR im.itm_name LIKE '%" + s + "%' OR im.itsv_printing_name LIKE '%" + s + "%' OR CAST(im.itsv_part_no AS CHAR) LIKE '%" + s + "%')";
+                }
+                if (filters.ContainsKey("specItem") && filters["specItem"] != "-1" && !string.IsNullOrWhiteSpace(filters["specItem"]))
+                {
+                    query_condition += " AND im.itsv_spec_item = '" + filters["specItem"].Trim().Replace("'", "''") + "'";
+                }
+                if (filters.ContainsKey("specBrand") && filters["specBrand"] != "-1" && !string.IsNullOrWhiteSpace(filters["specBrand"]))
+                {
+                    query_condition += " AND im.itsv_spec_brand = '" + filters["specBrand"].Trim().Replace("'", "''") + "'";
+                }
+                if (filters.ContainsKey("specThickness") && filters["specThickness"] != "-1" && !string.IsNullOrWhiteSpace(filters["specThickness"]))
+                {
+                    query_condition += " AND im.itsv_spec_thickness = '" + filters["specThickness"].Trim().Replace("'", "''") + "'";
+                }
+                if (filters.ContainsKey("specColour") && filters["specColour"] != "-1" && !string.IsNullOrWhiteSpace(filters["specColour"]))
+                {
+                    query_condition += " AND im.itsv_spec_colour = '" + filters["specColour"].Trim().Replace("'", "''") + "'";
+                }
+                if (filters.ContainsKey("specMachine") && filters["specMachine"] != "-1" && !string.IsNullOrWhiteSpace(filters["specMachine"]))
+                {
+                    query_condition += " AND im.itsv_spec_machine = '" + filters["specMachine"].Trim().Replace("'", "''") + "'";
+                }
+                if (filters.ContainsKey("uom") && filters["uom"] != "-1" && !string.IsNullOrWhiteSpace(filters["uom"]))
+                {
+                    query_condition += " AND im.itsv_uom_sales = '" + filters["uom"].Trim().Replace("'", "''") + "'";
+                }
+            }
+
+            int per_page = perpage > 0 ? perpage : 25;
+            int offset = (page - 1) * per_page;
+
+            string countQry = "SELECT COUNT(*) FROM tbl_item_master im " + query_condition;
+            int numrows = Convert.ToInt32(db.SelectScalar(countQry));
+            if (numrows == 0) return "N";
+
+            string selectQry = @"SELECT 
+                im.itm_id, 
+                im.itm_code, 
+                im.itm_name, 
+                COALESCE(im.itsv_printing_name, '') AS itsv_printing_name, 
+                COALESCE(im.itsv_part_no, '') AS itsv_part_no,
+                COALESCE(u_sal.tum_id, 1) AS uom_id,
+                COALESCE(u_sal.tum_name, '') AS uom_name,
+                COALESCE(sp_item.itsv_name, '') AS spec_item_name,
+                COALESCE(sp_pitch.itsv_name, '') AS spec_pitch_name,
+                COALESCE(sp_crust.itsv_name, '') AS spec_crust_name,
+                COALESCE(sp_brand.itsv_name, '') AS spec_brand_name,
+                COALESCE(sp_thick.itsv_name, '') AS spec_thickness_name,
+                COALESCE(sp_colour.itsv_name, '') AS spec_colour_name,
+                COALESCE(sp_coat.itsv_name, '') AS spec_coating_name,
+                COALESCE(sp_yield.itsv_name, '') AS spec_yield_name,
+                COALESCE(sp_width.itsv_name, '') AS spec_width_name,
+                COALESCE(sp_mach.itsv_name, '') AS spec_machine_name
+            FROM tbl_item_master im
+            LEFT JOIN tbl_item_uom u_sal ON u_sal.tum_id = im.itsv_uom_sales
+            LEFT JOIN tbl_item_master_spe_values sp_item ON sp_item.itsv_id = im.itsv_spec_item
+            LEFT JOIN tbl_item_master_spe_values sp_pitch ON sp_pitch.itsv_id = im.itsv_spec_pitch
+            LEFT JOIN tbl_item_master_spe_values sp_crust ON sp_crust.itsv_id = im.itsv_spec_crust
+            LEFT JOIN tbl_item_master_spe_values sp_brand ON sp_brand.itsv_id = im.itsv_spec_brand
+            LEFT JOIN tbl_item_master_spe_values sp_thick ON sp_thick.itsv_id = im.itsv_spec_thickness
+            LEFT JOIN tbl_item_master_spe_values sp_colour ON sp_colour.itsv_id = im.itsv_spec_colour
+            LEFT JOIN tbl_item_master_spe_values sp_coat ON sp_coat.itsv_id = im.itsv_spec_coating
+            LEFT JOIN tbl_item_master_spe_values sp_yield ON sp_yield.itsv_id = im.itsv_spec_yield_strength
+            LEFT JOIN tbl_item_master_spe_values sp_width ON sp_width.itsv_id = im.itsv_spec_width
+            LEFT JOIN tbl_item_master_spe_values sp_mach ON sp_mach.itsv_id = im.itsv_spec_machine "
+            + query_condition + @"
+            ORDER BY im.itm_id DESC 
+            LIMIT " + offset + ", " + per_page;
+
+            DataTable dt = db.SelectQuery(selectQry);
+            if (dt != null && dt.Rows.Count > 0)
+            {
+                string jsonData = JsonConvert.SerializeObject(dt);
+                return "{\"count\":\"" + numrows + "\",\"data\":" + jsonData + "}";
+            }
+            return "N";
+        }
+        catch (Exception ex)
+        {
+            return JsonConvert.SerializeObject(new { error = ex.Message });
         }
     }
 }
