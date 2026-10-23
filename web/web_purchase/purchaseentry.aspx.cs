@@ -21,7 +21,7 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
         purchase.checkPageAcess(3);
     }
 
-   
+
 
     [WebMethod(EnableSession = true)]
     public static string GetAutoCompleteVendorData(string variable)
@@ -67,6 +67,97 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
         dt = db.SelectQuery(query);
         return JsonConvert.SerializeObject(dt, Formatting.Indented);
     }
+        
+    [WebMethod(EnableSession = true)]
+    public static string SavePurchaseEntryNew(PurchaseSaveRequest request)
+    {
+        try
+        {
+            if (request == null || request.purchase_filters == null)
+                return JsonConvert.SerializeObject(new { status = false, message = "Invalid request." });
+            PurchaseFilters h = request.purchase_filters;
+            if (string.IsNullOrWhiteSpace(h.vendorId) || string.IsNullOrWhiteSpace(h.purchasedate)
+                || string.IsNullOrWhiteSpace(h.warehouse) || string.IsNullOrWhiteSpace(h.userid))
+                return JsonConvert.SerializeObject(new { status = false, message = "Vendor, purchase date, warehouse and user are required." });
+            if (request.purchase_items == null || request.purchase_items.Count == 0)
+                return JsonConvert.SerializeObject(new { status = false, message = "At least one purchase item is required." });
+            foreach (PurchaseItem it in request.purchase_items)
+            {
+                if (it == null || it.itm_id == null || it.pi_qty == null || it.pi_qty <= 0 || it.pi_price == null || it.pi_price < 0)
+                    return JsonConvert.SerializeObject(new { status = false, message = "Each item needs item id, positive quantity and valid price." });
+            }
+
+            string currentDateTime;
+            try
+            {
+                TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById(string.IsNullOrEmpty(request.time_zone) ? TimeZoneInfo.Local.Id : request.time_zone);
+                currentDateTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz).ToString("yyyy-MM-dd HH:mm:ss");
+            }
+            catch (Exception)
+            {
+                return JsonConvert.SerializeObject(new { status = false, message = "Invalid time zone." });
+            }
+
+            JsonSerializerSettings settings = new JsonSerializerSettings();
+            string filtersJson = JsonConvert.SerializeObject(h, settings);
+            string itemsJson = JsonConvert.SerializeObject(request.purchase_items, settings);
+
+            using (MySqlConnection con = new MySqlConnection(System.Configuration.ConfigurationManager.AppSettings["db_connect_mysql"]))
+            using (MySqlCommand cmd = new MySqlCommand("sp_save_purchase_entry", con))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                List<string> spParams = new List<string>();
+                using (MySqlCommand pcmd = new MySqlCommand("select parameter_name from information_schema.parameters where specific_schema=database() and specific_name=@spname and parameter_name is not null order by ordinal_position", con))
+                {
+                    pcmd.Parameters.AddWithValue("@spname", "sp_save_purchase_entry");
+                    using (MySqlDataReader rd = pcmd.ExecuteReader())
+                    {
+                        while (rd.Read())
+                            spParams.Add(Convert.ToString(rd[0]));
+                    }
+                }
+                if (spParams.Count != 5)
+                    throw new InvalidOperationException("sp_save_purchase_entry expected 5 parameters but found " + spParams.Count);
+                cmd.Parameters.Add(new MySqlParameter(spParams[0], MySqlDbType.JSON) { Value = filtersJson });
+                cmd.Parameters.Add(new MySqlParameter(spParams[1], MySqlDbType.JSON) { Value = itemsJson });
+                cmd.Parameters.Add(new MySqlParameter(spParams[2], MySqlDbType.VarChar) { Value = currentDateTime });
+                cmd.Parameters.Add(new MySqlParameter(spParams[3], MySqlDbType.Int32) { Direction = ParameterDirection.Output });
+                cmd.Parameters.Add(new MySqlParameter(spParams[4], MySqlDbType.JSON) { Direction = ParameterDirection.Output });
+                using (MySqlTransaction trans = con.BeginTransaction())
+                {
+                    cmd.Transaction = trans;
+                    try
+                    {
+                        cmd.ExecuteNonQuery();
+                        object pid = cmd.Parameters[spParams[3]].Value;
+                        object res = cmd.Parameters[spParams[4]].Value;
+                        int purchaseId = (pid == null || pid == DBNull.Value) ? 0 : Convert.ToInt32(pid);
+                        string resultText = (res == null || res == DBNull.Value) ? null : Convert.ToString(res);
+                        if (purchaseId <= 0 || string.IsNullOrEmpty(resultText))
+                        {
+                            trans.Rollback();
+                            return JsonConvert.SerializeObject(new { status = false, message = "Purchase could not be saved." });
+                        }
+                        trans.Commit();
+                        object resultObj = JsonConvert.DeserializeObject(resultText);
+                        return JsonConvert.SerializeObject(new { status = true, message = "Purchase saved.", purchase_id = purchaseId, result = resultObj });
+                    }
+                    catch (MySqlException)
+                    {
+                        trans.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LogClass log = new LogClass("purchaseerror");
+            log.write(ex);
+            return JsonConvert.SerializeObject(new { status = false, message = "Unable to save purchase. Please try again." });
+        }
+    }
 
     [WebMethod(EnableSession = true)]
     public static string GetAutoCompleteItemData(string variable, string BranchId)
@@ -74,16 +165,18 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
         StringBuilder sb = new StringBuilder();
         //List<string> custNames = new List<string>();
         mySqlConnection db = new mySqlConnection();
-        string sqlQuery = "SELECT itm_name,itbs_id from tbl_itembranch_stock where 1 and itm_name like '%" + variable + "%' and itm_code not in ('1234567891234') and branch_id='" + BranchId + "'";
+        string safeVariable = (variable ?? "").Replace("\\", "\\\\").Replace("'", "''");
+        string safeBranch = (BranchId ?? "").Replace("\\", "\\\\").Replace("'", "''");
+        string sqlQuery = "SELECT itm_name,itbs_id from tbl_itembranch_stock where 1 and itm_name like '%" + safeVariable + "%' and itm_code not in ('1234567891234') and branch_id='" + safeBranch + "'";
         DataTable QryTable = db.SelectQuery(sqlQuery);
         if (QryTable.Rows.Count > 0)
         {
             sb.Append("[");
             foreach (DataRow row in QryTable.Rows)
             {
-                sb.Append("{\"id\":\"" + Convert.ToString(row["itbs_id"]) + "\",");
-                sb.Append("\"label\":\"" + Convert.ToString(row["itm_name"]) + "\",");
-                sb.Append("\"value\":\"" + Convert.ToString(row["itm_name"]) + "\"}");
+                sb.Append("{\"id\":" + JsonConvert.ToString(Convert.ToString(row["itbs_id"])) + ",");
+                sb.Append("\"label\":" + JsonConvert.ToString(Convert.ToString(row["itm_name"])) + ",");
+                sb.Append("\"value\":" + JsonConvert.ToString(Convert.ToString(row["itm_name"])) + "}");
 
                 //sb.Append("'name':'" + Convert.ToString(row["cust_name"]) + "'}");
                 sb.Append(",");
@@ -107,9 +200,9 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
     {
         mySqlConnection db = new mySqlConnection();
         DataTable dt = new DataTable();
-        string query = "select itm_code,itm_name,tp_tax_percentage,tp_cess,itbs_purchase_price from tbl_itembranch_stock tis inner join"
-            +" tbl_tax_profile tp on tp.tp_tax_code=tis.tp_tax_code"
-        +"  where itbs_id=" + itemId + "";
+        string query = "select tis.itm_id,tis.itm_code,tis.itm_name,tp_tax_percentage,tp_cess,tis.itbs_purchase_price,tp_tax_title,itm.itsv_uom_purchase from tbl_itembranch_stock tis inner join"
+            + " tbl_tax_profile tp on tp.tp_tax_code=tis.tp_tax_code inner join tbl_item_master itm on itm.itm_id=tis.itm_id"
+        + "  where itbs_id=" + itemId + "";
         //    query = query + " order by tbl_branch.branch_id";
         dt = db.SelectQuery(query);
         return JsonConvert.SerializeObject(dt, Formatting.Indented);
@@ -118,10 +211,6 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
     [WebMethod]
     public static string searchOrderitems(int page, Dictionary<string, string> filters, int perpage)
     {
-
-        // string outputval = "okkkkkkkkkkk";
-
-
         try
         {
 
@@ -188,10 +277,10 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
     }
 
     [WebMethod]
-    public static string savePurchaseEntry(Dictionary<string, string> filters,string tableString)
+    public static string savePurchaseEntry(Dictionary<string, string> filters, string tableString)
     {
-       
-       string result = "";
+
+        string result = "";
         string checkstatus = "N";
         string message = "";
 
@@ -208,7 +297,7 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
             double pm_balance = 0;
             double pm_tax_excluded_amt = 0;
             double pm_tax_amount = 0;
-  
+
 
             // FOR purchase ITEMS
             string itm_code = "";
@@ -229,7 +318,7 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
             DateTime TimeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CurrentZone);
             string currdatetime = TimeNow.ToString("yyyy/MM/dd HH:mm:ss");
             //  string jsonData = JsonConvert.SerializeObject(tableString);
-            
+
             string invoiceCheckQry = "SELECT pm_id FROM tbl_purchase_master WHERE  pm_invoice_no ='" + filters["invoiceno"] + "'";
             string existId = db.SelectScalarForTransaction(invoiceCheckQry);
             if (!string.IsNullOrWhiteSpace(existId))
@@ -258,7 +347,7 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
             string insert_to_salsesQry = "INSERT INTO tbl_purchase_master (pm_invoice_no,vn_id,pm_userid,pm_date,";
             insert_to_salsesQry = insert_to_salsesQry + "pm_note,branch_id,pm_status,branch_tax_method,branch_tax_inclusive)";
             insert_to_salsesQry = insert_to_salsesQry + "VALUES ('" + filters["invoiceno"] + "','" + filters["vendorId"] + "','" + filters["userid"] + "','" + filters["purchasedate"] + "',";
-            insert_to_salsesQry = insert_to_salsesQry + "'" + filters["note"] + "','" + filters["warehouse"] + "',1,"+filters["branch_tax_method"]+","+filters["branch_tax_inclusive"]+");Select last_insert_id()";
+            insert_to_salsesQry = insert_to_salsesQry + "'" + filters["note"] + "','" + filters["warehouse"] + "',1," + filters["branch_tax_method"] + "," + filters["branch_tax_inclusive"] + ");Select last_insert_id()";
             var last_id = db.SelectScalarForTransaction(insert_to_salsesQry);
             result = last_id;
             Int32 pm_id = Convert.ToInt32(last_id);
@@ -266,14 +355,14 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
             // PROCESSING ITEMS
             Int32 row_no = 0;
             string insert_to_purchase_items = "INSERT INTO tbl_purchase_items(pm_id,row_no,itbs_id,itm_code,"
-            +" itm_name,pi_org_price,pi_price,pi_qty,pi_total,pi_discount_rate,pi_discount_amount,"
+            + " itm_name,pi_org_price,pi_price,pi_qty,pi_total,pi_discount_rate,pi_discount_amount,"
             + " pi_net_amount,pi_item_tax,pi_item_cgst,pi_item_sgst,pi_item_igst,pi_item_utgst,"
             + " pi_item_cess,pi_tax_excluded_total,pi_tax_amount,pi_carton_count,pi_item_per_carton) VALUES ";
             string itbsidString = "";
 
             foreach (var items in data)
             {
-                    itbsidString = itbsidString + "," + items.itbs_id;              
+                itbsidString = itbsidString + "," + items.itbs_id;
             }
             itbsidString = itbsidString.Trim().TrimStart(',');
 
@@ -297,12 +386,12 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
                 pi_org_price = 0.00;
 
                 pi_item_tax = Convert.ToDouble(data[i].pi_taxperc);
-                    pi_item_cess = Convert.ToDouble(dt_itemDetail.Rows[j]["tp_cess"]);
-                    itm_name = Convert.ToString(dt_itemDetail.Rows[j]["itm_name"]);
-                    itm_code = Convert.ToString(dt_itemDetail.Rows[j]["itm_code"]);
-                    itm_type = Convert.ToInt32(dt_itemDetail.Rows[j]["itm_type"]);
-                    itemId = Convert.ToInt32(dt_itemDetail.Rows[j]["itm_id"]);
-                    j = j + 1;
+                pi_item_cess = Convert.ToDouble(dt_itemDetail.Rows[j]["tp_cess"]);
+                itm_name = Convert.ToString(dt_itemDetail.Rows[j]["itm_name"]);
+                itm_code = Convert.ToString(dt_itemDetail.Rows[j]["itm_code"]);
+                itm_type = Convert.ToInt32(dt_itemDetail.Rows[j]["itm_type"]);
+                itemId = Convert.ToInt32(dt_itemDetail.Rows[j]["itm_id"]);
+                j = j + 1;
                 // CALCULATIONS
                 if (branch_tax_method == 0) // no tax
                 {
@@ -390,12 +479,12 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
                 pi_tax_amount = tax_amount;
 
                 // INSERTING INTO TBL_SALES_ITEMS
-               
+
                 insert_to_purchase_items += " (" + "'" + pm_id + "','" + row_no + "', '" + data[i].itbs_id + "', '" + itm_code + "', '" + itm_name + "',  '" + pi_org_price + "', '" + data[i].pi_price + "',"
-                +" '" + pi_qty + "', '" + pi_total + "', '" + pi_discount_rate + "', '" + pi_discount_amount + "',"
-                +" '" + pi_net_amount + "','" + pi_item_tax + "', '" + pi_item_cgst + "', '" + pi_item_sgst + "',"
-                +" '" + pi_item_igst + "', '" + pi_item_utgst + "', '" + pi_item_cess + "',"
-                +" '" + (pi_net_amount - tax_amount) + "', '" + tax_amount + "',0,0),";
+                + " '" + pi_qty + "', '" + pi_total + "', '" + pi_discount_rate + "', '" + pi_discount_amount + "',"
+                + " '" + pi_net_amount + "','" + pi_item_tax + "', '" + pi_item_cgst + "', '" + pi_item_sgst + "',"
+                + " '" + pi_item_igst + "', '" + pi_item_utgst + "', '" + pi_item_cess + "',"
+                + " '" + (pi_net_amount - tax_amount) + "', '" + tax_amount + "',0,0),";
 
                 //  }
 
@@ -421,97 +510,98 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
                 }
                 // HANDLE STOCK
 
-                        Int32 item_total_qty = Convert.ToInt32(pi_foc) + Convert.ToInt32(pi_qty);
+                Int32 item_total_qty = Convert.ToInt32(pi_foc) + Convert.ToInt32(pi_qty);
 
-                        string upstockQry = "UPDATE tbl_itembranch_stock SET itbs_stock=(itbs_stock + " + item_total_qty + ") where itbs_id='" + data[i].itbs_id + "'";
-                        bool upstockresult = db.ExecuteQueryForTransaction(upstockQry);
-                        // code to record stock transaction by deepika
-                        sb_bulk_stkTrQry.Append("('" + data[i].itbs_id + "','" + ((int)Constants.ActionType.PURCHASE) + "','" + pm_id + "','" + filters["userid"] + "'");
-                        sb_bulk_stkTrQry.Append(",CONCAT('Purchased " + item_total_qty + "' , (select itm_name from tbl_itembranch_stock where itbs_id='" + data[i].itbs_id + "'), ' in purchase entry #" + pm_id + "') ,'" + item_total_qty + "'");
-                        sb_bulk_stkTrQry.Append(",(select itbs_stock from tbl_itembranch_stock where itbs_id='" + data[i].itbs_id + "')");
-                        sb_bulk_stkTrQry.Append(",'" + currdatetime + "')" + (i != size - 1 ? "," : ";"));
+                string upstockQry = "UPDATE tbl_itembranch_stock SET itbs_stock=(itbs_stock + " + item_total_qty + ") where itbs_id='" + data[i].itbs_id + "'";
+                bool upstockresult = db.ExecuteQueryForTransaction(upstockQry);
+                // code to record stock transaction by deepika
+                sb_bulk_stkTrQry.Append("('" + data[i].itbs_id + "','" + ((int)Constants.ActionType.PURCHASE) + "','" + pm_id + "','" + filters["userid"] + "'");
+                sb_bulk_stkTrQry.Append(",CONCAT('Purchased " + item_total_qty + "' , (select itm_name from tbl_itembranch_stock where itbs_id='" + data[i].itbs_id + "'), ' in purchase entry #" + pm_id + "') ,'" + item_total_qty + "'");
+                sb_bulk_stkTrQry.Append(",(select itbs_stock from tbl_itembranch_stock where itbs_id='" + data[i].itbs_id + "')");
+                sb_bulk_stkTrQry.Append(",'" + currdatetime + "')" + (i != size - 1 ? "," : ";"));
 
                 //end for loop  
             }
 
-                var grandTotal = Convert.ToDecimal(pm_netamount);
-                pm_netamount = Convert.ToDouble(Math.Round(grandTotal, MidpointRounding.AwayFromZero));
-                double roundOffVal = pm_netamount - Convert.ToDouble(grandTotal);
-                insert_to_purchase_items = insert_to_purchase_items.Remove(insert_to_purchase_items.Trim().Length - 1);
-                bool Itemresult = db.ExecuteQueryForTransaction(insert_to_purchase_items);
+            var grandTotal = Convert.ToDecimal(pm_netamount);
+            pm_netamount = Convert.ToDouble(Math.Round(grandTotal, MidpointRounding.AwayFromZero));
+            double roundOffVal = pm_netamount - Convert.ToDouble(grandTotal);
+            insert_to_purchase_items = insert_to_purchase_items.Remove(insert_to_purchase_items.Trim().Length - 1);
+            bool Itemresult = db.ExecuteQueryForTransaction(insert_to_purchase_items);
 
 
-                // bulk insert stock transactions
-                if (sb_bulk_stkTrQry.ToString() != "")
-                {
+            // bulk insert stock transactions
+            if (sb_bulk_stkTrQry.ToString() != "")
+            {
 
-                   // sb_bulk_stkTrQry.Append(sb_bulk_stkTrQry.ToString());
-                    db.ExecuteQueryForTransaction(sb_bulk_stkTrQry.ToString());
-                }
-                // calculating discount rate
-                double divider = pm_tax_excluded_amt + pm_discount_amount;
-                double divident = pm_discount_amount * 100;
-                pm_discount_rate = divident / divider;
-                pm_discount_rate = Math.Round(pm_discount_rate, 2);
-                string update_salesmaster_qry = "UPDATE tbl_purchase_master SET pm_total='" + pm_total + "',pm_discount_rate='" + pm_discount_rate + "',pm_discount_amount='" + pm_discount_amount + "',pm_netamount='" + pm_netamount + "',pm_tax_excluded_amt='" + pm_tax_excluded_amt + "',pm_tax_amount='" + pm_tax_amount + "',pm_ref_no='" + pm_id + "',pm_roundoff=" + roundOffVal + " WHERE pm_id='" + pm_id + "'";
-                bool update_sales_result = db.ExecuteQueryForTransaction(update_salesmaster_qry);
+                // sb_bulk_stkTrQry.Append(sb_bulk_stkTrQry.ToString());
+                db.ExecuteQueryForTransaction(sb_bulk_stkTrQry.ToString());
+            }
+            // calculating discount rate
+            double divider = pm_tax_excluded_amt + pm_discount_amount;
+            double divident = pm_discount_amount * 100;
+            pm_discount_rate = divident / divider;
+            pm_discount_rate = Math.Round(pm_discount_rate, 2);
+            string update_salesmaster_qry = "UPDATE tbl_purchase_master SET pm_total='" + pm_total + "',pm_discount_rate='" + pm_discount_rate + "',pm_discount_amount='" + pm_discount_amount + "',pm_netamount='" + pm_netamount + "',pm_tax_excluded_amt='" + pm_tax_excluded_amt + "',pm_tax_amount='" + pm_tax_amount + "',pm_ref_no='" + pm_id + "',pm_roundoff=" + roundOffVal + " WHERE pm_id='" + pm_id + "'";
+            bool update_sales_result = db.ExecuteQueryForTransaction(update_salesmaster_qry);
             //inserts to transaction table
-                //inserting order debit entry
-                MySqlCommand cmdInsCr = new MySqlCommand();
-                cmdInsCr.CommandText = "INSERT INTO `tbl_transactions` " +
-                    " (`action_type`, `action_ref_id`, `partner_id`,`partner_type`, `user_id`, `narration`, `cr`,  `date`,`closing_balance`)" +
-                    " select @action_type, @action_ref_id, @partner_id,@partner_type, @user_id, @narration, @cr, @date,(ifnull(sum(dr)-sum(cr),0)-@cr) from tbl_transactions where partner_id=@partner_id and partner_type=@partner_type ";
-                cmdInsCr.Parameters.AddWithValue("@action_type", (int)Constants.ActionType.PURCHASE);
-                cmdInsCr.Parameters.AddWithValue("@action_ref_id", pm_id);
-                cmdInsCr.Parameters.AddWithValue("@partner_id", filters["vendorId"]);
-                cmdInsCr.Parameters.AddWithValue("@partner_type", (int)Constants.PartnerType.VENDOR);
-                cmdInsCr.Parameters.AddWithValue("@user_id", filters["userid"]);
-                cmdInsCr.Parameters.AddWithValue("@narration", "Purchase entry #" + filters["invoiceno"] + " is purchased with net amount " + pm_netamount);
-                cmdInsCr.Parameters.AddWithValue("@cr", pm_netamount);
-                cmdInsCr.Parameters.AddWithValue("@date", currdatetime);
-                db.ExecuteQueryForTransaction(cmdInsCr);
+            //inserting order debit entry
+            MySqlCommand cmdInsCr = new MySqlCommand();
+            cmdInsCr.CommandText = "INSERT INTO `tbl_transactions` " +
+                " (`action_type`, `action_ref_id`, `partner_id`,`partner_type`, `user_id`, `narration`, `cr`,  `date`,`closing_balance`)" +
+                " select @action_type, @action_ref_id, @partner_id,@partner_type, @user_id, @narration, @cr, @date,(ifnull(sum(dr)-sum(cr),0)-@cr) from tbl_transactions where partner_id=@partner_id and partner_type=@partner_type ";
+            cmdInsCr.Parameters.AddWithValue("@action_type", (int)Constants.ActionType.PURCHASE);
+            cmdInsCr.Parameters.AddWithValue("@action_ref_id", pm_id);
+            cmdInsCr.Parameters.AddWithValue("@partner_id", filters["vendorId"]);
+            cmdInsCr.Parameters.AddWithValue("@partner_type", (int)Constants.PartnerType.VENDOR);
+            cmdInsCr.Parameters.AddWithValue("@user_id", filters["userid"]);
+            cmdInsCr.Parameters.AddWithValue("@narration", "Purchase entry #" + filters["invoiceno"] + " is purchased with net amount " + pm_netamount);
+            cmdInsCr.Parameters.AddWithValue("@cr", pm_netamount);
+            cmdInsCr.Parameters.AddWithValue("@date", currdatetime);
+            db.ExecuteQueryForTransaction(cmdInsCr);
 
-                //check is cash paid
-                if (Convert.ToDouble(filters["PaidAmount"]) > 0)
+            //check is cash paid
+            if (Convert.ToDouble(filters["PaidAmount"]) > 0)
+            {
+                //inserting order credit entry
+                MySqlCommand cmdInsDr = new MySqlCommand();
+                cmdInsDr.CommandText = "INSERT INTO `tbl_transactions` " +
+                    " (`action_type`, `action_ref_id`, `partner_id`,`partner_type`, `user_id`, `narration`,cash_amt " +
+                    (Convert.ToDouble(filters["ChequeAmount"]) != 0 ? ", `cheque_amt`, `cheque_no`, `cheque_date`, `cheque_bank`" : "") +
+                    ", `dr`, `date`,`closing_balance`)" +
+                    " select @action_type, @action_ref_id, @partner_id,@partner_type, @user_id, @narration,@cash_amt " +
+                    (Convert.ToDouble(filters["ChequeAmount"]) != 0 ? ", @cheque_amt, @cheque_no, @cheque_date, @cheque_bank" : "") +
+                    ", @dr, @date,(ifnull(sum(dr)-sum(cr),0)+@dr) from tbl_transactions where partner_id=@partner_id and partner_type=@partner_type ";
+                cmdInsDr.Parameters.AddWithValue("@action_type", (int)Constants.ActionType.PURCHASE);
+                cmdInsDr.Parameters.AddWithValue("@action_ref_id", pm_id);
+                cmdInsDr.Parameters.AddWithValue("@partner_id", filters["vendorId"]);
+                cmdInsDr.Parameters.AddWithValue("@partner_type", (int)Constants.PartnerType.VENDOR);
+                cmdInsDr.Parameters.AddWithValue("@user_id", filters["userid"]);
+                cmdInsDr.Parameters.AddWithValue("@narration", "Paid " + filters["PaidAmount"] + " for Purchase entry #" + filters["invoiceno"]);
+                cmdInsDr.Parameters.AddWithValue("@cash_amt", Convert.ToDecimal(filters["CashAmount"]));
+                //cmdInsDr.Parameters.AddWithValue("@card_amt", neworder["sessionId"]);
+                //cmdInsDr.Parameters.AddWithValue("@card_no", neworder["sessionId"]);
+                if (Convert.ToDouble(filters["CashAmount"]) != 0)
                 {
-                    //inserting order credit entry
-                    MySqlCommand cmdInsDr = new MySqlCommand();
-                    cmdInsDr.CommandText = "INSERT INTO `tbl_transactions` " +
-                        " (`action_type`, `action_ref_id`, `partner_id`,`partner_type`, `user_id`, `narration`,cash_amt " +
-                        (Convert.ToDouble(filters["ChequeAmount"]) != 0 ? ", `cheque_amt`, `cheque_no`, `cheque_date`, `cheque_bank`" : "") +
-                        ", `dr`, `date`,`closing_balance`)" +
-                        " select @action_type, @action_ref_id, @partner_id,@partner_type, @user_id, @narration,@cash_amt " +
-                        (Convert.ToDouble(filters["ChequeAmount"]) != 0 ? ", @cheque_amt, @cheque_no, @cheque_date, @cheque_bank" : "") +
-                        ", @dr, @date,(ifnull(sum(dr)-sum(cr),0)+@dr) from tbl_transactions where partner_id=@partner_id and partner_type=@partner_type ";
-                    cmdInsDr.Parameters.AddWithValue("@action_type", (int)Constants.ActionType.PURCHASE);
-                    cmdInsDr.Parameters.AddWithValue("@action_ref_id", pm_id);
-                    cmdInsDr.Parameters.AddWithValue("@partner_id", filters["vendorId"]);
-                    cmdInsDr.Parameters.AddWithValue("@partner_type", (int)Constants.PartnerType.VENDOR);
-                    cmdInsDr.Parameters.AddWithValue("@user_id", filters["userid"]);
-                    cmdInsDr.Parameters.AddWithValue("@narration", "Paid " + filters["PaidAmount"] + " for Purchase entry #" + filters["invoiceno"]);
-                    cmdInsDr.Parameters.AddWithValue("@cash_amt", Convert.ToDecimal(filters["CashAmount"]));
-                    //cmdInsDr.Parameters.AddWithValue("@card_amt", neworder["sessionId"]);
-                    //cmdInsDr.Parameters.AddWithValue("@card_no", neworder["sessionId"]);
-                    if (Convert.ToDouble(filters["CashAmount"]) != 0)
-                    {
-                        cmdInsDr.Parameters.AddWithValue("@cheque_amt", filters["ChequeAmount"]);
-                        cmdInsDr.Parameters.AddWithValue("@cheque_no", filters["ChequeNo"]);
-                        cmdInsDr.Parameters.AddWithValue("@cheque_date", filters["ChequeDate"]);
-                        cmdInsDr.Parameters.AddWithValue("@cheque_bank", filters["BankName"]);
-                    }
-
-                    cmdInsDr.Parameters.AddWithValue("@dr", filters["PaidAmount"]);
-                    cmdInsDr.Parameters.AddWithValue("@date", currdatetime);
-                    db.ExecuteQueryForTransaction(cmdInsDr);
+                    cmdInsDr.Parameters.AddWithValue("@cheque_amt", filters["ChequeAmount"]);
+                    cmdInsDr.Parameters.AddWithValue("@cheque_no", filters["ChequeNo"]);
+                    cmdInsDr.Parameters.AddWithValue("@cheque_date", filters["ChequeDate"]);
+                    cmdInsDr.Parameters.AddWithValue("@cheque_bank", filters["BankName"]);
                 }
 
-                string update_vendor_qry = "UPDATE tbl_vendor SET vn_balance=(select (sum(cr)-sum(dr)) from tbl_transactions where partner_id='" + filters["vendorId"] + "' and partner_type=" + (int)Constants.PartnerType.VENDOR + ") WHERE vn_id='" + filters["vendorId"] + "'";
-                bool upvndr_result = db.ExecuteQueryForTransaction(update_vendor_qry);
+                cmdInsDr.Parameters.AddWithValue("@dr", filters["PaidAmount"]);
+                cmdInsDr.Parameters.AddWithValue("@date", currdatetime);
+                db.ExecuteQueryForTransaction(cmdInsDr);
+            }
 
-               if(upvndr_result){
-                   checkstatus = "Y";
-               }
-                db.CommitTransaction();
+            string update_vendor_qry = "UPDATE tbl_vendor SET vn_balance=(select (sum(cr)-sum(dr)) from tbl_transactions where partner_id='" + filters["vendorId"] + "' and partner_type=" + (int)Constants.PartnerType.VENDOR + ") WHERE vn_id='" + filters["vendorId"] + "'";
+            bool upvndr_result = db.ExecuteQueryForTransaction(update_vendor_qry);
+
+            if (upvndr_result)
+            {
+                checkstatus = "Y";
+            }
+            db.CommitTransaction();
         }
         catch (Exception ex)
         {
@@ -700,44 +790,44 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
         bool queryStatus;
         string query = "";
 
-      
-            //check is unique?
-            String chk_qry = "SELECT count(*) FROM  tbl_itembranch_stock WHERE (branch_id = '" + branch + "' and itm_id  = '" + item + "')";
-            double numrows = Convert.ToInt32(db.SelectScalar(chk_qry));
-            if (numrows > 0)
-            {
-                return "E";
-            }
-            ////
 
-            string qry = "select MAX(itbs_id) as id from tbl_itembranch_stock";
-            DataTable dt = new DataTable();
-            dt = db.SelectQuery(qry);
-            Int32 branchstockid = 0;
-            if (dt != null)
-            {
+        //check is unique?
+        String chk_qry = "SELECT count(*) FROM  tbl_itembranch_stock WHERE (branch_id = '" + branch + "' and itm_id  = '" + item + "')";
+        double numrows = Convert.ToInt32(db.SelectScalar(chk_qry));
+        if (numrows > 0)
+        {
+            return "E";
+        }
+        ////
 
-                if (dt.Rows[0][0] is DBNull)
-                {
-                    branchstockid = ++branchstockid;
-                }
-                else
-                {
-                    branchstockid = Convert.ToInt32(dt.Rows[0][0]);
-                    branchstockid = ++branchstockid;
-                }
+        string qry = "select MAX(itbs_id) as id from tbl_itembranch_stock";
+        DataTable dt = new DataTable();
+        dt = db.SelectQuery(qry);
+        Int32 branchstockid = 0;
+        if (dt != null)
+        {
 
-
-            }
-            else
+            if (dt.Rows[0][0] is DBNull)
             {
                 branchstockid = ++branchstockid;
             }
-            DataTable dt1 = new DataTable();
-            dt1 = db.SelectQuery("select itm_code,itm_name,itm_brand_id,itm_category_id,itm_subcategory_id from tbl_item_master where itm_id='" + item + "'");
-            query = "INSERT INTO tbl_itembranch_stock (itbs_id,branch_id, itm_id, itbs_stock, itbs_reorder, itbs_available, itm_code, itm_name,itm_brand_id,itm_category_id,itm_subcategory_id,itm_mrp,itm_commision,itm_target,tp_tax_code,itbs_purchase_price)";
-            query = query + "VALUES ('" + branchstockid + "','" + branch + "','" + item + "','0','0','1','" + dt1.Rows[0]["itm_code"] + "','" + dt1.Rows[0]["itm_name"] + "','" + dt1.Rows[0]["itm_brand_id"] + "','" + dt1.Rows[0]["itm_category_id"] + "','" + dt1.Rows[0]["itm_subcategory_id"] + "','0','0','0','" + taxcode + "','"+purchasePrice+"')";
-        
+            else
+            {
+                branchstockid = Convert.ToInt32(dt.Rows[0][0]);
+                branchstockid = ++branchstockid;
+            }
+
+
+        }
+        else
+        {
+            branchstockid = ++branchstockid;
+        }
+        DataTable dt1 = new DataTable();
+        dt1 = db.SelectQuery("select itm_code,itm_name,itm_brand_id,itm_category_id,itm_subcategory_id from tbl_item_master where itm_id='" + item + "'");
+        query = "INSERT INTO tbl_itembranch_stock (itbs_id,branch_id, itm_id, itbs_stock, itbs_reorder, itbs_available, itm_code, itm_name,itm_brand_id,itm_category_id,itm_subcategory_id,itm_mrp,itm_commision,itm_target,tp_tax_code,itbs_purchase_price)";
+        query = query + "VALUES ('" + branchstockid + "','" + branch + "','" + item + "','0','0','1','" + dt1.Rows[0]["itm_code"] + "','" + dt1.Rows[0]["itm_name"] + "','" + dt1.Rows[0]["itm_brand_id"] + "','" + dt1.Rows[0]["itm_category_id"] + "','" + dt1.Rows[0]["itm_subcategory_id"] + "','0','0','0','" + taxcode + "','" + purchasePrice + "')";
+
         queryStatus = db.ExecuteQuery(query);
         if (queryStatus)
         {
@@ -772,4 +862,27 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
         dt = db.SelectQuery(query);
         return JsonConvert.SerializeObject(dt, Formatting.Indented);
     }
+
+    [WebMethod]
+    public static string loadUomTypes()
+    {
+        mySqlConnection db = new mySqlConnection();
+        DataTable dt = db.SelectQuery("SELECT tumt_id, tumt_name, IFNULL(tum_id,0) AS tum_id FROM tbl_item_uom_type");
+        return JsonConvert.SerializeObject(dt, Formatting.Indented);
+    }
+
+    [WebMethod]
+    public static string loadUomData(int uom_type = 0)
+    {
+        mySqlConnection db = new mySqlConnection();
+        string query = "SELECT tbl_item_uom.tum_id, tbl_item_uom.tum_name, tbl_item_uom.tum_type_id, tbl_item_uom.tum_convertion_fac, IFNULL(tbl_item_uom.tum_subunit_Id,0) AS tum_subunit_Id FROM tbl_item_uom";
+        if (uom_type != 0)
+        {
+            query += " WHERE tbl_item_uom.tum_type_id=" + uom_type;
+        }
+        DataTable dt = db.SelectQuery(query);
+        return JsonConvert.SerializeObject(dt, Formatting.Indented);
+    }
+
+
 }

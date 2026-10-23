@@ -1,0 +1,27 @@
+Sales 
+=====
+1) Sales order  (tbl_sales_master_order, tbl_sales_items_order)
+1.1  Approve (tbl_sales_master_order, tbl_sales_items_order)
+1.2  Reserve- "Need to show Production completed with stock >0  batch table" or  "Bom related stock >0 batch table"  (tbl_sales_master_order, tbl_sales_items_order,tbl_item_batchstock_reserve)
+1.2.1 case 1:  if customer reduces order item qty  partialy  or fully  in this case ("Both bom item" and "Finished item") just reduce the  reserve item qty / case 2: remove if fully cancelled (tbl_sales_master_order, tbl_sales_items_order,tbl_item_batchstock_reserve)
+1.3  convert Reserve status to  "Ready to Use" (Here 2 case will happen) 
+1.3.1  case 1: If finished goods, There is no change in batch stock and item remains in reserve table until it  delivered, if deliverd it must  reduce the stock from batch table and remove from reserve table. (tbl_sales_master_order, tbl_sales_items_order,tbl_item_batchstock_reserve,tbl_item_pro_master,tbl_stock_transactions)
+1.3.2  case 2: If BOM items, this bom item removed from reserve table and reduced the stock from batch also and must have a entry to production table. Then must have new batch  for the finished item, that item must enter to reserve table and its status will be "ready to use". Finaly its item status changed to delivered, then(it must  reduce the stock from batch table and remove from reserve table.)  (tbl_sales_master_order, tbl_sales_items_order,tbl_item_batchstock_reserve,tbl_item_pro_master,tbl_stock_transactions) 
+1.3.3  case 3: If customer  reduces order item qty  partialy  or fully  in this case ("Finished item" only because bom item converted to finished) just reduce the  reserve item qty / case 2: remove if fully cancelled.  (tbl_sales_master_order, tbl_sales_items_order,tbl_item_batchstock_reserve,tbl_item_pro_master,tbl_stock_transactions)
+1.4    Stock inter Tranfer invoice  (tbl_sales_master_order, tbl_sales_items_order, tbl_sales_master, tbl_sales_items)
+1.5    Customer invoiced. (tbl_sales_master_order, tbl_sales_items_order , tbl_sales_master, tbl_sales_items,tbl_transactions)
+1.6    patialy delivered   or  fully delivered (tbl_sales_master_order, tbl_sales_items_order,tbl_item_batchstock_reserve,tbl_transactions)
+1.7    Cancelled (tbl_sales_master_order, tbl_sales_items_order,tbl_item_batchstock_reserve,tbl_item_pro_master,, tbl_sales_master, tbl_sales_items,tbl_transactions)
+
+
+
+
+
+Purchase
+========
+1) Bom item like feet / inch / meter additionaly needed ? customer choice.
+
+
+
+Batch Tranfer to branch
+========================

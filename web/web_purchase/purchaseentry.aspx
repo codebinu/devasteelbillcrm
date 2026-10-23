@@ -1,4 +1,4 @@
-<%@ Page Language="C#" AutoEventWireup="true" CodeFile="purchaseentry.aspx.cs" Inherits="web_purchase_purchaseentry" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="purchaseentry.aspx.cs" Inherits="web_purchase_purchaseentry" %>
 
 <!DOCTYPE html>
 
@@ -12,6 +12,7 @@
 
     <script type="text/javascript" src="../js/jquery.cookie.js"></script>
     <script src="../js/pagination.js" type="text/javascript"></script>
+    <script src="../js/uom-conversion.js" type="text/javascript"></script>
     <link rel="stylesheet" href="../mobiscroll/css/jquery.mobile-1.1.0.min.css" />
     <script src="../mobiscroll/js/mobiscroll-2.0rc3.full.min.js" type="text/javascript"></script>
     <link href="../mobiscroll/css/mobiscroll-2.0rc3.full.min.css" rel="stylesheet" type="text/css" />
@@ -36,6 +37,116 @@
         var itm_id = 0;
         var tax_type = 0;
         var isInclusive = 0;
+        var uomData = [];
+        function setSpecAction(action) {
+            $("#btnSpecSave").text(action).attr("data-action", action);
+        }
+
+        function loadUomData(uom_type) {
+            $.ajax({
+                type: "POST",
+                url: "purchaseentry.aspx/loadUomData",
+                data: JSON.stringify({ uom_type: uom_type || 0 }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                async: false,
+                success: function(response) {
+                    uomData = JSON.parse(response.d);
+                    fillItemSpecUom(uom_type);
+                    if (!uom_type) loadUomTypes();
+
+                },
+                error: function (xhr) {
+                    console.log(xhr.responseText);
+                }
+            });
+            return uomData;
+        }
+
+function loadUomTypes() {
+            $.ajax({
+                type: "POST",
+                url: "purchaseentry.aspx/loadUomTypes",
+                data: "{}",
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                async: false,
+                success: function (response) {
+                    UomConversion.init(uomData, JSON.parse(response.d));
+                    var issues = UomConversion.checkMasterData();
+                    if (issues.length) console.warn("UOM master data issues:", issues);
+                },
+                error: function (xhr) {
+                    console.log(xhr.responseText);
+                }
+            });
+        }
+
+        function updateSpecDimLabels() {
+            var uomId = $("#itemSpec_Uom").val();
+            var name = "";
+            if (uomId && uomId != "-1") {
+                name = $.trim($("#itemSpec_Uom option:selected").text());
+            }
+            var suffix = name ? " (" + name + ")" : "";
+            $("label[for='itemSpec_Length']").text("Length/Unit" + suffix);
+            $("label[for='itemSpec_Width']").text("Width/Unit" + suffix);
+        }
+
+        function specApplyFieldRules() {
+            var uomId = $("#itemSpec_Uom").val();
+            var req = (uomId && uomId != "-1") ? UomConversion.getRequirements(uomId) : { length: false, width: true, kg: true };
+            $("#itemSpec_Length,#itemSpec_TotalKg").prop("disabled", false);
+            $("#itemSpec_Width").prop("disabled", !req.width);
+        }
+
+        function specRecalcFinal() {
+            specApplyFieldRules();
+            updateSpecDimLabels();
+            var $f = $("#itemSpec_FinalQty"), $e = $("#itemSpec_FinalQtyErr");
+            var uomId = $("#itemSpec_Uom").val();
+            if (!uomId || uomId == "-1") {
+                $f.val("");
+                $e.text("");
+                return;
+            }
+            var r = UomConversion.calculateFinalQuantity({
+                uomId: uomId,
+                targetUomId: specItem ? specItem.defUomId : null,
+                quantity: $("#itemSpec_Qty").val(),
+                length: $("#itemSpec_Length").val(),
+                width: $("#itemSpec_Width").val()
+            });
+            if (r.error || r.value === null) {
+                $f.val("");
+                $e.text(r.error || "");
+            } else {
+                $f.val(r.value > 0 ? r.value.toFixed(2) : "");
+                $e.text(r.warning || "");
+            }
+        }
+
+function fillItemSpecUom(uom_type) {
+            var data = uomData;
+            var $ddl = $("#itemSpec_Uom");
+            var prev = $ddl.val();
+            if (specItem && specItem.defUomId && UomConversion.findUom(specItem.defUomId)) {
+                data = UomConversion.getCompatibleUoms(specItem.defUomId);
+            }
+            $ddl.empty().append('<option value="-1">Select</option>');
+            $.each(data, function (i, u) {
+                $ddl.append($('<option></option>').val(u.tum_id).text(u.tum_name));
+            });
+            if (prev && $ddl.find("option[value='" + prev + "']").length) {
+                $ddl.val(prev);
+            } else if (specItem && specItem.defUomId && $ddl.find("option[value='" + specItem.defUomId + "']").length) {
+                $ddl.val(specItem.defUomId);
+            } else {
+                $ddl.val("-1");
+            }
+            updateSpecDimLabels();
+        }
+
         $(document).ready(function () {
             var BranchId = $.cookie("invntrystaffBranchId");
             var CountryId = $.cookie("invntrystaffCountryId");
@@ -58,11 +169,12 @@
             }
             cur_dat = dt.getFullYear() + '-' + month + '-' + day;
             $("#txtpurchaseDate").val(cur_dat);
-            $('.footerDivContent').html("Copyright " + new Date().getFullYear() + " © ");
+            $('.footerDivContent').html("Copyright " + new Date().getFullYear() + " Â© ");
             SearchAutoVendor();
             searchAutoItems();
             showBranches();
             getBrands();
+            loadUomData(0);
             $("#vendorNames").val("");
             $("#txtinvoiceId").val("");
             $("#itemNames").val("");
@@ -260,7 +372,7 @@
                  type: "POST",
                  contentType: "application/json; charset=utf-8",
                  url: "purchaseentry.aspx/GetAutoCompleteItemData",
-                 data: "{'variable':'" + $("#itemNames").val() + "','BranchId':'" + selBranchId1 + "'}",
+                 data: JSON.stringify({ variable: $("#itemNames").val(), BranchId: String(selBranchId1) }),
                  dataType: "json",
                  success: function (data) {
                      var data1 = jQuery.parseJSON(data.d);
@@ -426,109 +538,259 @@
 
         }
 
-        // start: Showing Details of selected  Item from autopopulate
-        function selectOrderItem(id) {
-            //alert("product_code: " + product_code + ", product_name: " + product_name + ", sales_price: " + sales_price + ", CountryId: " + CountryId + ", Tax: " + Tax + ", Discount: " + Discount);
-            var html = '';
-            var rowCount = $('#tblPurchaseItems tr').length;
-            rowid = rowCount - 3;
-            rowposition = rowCount - 2;
-        
-            $.ajax({
-                type: "POST",
-                contentType: "application/json; charset=utf-8",
-                url: "purchaseentry.aspx/selectOrderItem",
-                data: "{'itemId':'" + id + "'}",
-                dataType: "json",
-                success: function (msg) {
-                    var obj = JSON.parse(msg.d);
-                   // var tax_rate = obj[0].tp_tax_percentage;
-					  var tax_rate = 0;
-                    var cessRate = obj[0].tp_cess;
-                   // alert(tax_rate + " " + cessRate);
-                    var Discount = 0;
-                    var realprice = 0;
-                    //tax calculation starts on 25-8-2017
-                    if (tax_type == 0) // no tax
-                    {
-                        realtotal = realprice// price without discount
-                        discount_amt = (parseFloat(realtotal) * (parseFloat(Discount) / 100));
-                        nettotal = (parseFloat(parseFloat(realtotal) - (parseFloat(realtotal) * (parseFloat(Discount) / 100))));
-                        tax_included_nettotal = nettotal;
-                        tax_amount = 0; // not tax used
-                        cessAmount = 0;
+		var specEditUid = null;
+		var specRowSeq = 0;
+		var specItem = null;
+		var specFields = "#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width,#itemSpec_TotalKg,#itemSpec_FinalQty,#itemSpec_Price,#itemSpec_Discount,#itemSpec_DiscountAmt,#itemSpec_CostWith,#itemSpec_CostWithout,#itemSpec_VendorBatch,#itemSpec_NetCost";
 
-                    }
+		function specShowDefUom(name) {
+			$("#itemSpec_DefUom").text(name || "");
+			$("#itemSpec_FinalQtyUom").text(name ? " (" + name + ")" : "");
+		}
 
-                    else { // VAT CALCULATION
-                        //clearValues(); // clears gst values
+		function specResetForm() {
+			specEditUid = null;
+			specItem = null;
+			$("#itemSpec_Code,#itemSpec_Name,#itemSpec_Hsn,#itemSpec_TaxPerc").text("");
+			$(specFields).val("");
+			fillItemSpecUom();
+			$("#itemSpec_Uom").val("-1");
+			specApplyFieldRules();
+			updateSpecDimLabels();
+			specShowDefUom("");
+			$("#itemSpec_Taxable,#itemSpec_TaxAmount,#itemSpec_Net").val("");
+			$("#tblPurchaseItems tr.spec-editing")
+			setSpecAction("Add");
+		}
 
-                        if (isInclusive == 1) { // tax is included with the price
+		// start: Showing Details of selected  Item from autopopulate / popup (loads item spec form only)
+		function selectOrderItem(id) {
+			if (specEditUid !== null && !confirm("An item is being edited. Discard pending changes and select another item?")) {
+				return;
+			}
+			$.ajax({
+				type: "POST",
+				contentType: "application/json; charset=utf-8",
+				url: "purchaseentry.aspx/selectOrderItem",
+				data: "{'itemId':'" + id + "'}",
+				dataType: "json",
+				success: function (msg) {
+					var obj = JSON.parse(msg.d);
+					specResetForm();
+					specItem = { id: id, itm_id: obj[0].itm_id, cess: parseFloat(obj[0].tp_cess) || 0 };
+					itemSpecPopulate(obj[0]);
+					$("#itemNames").val("");
+					var defId = String(obj[0].itsv_uom_purchase);
+					var defName = "";
+					$.each(uomData, function (i, u) { if (String(u.tum_id) === defId) { defName = u.tum_name; return false; } });
+					if (defName) {
+						specItem.defUomId = defId;
+						specItem.defUomName = defName;
+						$("#itemSpec_Uom").val("-1");
+						fillItemSpecUom();
+						$("#itemSpec_Uom").val(defId);
+					} else {
+						fillItemSpecUom();
+						$("#itemSpec_Uom").val("-1");
+					}
+					specShowDefUom(defName);
+					specRecalcFinal();
+					itemSpecCalc();
+					popupclose('popupItems');
+				},
+				error: function (xhr, status) {
+					Unloading();
+					alert("Internet Problem..!");
+				}
+			});
+		}
+		// Stop: Showing Details of selected  Item from autopopulate
 
-                            if (parseFloat(cessRate) > 0) {
+		function specCollect() {
+			var d = {
+				id: specItem.id, itm_id: specItem.itm_id, cess: specItem.cess,
+				code: $("#itemSpec_Code").text(), name: $("#itemSpec_Name").text(),
+				hsn: $("#itemSpec_Hsn").text(), taxPerc: $("#itemSpec_TaxPerc").text(),
+				uom: $("#itemSpec_Uom").val(),
+				defUomId: specItem.defUomId, defUomName: specItem.defUomName
+			};
+			$.each(["Qty", "Length", "Width", "TotalKg", "FinalQty", "Price", "Discount", "DiscountAmt", "CostWith", "CostWithout", "VendorBatch", "NetCost"], function (i, k) {
+				d[k] = $("#itemSpec_" + k).val();
+			});
+			return d;
+		}
 
-                                var denominator = 10000 * realprice;
-                                var base = 10000 + (100 * tax_rate) + (tax_rate * cessRate);
-                                realtotal = denominator / base;
-                            }
-                            else {
-                                var constant = (tax_rate / 100) + 1; // equation for the dividing constant
-                                realtotal = realprice / constant;
-                            }
-                        }
-                        else {
-                            realtotal = realprice;
-                        }
+		function specLoad(d) {
+			specItem = { id: d.id, itm_id: d.itm_id, cess: d.cess, defUomId: d.defUomId, defUomName: d.defUomName };
+			specShowDefUom(d.defUomName);
+			$("#itemSpec_Code").text(d.code);
+			$("#itemSpec_Name").text(d.name);
+			$("#itemSpec_Hsn").text(d.hsn);
+			$("#itemSpec_TaxPerc").text(d.taxPerc);
+			fillItemSpecUom();
+			$("#itemSpec_Uom").val(d.uom);
+			$.each(["Qty", "Length", "Width", "TotalKg", "FinalQty", "Price", "Discount", "DiscountAmt", "CostWith", "CostWithout", "VendorBatch", "NetCost"], function (i, k) {
+				$("#itemSpec_" + k).val(d[k]);
+			});
+			specRecalcFinal();
+			itemSpecCalc();
+		}
 
-                        // price without discount
-                        discount_amt = (parseFloat(realtotal) * (parseFloat(Discount) / 100));
-                        nettotal = (parseFloat(parseFloat(realtotal) - (parseFloat(realtotal) * (parseFloat(Discount) / 100))));
-                        tax_amount = ((nettotal * tax_rate) / 100);
-                        tax_included_nettotal = parseFloat(parseFloat(nettotal) + parseFloat(tax_amount));
+		function specBuildRow(d, uid) {
+			var qty = parseFloat(d.FinalQty) || parseFloat(d.Qty) || 0;
+			var price = parseFloat(d.Price) || 0;
+			var disc = parseFloat(d.Discount) || 0;
+			var rate = parseFloat(d.taxPerc);
+			if (isNaN(rate) || tax_type == 0) rate = 0;
+			var cess = d.cess || 0;
+			var real = price;
+			if (isInclusive == 1) {
+				real = cess > 0 ? (10000 * price) / (10000 + 100 * rate + rate * cess) : price / (rate / 100 + 1);
+			}
+			var amount = real * qty;
+			var discAmt = amount * disc / 100;
+			var taxable = amount - discAmt;
+			var tax = tax_type == 0 ? 0 : calculateTaxAmt(taxable, rate, cess);
+			var net = taxable + parseFloat(tax);
+            var h = "<tr class='classtest' data-uid='" + uid + "'>";
+            h += "<td>" + d.code + "</td>";
+            h += "<td>" + d.name + "</td>";
+            h += "<td data-value='" + qty + "' data-taxrate='" + rate + "' data-cessrate='" + cess + "'>" + qty + "</td>";
+            h += "<td data-value='" + price + "'>" + price + "</td>";
+            h += "<td>" + amount.toFixed(2) + "</td>";
+            h += "<td data-value='" + disc + "'>" + disc + "</td>";
+            h += "<td>" + discAmt.toFixed(2) + "</td>";
+            h += "<td>" + taxable.toFixed(2) + "</td>";
+            h += "<td data-value='" + rate + "'>" + rate + "</td>";
+            h += "<td data-value='" + parseFloat(tax).toFixed(2) + "'>" + parseFloat(tax).toFixed(2) + "</td>";
+			h += "<td>" + net.toFixed(2) + "</td>";
+			h += "<td>" + (d.defUomName || "") + "</td>";
+			h += "<td style='display:none;'>" + d.id + "</td>";
+			//h += "<td></td>";
+			//h += "<td></td>";
+            h += "<td style='white-space:nowrap;'><a class='btn btn-info btn-xs' title='Edit' onclick='EditRaw(this);'><li class='fa fa-pencil'></li></a> <a class='btn btn-danger btn-xs'><li class='fa fa-close' onclick='DeleteRaw(this);'></li></a></td>";
+			h += "</tr>";
+			return h;
+		}
 
-                    }
+		function specSave() {
+			if (!specItem) {
+				alert("Please select an item first");
+				return;
+			}
+			var d = specCollect();
+			if (!(parseFloat(d.FinalQty) > 0 || parseFloat(d.Qty) > 0)) {
+				alert("Enter a quantity");
+				$("#itemSpec_Qty").focus();
+				return;
+			}
+			if (!(parseFloat(d.Price) >= 0) || d.Price === "") {
+				alert("Enter a purchase price");
+				$("#itemSpec_Price").focus();
+				return;
+			}
+			if (specEditUid !== null) {
+				var $old = $("#tblPurchaseItems tr[data-uid='" + specEditUid + "']");
+				if ($old.length == 0) {
+					alert("The row being edited no longer exists");
+					specResetForm();
+					return;
+				}
+				var $new = $(specBuildRow(d, specEditUid)).data("spec", d);
+				$old.replaceWith($new);
+				finalCalculation(1);
+			} else {
+				specRowSeq++;
+				$('#TrSum').before($(specBuildRow(d, specRowSeq)).data("spec", d));
+				finalCalculation(1);
+			}
+			specResetForm();
+		}
 
-                    if (tax_type != 0 && cessRate > 0) {
+		function EditRaw(ctrl) {
+			var $tr = $(ctrl).closest("tr");
+			var d = $tr.data("spec");
+			if (!d) return;
+			if (specEditUid !== null && specEditUid != $tr.attr("data-uid") && !confirm("Discard the pending edit and edit this row instead?")) {
+				return;
+			}
+			specResetForm();
+			specEditUid = $tr.attr("data-uid");
+			$tr.addClass("spec-editing").css("background-color", "#fff3cd");
+            var rowQty = $tr.find('td:eq(2)').attr('data-value') || $.trim($tr.find('td:eq(2)').text());
+            var rowPrice = $tr.find('td:eq(3)').attr('data-value') || $.trim($tr.find('td:eq(3)').text());
+            var rowDisc = $tr.find('td:eq(5)').attr('data-value') || $.trim($tr.find('td:eq(5)').text());
+            var rowTaxPerc = $tr.find('td:eq(8)').attr('data-value') || $.trim($tr.find('td:eq(8)').text());
+            var gridQty = parseFloat(rowQty);
+            if (gridQty != (parseFloat(d.FinalQty) || parseFloat(d.Qty) || 0)) { d.Qty = rowQty; d.Length = ''; d.Width = ''; d.uom = '-1'; }
+            d.Price = rowPrice; d.Discount = rowDisc; d.taxPerc = rowTaxPerc;
+			specLoad(d);
+			setSpecAction("Update");
+		}
 
-                        cessAmount = ((tax_amount * cessRate) / 100);
-                        tax_included_nettotal = parseFloat(tax_included_nettotal) + parseFloat(cessAmount);
-                        tax_amount = parseFloat(parseFloat(tax_amount) + parseFloat(cessAmount));
-                    }
-                    else {
+		$(document).on("click", "#btnSpecSave", specSave);
+		$(document).on("click", "#btnSpecCancel", function () {
+			if (specEditUid !== null || specItem) {
+				if (!confirm("Clear the item specification form?")) return;
+			}
+			specResetForm();
+		});
 
-                        cessAmount = 0;
-                    }
-
-                    html = "<tr class='classtest' id='divTbl'>";
-                    html = html + "<td>" + obj[0].itm_code + "</td>";
-                    html = html + "<td>" + obj[0].itm_name.replace(/\u00a0/g, " "); +"</td>";
-                    html = html + "<td><input type='text' onkeyup=modifyValues(this,'ItemQty'); class='number-only textwidth' style=' width:98%;' value='1' data-quantityval='0'  data-taxRate=" + tax_rate + " data-cessRate=" + cessRate + "/></td>";
-                    html = html + "<td><input type='text' onkeyup=modifyValues(this,'ItemPrice'); class='number-only textwidth' style=' width:98%;' value='0' data-initialValue='0' /></td>";
-                 
-                    html = html + "<td>" + realtotal.toFixed(2) + "</td>";
-                    html = html + "<td><input type='text' onkeyup=modifyValues(this,'DiscountPercent'); class='number-only textwidth' style=' width:98%;'  value='" + Discount + "' data-initialValue='" + Discount + "'/></td>";
-                    html = html + "<td>" + discount_amt.toFixed(2) + "</td>";
-                    html = html + "<td>" + nettotal.toFixed(2) + "</td>";
-                    html = html + "<td><input type='text' onkeyup=modifyValues(this,'ItemTaxPerc'); class='number-only textwidth' style=' width:98%;' value=" + tax_rate + " /></td>";
-                    html = html + "<td><input type='text' onkeyup=modifyValues(this,'ItemTax'); class='number-only textwidth' style=' width:98%;' value=" + tax_amount.toFixed(2) + " disabled/></td>";
-                    html = html + "<td>" + tax_included_nettotal.toFixed(2) + "</td>";
-                    html = html + "<td style='display:none;'>" + id + "</td>";
-                    html = html + "<td></td>";
-                    html = html + "<td></td>";
-                    html = html + "<td><a class='btn btn-danger btn-xs'><li class='fa fa-close' onclick='DeleteRaw(this);'></li></a></td>";
-                    html = html + "</tr>";
-                    $("#itemNames").val("");
-                    //alert(html);
-                    AddNewRaw(html);
-                    popupclose('popupItems');
-                },
-                error: function (xhr, status) {
-                    Unloading();
-                    alert("Internet Problem..!");
-                }
-            });
+        // Item Specification section
+        function itemSpecNum(sel) {
+            var v = parseFloat($(sel).val());
+            return isNaN(v) ? 0 : v;
         }
-        // Stop: Showing Details of selected  Item from autopopulate
+
+        function itemSpecPopulate(item) {
+            item = item || {};
+            $("#itemSpec_Code").text(item.itm_code || "");
+            $("#itemSpec_Name").text((item.itm_name || "").replace(/\u00a0/g, " "));
+            $("#itemSpec_Hsn").text(item.tp_tax_title || "");
+            var rate = parseFloat(item.tp_tax_percentage);
+            $("#itemSpec_TaxPerc").text(isNaN(rate) ? "" : rate);
+            $("#itemSpec_SysBatch").text("");
+            $("#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width,#itemSpec_TotalKg,#itemSpec_FinalQty,#itemSpec_Discount,#itemSpec_CostWith,#itemSpec_CostWithout,#itemSpec_VendorBatch,#itemSpec_NetCost").val("");
+            var pp = parseFloat(item.itbs_purchase_price);
+            $("#itemSpec_Price").val(isNaN(pp) ? "" : pp);
+            specRecalcFinal();
+            itemSpecCalc();
+        }
+        // Same rules as the items grid: discount in percent, optional inclusive tax, tax_type 0 = no tax.
+        // Net Purchase Cost = (Net Amount + Cost With Invoice + Cost Without Invoice) / Quantity.
+        function itemSpecCalc() {
+            var qty = itemSpecNum("#itemSpec_FinalQty") || itemSpecNum("#itemSpec_Qty");
+            var price = itemSpecNum("#itemSpec_Price");
+            var disc = itemSpecNum("#itemSpec_Discount");
+            var rate = parseFloat($("#itemSpec_TaxPerc").text());
+            if (isNaN(rate) || tax_type == 0) rate = 0;
+            var cess = (specItem && specItem.cess) || 0;
+            var real = price;
+            if (typeof isInclusive !== "undefined" && isInclusive == 1) {
+                real = cess > 0 ? (10000 * price) / (10000 + 100 * rate + rate * cess) : price / (rate / 100 + 1);
+            }
+            var amount = real * qty;
+            var discAmt = amount * disc / 100;
+            var taxable = amount - discAmt;
+            var tax = taxable * rate / 100;
+            if (cess > 0) tax += tax * cess / 100;
+            var net = taxable + tax;
+            $("#itemSpec_DiscountAmt").val(discAmt.toFixed(2));
+            $("#itemSpec_Taxable").val(taxable.toFixed(2));
+            $("#itemSpec_TaxAmount").val(tax.toFixed(2));
+            $("#itemSpec_Net").val(net.toFixed(2));
+            var costQty = itemSpecNum("#itemSpec_Qty") || qty;
+            $("#itemSpec_NetCost").val(costQty > 0 ? ((net + itemSpecNum("#itemSpec_CostWithout")) / costQty).toFixed(2) : "");
+        }
+        $(document).on("input", ".itemspec-decimal", function () {
+            var v = this.value.replace(/[^0-9.]/g, "");
+            var p = v.indexOf(".");
+            if (p >= 0) v = v.substring(0, p + 1) + v.substring(p + 1).replace(/\./g, "").substring(0, 3);
+            this.value = v;
+        });
+        $(document).on("input", ".itemspec-calc", itemSpecCalc);
+        $(document).on("input", "#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width", function () { specRecalcFinal(); itemSpecCalc(); });
+        $(document).on("change", "#itemSpec_Uom", function () { specRecalcFinal(); itemSpecCalc(); });
 
         function AddNewRaw(html) {
             $('#TrSum').before(html);
@@ -869,17 +1131,17 @@
 
             for (var i = 1; i <= start_row; i++) {
 
-                unit_price = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(3)').find('input').val());
-                item_qty = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(2)').find('input').val());
+                unit_price = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(3)').attr('data-value') || $('#tblPurchaseItems tr:eq(' + i + ') td:eq(3)').text());
+                item_qty = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(2)').attr('data-value') || $('#tblPurchaseItems tr:eq(' + i + ') td:eq(2)').text());
                 purchase_amount = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(4)').text());
-                discnt_percent = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(5)').find('input').val());
+                discnt_percent = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(5)').attr('data-value') || $('#tblPurchaseItems tr:eq(' + i + ') td:eq(5)').text());
                 discnt_amount = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(6)').text());
                 tax_exclude_amt = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(7)').text());
-                tax_amount = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(9)').find('input').val());
+                tax_amount = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(9)').attr('data-value') || $('#tblPurchaseItems tr:eq(' + i + ') td:eq(9)').text());
                 net_amount = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(10)').text());
 
             
-                item_qty = parseInt($.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(2)').find('input').val()));
+                item_qty = parseInt($.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(2)').attr('data-value') || $('#tblPurchaseItems tr:eq(' + i + ') td:eq(2)').text()));
                 
                 if (purchase_amount == "") {
                     purchase_amount = 0.00;
@@ -891,7 +1153,7 @@
                     discnt_percent = 0.00;
                 }
                 else {
-                    discnt_percent = parseFloat($.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(5)').find('input').val()));
+                    discnt_percent = parseFloat($.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(5)').attr('data-value') || $('#tblPurchaseItems tr:eq(' + i + ') td:eq(5)').text()));
                 }
                 if (discnt_amount == "") {
                     discnt_amount = 0.00;
@@ -917,7 +1179,7 @@
                     tax_amount = 0.00;
                 }
                 else {
-                    tax_amount = parseFloat($.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(9)').find('input').val()));
+                    tax_amount = parseFloat($.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(9)').attr('data-value') || $('#tblPurchaseItems tr:eq(' + i + ') td:eq(9)').text()));
                 }
 
                 purchase_amount = unit_price * item_qty;
@@ -1277,59 +1539,36 @@
             for (var row = 1; row <= filters.rowCount; row++) {
                 itemstring += "{";
                 for (var col = 0; col <= 12; col++) {
-                    if (col != 2 && col != 3 && col != 5 && col != 8 && col != 9) {
-                        if (col == 0) {
-                            itemstring += "'itemcode':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text() + "',";
-                        }
-                        if (col == 1) {
-                            itemstring += "'itemname':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text() + "',";
-                        }
-                        if (col == 4) {
-                            itemstring += "'amount':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text() + "',";
-                        }
-                        if (col == 6) {
-                            itemstring += "'disamount':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text() + "',";
-                        }
-                        if (col == 10) {
-                            itemstring += "'netamount':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text() + "',";
-                        }
-                        if (col == 11) {
-                            itemstring += "'itbs_id':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text() + "',";
-                        }
-
+                    if (col == 0) {
+                        itemstring += "'itemcode':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text() + "',";
                     }
-                    else {
-                        //alert($("#tblPurchaseItems tr:eq(" + row + ") td:eq(3) input").val());
-                        if ($("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ") input").val() == "") {
-
-                            if ($("#tblPurchaseItems tr:eq(" + row + ") td:eq(2) input").val() == "") {
-                                itemstring += "'pi_qty':'1',";
-                            }
-                            else {
-                                itemstring += "'pi_qty':'0',";
-                            }
-
-                        }
-                        else {
-                            if (col == 3) {
-                                itemstring += "'pi_price':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ") input").val() + "',";
-                            }
-                            if (col == 2) {
-                                itemstring += "'pi_qty':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ") input").val() + "',";
-                            }
-
-                            if (col == 5) {
-                                itemstring += "'pi_discount_rate':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ") input").val() + "',";
-                            }
-
-                            if (col == 8) {
-                                itemstring += "'pi_taxperc':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ") input").val() + "',";
-                            }
-
-                            // tableString = tableString + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ") input").val();
-                        }
+                    if (col == 1) {
+                        itemstring += "'itemname':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text() + "',";
                     }
-
+                    if (col == 2) {
+                        itemstring += "'pi_qty':'" + $.trim($("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").attr('data-value') || $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text()) + "',";
+                    }
+                    if (col == 3) {
+                        itemstring += "'pi_price':'" + $.trim($("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").attr('data-value') || $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text()) + "',";
+                    }
+                    if (col == 4) {
+                        itemstring += "'amount':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text() + "',";
+                    }
+                    if (col == 5) {
+                        itemstring += "'pi_discount_rate':'" + $.trim($("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").attr('data-value') || $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text()) + "',";
+                    }
+                    if (col == 6) {
+                        itemstring += "'disamount':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text() + "',";
+                    }
+                    if (col == 8) {
+                        itemstring += "'pi_taxperc':'" + $.trim($("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").attr('data-value') || $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text()) + "',";
+                    }
+                    if (col == 10) {
+                        itemstring += "'netamount':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text() + "',";
+                    }
+                    if (col == 11) {
+                        itemstring += "'itbs_id':'" + $("#tblPurchaseItems tr:eq(" + row + ") td:eq(" + col + ")").text() + "',";
+                    }
                 }
                 itemstring += "},";
             }
@@ -1386,6 +1625,165 @@
 
         }
 
+
+        function savePurchaseEntry() {
+            function num(v) {
+                var n = parseFloat(v);
+                return isNaN(n) ? null : n;
+            }
+            function txt(v) {
+                v = $.trim(v);
+                return v === "" ? null : v;
+            }
+            var filters = {};
+            filters.pm_id = null;
+            filters.pm_ref_no = null;
+            filters.invoiceno = txt($("#txtinvoiceId").val());
+            filters.vendorId = $("#txtvendorId").text();
+            filters.userid = $.cookie("invntrystaffId");
+            filters.purchasedate = $("#txtpurchaseDate").val();
+            filters.note = txt($("#txtSpecialNote").val());
+            filters.warehouse = $("#warehousediv").val();
+            filters.pm_status = 1;
+            filters.pm_cancelled_date = null;
+            filters.branch_tax_method = String(tax_type);
+            filters.branch_tax_inclusive = String(isInclusive);
+            filters.pm_sessionid = null;
+
+            if (filters.warehouse == "0") {
+                alert("Choose a warehouse");
+                return false;
+            }
+            if (filters.vendorId == "0" || filters.vendorId == "") {
+                alert("Choose a vendor");
+                return false;
+            }
+            if (!filters.invoiceno) {
+                alert("Enter an invoice number");
+                $("#txtinvoiceId").focus();
+                return false;
+            }
+            if ($("#cbCashPayment").is(':checked') && ($('#txtCashAmount').val() == "" || isNaN($('#txtCashAmount').val()))) {
+                alert("Enter a valid Cash Amount");
+                return false;
+            }
+            if ($("#cbChequePayment").is(':checked')) {
+                if ($('#txtChequeAmount').val() == "" || isNaN($('#txtChequeAmount').val())) {
+                    alert("Enter a valid Cheque Amount");
+                    return false;
+                } else if ($('#txtChequeNo').val() == "") {
+                    alert("Enter Cheque No");
+                    return false;
+                } else if ($('#txtChequeDate').val() == "") {
+                    alert("Enter Cheque Date");
+                    return false;
+                } else if ($('#txtBankName').val() == "") {
+                    alert("Enter Bank Name");
+                    return false;
+                }
+            }
+
+            var cash = num($("#txtCashAmount").val()) || 0;
+            var cheque = num($("#txtChequeAmount").val()) || 0;
+            filters.payment = {
+                paid_amount: cash + cheque,
+                cash_amount: cash,
+                cheque_amount: cheque,
+                cheque_no: txt($("#txtChequeNo").val()),
+                cheque_date: txt($("#txtChequeDate").val()),
+                cheque_bank: txt($("#txtBankName").val())
+            };
+
+            var items = [];
+            var missingItem = false;
+            $("#tblPurchaseItems tr.classtest").each(function (i) {
+                var $tr = $(this);
+                var d = $tr.data("spec") || {};
+                var cell = function (idx) {
+                    return $tr.find("td:eq(" + idx + ")").attr("data-value") || $.trim($tr.find("td:eq(" + idx + ")").text());
+                };
+                var qty = num(cell(2));
+                var cost = num(d.NetCost);
+                var uom = num(d.uom);
+                if (d.itm_id === undefined || d.itm_id === null) {
+                    missingItem = true;
+                }
+                items.push({
+                    row_no: i + 1,
+                    itm_id: num(d.itm_id),
+                    itm_code: txt($tr.find("td:eq(0)").text()),
+                    itm_name: txt($tr.find("td:eq(1)").text()),
+                    pi_org_price: num(cell(3)),
+                    pi_price: num(cell(3)),
+                    pi_qty: qty,
+                    pi_discount_rate: num(cell(5)),
+                    pi_item_tax: num(cell(8)),
+                    pi_item_cess: num(d.cess),
+                    pi_carton_count: null,
+                    pi_item_per_carton: null,
+                    itbh_custbatchid: txt(d.VendorBatch),
+                    tum_id: (uom === null || uom < 0) ? null : uom,
+                    itbh_no_piece: num(d.Qty),
+                    itbh_length: num(d.Length),
+                    itbh_width: num(d.Width),
+                    itbh_kg: num(d.TotalKg),
+                    itbh_kgmeter: null,
+                    itbh_sqmt: null,
+                    itbh_status: 1,
+                    itbh_cost: cost,
+                    itbh_costwithinvoice: num(d.CostWith),
+                    itbh_costwithoutinvoice: num(d.CostWithout),
+                    itbh_costotal: (cost === null || qty === null) ? null : cost * qty,
+                    itbh_createddate: null,
+                    itbh_createduser: txt(filters.userid)
+                });
+            });
+            if (items.length == 0) {
+                alert("Please Add Item");
+                return false;
+            }
+            if (missingItem) {
+                alert("Item id missing for one or more rows. Please re-add the items.");
+                return false;
+            }
+
+            var request = {
+                purchase_filters: filters,
+                purchase_items: items,
+                time_zone: $.cookie("invntryTimeZone")
+            };
+
+            bootbox.confirm("Do you want to continue?", function (result) {
+                if (result) {
+                    loading();
+                    $.ajax({
+                        type: "POST",
+                        url: "purchaseentry.aspx/SavePurchaseEntryNew",
+                        data: JSON.stringify({ request: request }),
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        success: function (msg) {
+                            Unloading();
+                            var res = JSON.parse(msg.d);
+                            if (res.status) {
+                                alert("Entry saved successfully");
+                                window.location = 'listPurchaseEntries.aspx';
+                            } else {
+                                alert(res.message || "Error!.. Please Try Again...");
+                            }
+                        },
+                        error: function (xhr, status) {
+                            Unloading();
+                            console.log(xhr);
+                            console.log(status);
+                            alert("Error!.. Please Try Again...");
+                        }
+                    });
+                } else {
+                    bootbox.hideAll();
+                }
+            });
+        }
 
         //search Vendors: shows in popup
         function resetVendorlist() {
@@ -1706,6 +2104,7 @@
                     <div class="col-md-6 col-sm-12 col-xs-12">
                         <div class="x_panel">
                             <div class="col-md-4 col-sm-6 col-xs-12">
+                                <label>Warehouse</label>
                                 <div id="showbranchdiv">
                                     <select id="warehousediv" class="form-control" onchange="loadTaxes(-1);">
                                         <option value="0" selected="selected" taxtype="-1">--Warehouse--</option>
@@ -1717,6 +2116,7 @@
                             </div>
 
                             <div class="col-md-4 col-sm-6 col-xs-6 form-group has-feedback">
+                                <label>Date of Purchase</label>
                                 <input class="form-control has-feedback-left ui-autocomplete-input" placeholder="" id="txtpurchaseDate" style="padding-right: 10px;" />
                                 <span class="fa fa-calendar form-control-feedback left" aria-hidden="true"></span>
 
@@ -1724,19 +2124,23 @@
                             </div>
 
                             <div class="col-md-4 col-sm-6 col-xs-12 form-group has-feedback">
+                                <label>Invoice Number</label>
                                 <input class="form-control ui-autocomplete-input" placeholder="Invoice Number" id="txtinvoiceId" style="padding-right: 20px;" />
                             </div>
                         </div>
                     </div>
                     <div class="col-md-6 col-sm-12 col-xs-12">
                         <div class="x_panel">
-                            <div class="col-md-10 col-sm-6 col-xs-12 form-group has-feedback" style="padding-right: 0px;" id="divVendorField">
+                            <div class="col-md-11 col-sm-6 col-xs-12 form-group has-feedback" style="padding-right: 0px;" id="divVendorField">
+                                <label>Supplier</label>
                                 <input class="form-control has-feedback-left" placeholder="Search Supplier" id="vendorNames" style="padding-right: 10px;" />
                                 <span class="fa fa-search form-control-feedback left" aria-hidden="true"></span>
                             </div>
-                            <div class="col-md-2" style="font-size: 22px;" title="search supplier" onclick="searchVendors(1)" id="divVendorIcon">
-                                <label class="fa fa-user" style="color: #ff6a00; cursor: pointer;"></label>
-                                <label class="fa fa-search" style="font-size: 16px; cursor: pointer; position: relative; margin-left: -12px;"></label>
+                            <div class="col-md-1" style="padding-right: 0px; padding-top: 25px;" title="search supplier" onclick="searchVendors(1)" id="divVendorIcon">
+                                <div class="pull-right" style="font-size: 25px; margin-right: 10px;">
+                                    <label class="fa fa-user" style="color: #ff6a00; cursor: pointer;"></label>
+                                    <label class="fa fa-search" style="font-size: 16px; cursor: pointer; position: relative; margin-left: -12px;"></label>
+                                </div>
                             </div>
                             <div id="divVendorDetails" style="display: none; border-left: 1px solid #bebebe; border-right: 1px solid #bebebe;">
                                 <div class="col-md-12 col-sm-12 col-xs-12" style="line-height: 32px;">
@@ -1885,7 +2289,7 @@
                 <div class="clearfix"></div>
 
                 <div class="row">
-                    <div class="col-md-12 col-sm-12 col-xs-12">
+                    <div class="col-md-6 col-sm-12 col-xs-12">
                         <div class="x_panel">
                       <div class="col-md-6 col-sm-6 col-xs-12 form-group has-feedback">
                                                 <label>Tax Method</label>
@@ -1911,8 +2315,83 @@
                  
                         </div>
                     </div>
+
+                    <div class="col-md-6 col-sm-12 col-xs-12">
+    <div class="x_panel">
+  <label>Search Item</label>
+                                                <div class="col-md-11 col-sm-6 col-xs-8" style="display: ;">
+    <input class="form-control has-feedback-left" placeholder="Search Item" id="itemNames" autocomplete="off" type="search" />
+    <span class="fa fa-search form-control-feedback left" aria-hidden="true"></span>
+</div>
+<div class="col-md-1 col-sm-12 col-xs-4" style="padding-right: 0px;" onclick="javascript:resetItemlist();">
+    <div class="pull-right" style="font-size: 25px; margin-right: 10px" title="Search Items" data-toggle="modal">
+        <label class="fa fa-shopping-cart" style="color: #ff6a00; cursor: pointer;"></label>
+        <label class="fa fa-search" style="font-size: 16px; cursor: pointer; position: relative; margin-left: -12px;"></label>
+    </div>
+
+</div>
+                 
+    </div>
+</div>
                     
                 </div>
+                <div class="clearfix"></div>
+
+                                                                                            <div id="itemSpecDiv">
+    <div class="x_panel" style=" margin-bottom: 20px;">
+        <div class="x_title" style="margin-bottom: 15px;">
+            <label>Item Specification</label>
+            <ul class="nav navbar-right panel_toolbox">
+                <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a></li>
+            </ul>
+        </div>
+        <div class="x_content">
+            <div class="row">
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label>Item Code</label><div><label id="itemSpec_Code" style="font-weight: bold;color:#1e99c7"></label></div></div>
+                <div class="col-md-4 col-sm-6 col-xs-12 form-group"><label>Item Name</label><div><label id="itemSpec_Name" style="font-weight: bold;color:#1e99c7"></label></div></div>
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label>UOM</label><div><label id="itemSpec_DefUom" style="font-weight: bold;color:#1e99c7"></label></div></div>
+                                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label>HSN Code</label><div><label id="itemSpec_Hsn" style="font-weight: bold;color:#1e99c7"></label></div></div>
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label>Tax Percentage</label><div><label id="itemSpec_TaxPerc" style="font-weight: bold;color:#1e99c7"></label></div></div>
+            </div>
+            <hr />
+            <div class="row">
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_Qty">Quantity</label><input type="text" class="form-control itemspec-decimal itemspec-calc" id="itemSpec_Qty" /></div>
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group">
+                    <label for="itemSpec_Uom">UOM</label>
+                    <select class="form-control" id="itemSpec_Uom"><option value="-1">Select</option></select>
+                </div>                
+                <div class="col-md-2 col-sm-4 col-xs-12 form-group"><label for="itemSpec_Length">Length/Unit</label><input type="text" class="form-control itemspec-decimal" id="itemSpec_Length" /></div>
+                <div class="col-md-2 col-sm-4 col-xs-12 form-group"><label for="itemSpec_Width">Width/Unit</label><input type="text" class="form-control itemspec-decimal" id="itemSpec_Width" /></div>
+                <div class="col-md-2 col-sm-4 col-xs-12 form-group"><label for="itemSpec_TotalKg">Total KG</label><input type="text" class="form-control itemspec-decimal" id="itemSpec_TotalKg" /></div>
+                <div class="col-md-2 col-sm-4 col-xs-12 form-group"><label for="itemSpec_FinalQty">Final Quantity<span id="itemSpec_FinalQtyUom"></span></label><input type="text" class="form-control" id="itemSpec_FinalQty" readonly="readonly" /><small id="itemSpec_FinalQtyErr" class="text-danger"></small></div>
+            </div>
+            <div class="row">
+                
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_Price">Purchase Price</label><input type="text" class="form-control itemspec-decimal itemspec-calc" id="itemSpec_Price" /></div>
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_Discount">Discount (%)</label><input type="number" class="form-control itemspec-decimal itemspec-calc" id="itemSpec_Discount" /></div>
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_DiscountAmt">Discount Amount</label><input type="text" class="form-control" id="itemSpec_DiscountAmt" readonly="readonly" /></div>
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_Taxable">Taxable Value</label><input type="text" class="form-control" id="itemSpec_Taxable" readonly="readonly" /></div>
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label>Tax Amount</label><input type="text" class="form-control" id="itemSpec_TaxAmount" readonly="readonly" /></div>
+<div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_Net">Net Amount</label><input type="text" class="form-control" id="itemSpec_Net" readonly="readonly" /></div>
+            </div>
+            <div class="row">
+                
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_VendorBatch">Supplier Batch No.</label><input type="text" class="form-control" id="itemSpec_VendorBatch" maxlength="50" /></div>
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label>System Batch No.</label><input type="text" class="form-control" id="itemSpec_SyatemBatchNo" readonly="readonly" /></div>
+           
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_CostWith">Cost With Invoice / Unit</label><input type="text" class="form-control itemspec-decimal itemspec-calc" id="itemSpec_CostWith" /></div>
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_CostWithout">Cost Without Invoice</label><input type="text" class="form-control itemspec-decimal itemspec-calc" id="itemSpec_CostWithout" /></div>
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_NetCost">Net Purchase Cost</label><input type="text" class="form-control" id="itemSpec_NetCost" readonly="readonly" /></div>
+                <div id="specButtons" class="col-md-2 col-xs-12 form-group" style="white-space:nowrap;">
+                    <br />
+                                    <button type="button" id="btnSpecSave" class="btn btn-success" style="display:inline-block;" data-action="Add">Add</button>
+                                    <button type="button" id="btnSpecCancel" class="btn btn-default" style="display:inline-block;">Cancel</button>
+                                </div>
+            </div>      
+        </div>
+    </div>
+</div>
+
                 <div class="clearfix"></div>
                 <div class="row">
                     <div class="col-md-12 col-sm-12 col-xs-12">
@@ -1927,19 +2406,18 @@
                             <div class="x_content">
                                 <div class="row" style="margin-bottom: 5px;">
 
+                                   
                                     <div class="col-md-6 col-sm-6 col-xs-12 pull-right" style="padding-right: 0px;">
 
-                                        <div class="col-md-10 col-sm-6 col-xs-8" style="display: ;">
-                                            <input class="form-control has-feedback-left" placeholder="Search Item" id="itemNames" autocomplete="off" type="search" />
-                                            <span class="fa fa-search form-control-feedback left" aria-hidden="true"></span>
-                                        </div>
-                                        <div class="col-md-2 col-sm-12 col-xs-4" style="padding-right: 0px;" onclick="javascript:resetItemlist();">
-                                            <div class="pull-right" style="font-size: 25px; margin-right: 10px" title="Search Items" data-toggle="modal">
-                                                <label class="fa fa-shopping-cart" style="color: #ff6a00; cursor: pointer;"></label>
-                                                <label class="fa fa-search" style="font-size: 16px; cursor: pointer; position: relative; margin-left: -12px;"></label>
-                                            </div>
 
+                                           
                                         </div>
+
+                                    <div class="col-lg-12 col-md-6 col-sm-6 col-xs-12 pull-right" style="padding-right: 0px;">
+
+                                                                          
+
+                                     
                                         <%-- pop up for show  items --%>
                                         <div class="container">
 
@@ -1994,7 +2472,7 @@
                                                                         <option value="500">500</option>
                                                                     </select>
                                                                 </div>
-                                                                
+                                                            
 
                                                     
                                                             </div>
@@ -2157,18 +2635,17 @@
                                                 <tr>
                                                     <td>Item Code</td>
                                                     <td style="width: 300px;">Name</td>
-                                                    <td>QTY</td>
+                                                    <td>Qty</td>
                                                     <td>Unit Price</td>
                                                     
-                                                    <td>Amt</td>
+                                                    <td>Amount</td>
                                                     <td>Dis %</td>
                                                     <td>Dis Amt</td>
                                                     <td>Taxable Value</td>
                                                     <td>Tax %</td>
-                                                    <td>Tax Amt</td>
-                                                    <td>Net Amt</td>
-                                                    <td>Paid</td>
-                                                    <td>Balance</td>
+                                                    <td>Tax Amount</td>
+                                                    <td>Net Amount</td>
+                                                    <td>UOM</td>
                                                     <td></td>
                                                 </tr>
                                                 <tr id="TrSum">
@@ -2183,8 +2660,6 @@
                                                      <td></td>
                                                     <td id="txtTotalTaxamt"></td>
                                                     <td id="txtTotalNetAmount"></td>
-                                                     
-                                                    <td></td>
                                                     <td></td>
                                                     <td></td>
                                                 </tr>
@@ -2197,11 +2672,8 @@
                                                     <td></td>
                                                     <td>
                                                         <label id="txtTotalGrossamount"></label>
-                                                    </td>
-                                                    <td>
-                                                        <input type="text" class="textwidth" id="txtPosPaidAmount" onkeyup="calculteTable();" style="width: 98%; background: none; border: none;" disabled=""></td>
-                                                    <td>
-                                                        <input type="text" class="textwidth" id="txtPosBalanceAmount" style="width: 98%; background: none; border: none;" disabled=""></td>
+                                                    </td>                                                    
+                                                    <td></td>
                                                     <td></td>
 
                                                 </tr>
@@ -2335,7 +2807,7 @@
                             </div>
                             <div class="clearfix"></div>
 
-                            <div class="col-md-3 col-sm-3 col-xs-3" style="margin-top: 10px;" id="divsaveorder" onclick="javascript:saveAndPrintPurchase(false);">
+                            <div class="col-md-3 col-sm-3 col-xs-3" style="margin-top: 10px;" id="divsaveorder" onclick="javascript:savePurchaseEntry();">
                                 <button class="btn btn-primary mybtnstyl" type="button">Save</button>
                             </div>
 
@@ -2357,7 +2829,7 @@
             <div class="pull-right">
                 <div class="footerDiv">
                     <div class="footerDivContent">
-                        Copyright 2014 ©
+                        Copyright 2014 Â©
                     </div>
                 </div>
             </div>
