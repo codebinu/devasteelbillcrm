@@ -168,8 +168,11 @@
                         var htmItemRow = '';
                         htmItemRow += '<tr>';
                         htmItemRow += '<td>' + item.itm_code + '</td>';
+                        htmItemRow += '<td>' + item.itbh_no + '</td>';
+                        htmItemRow += '<td>' + item.itbh_custbatchid + '</td>';
                         htmItemRow += '<td>' + item.itm_name + '</td>';
                         htmItemRow += '<td>' + item.pi_qty + '</td>';
+                        htmItemRow += '<td>' + item.tum_name + '</td>';
                         htmItemRow += '<td>' + item.pi_price + '</td>';
                        
                         htmItemRow += '<td>' + item.pi_total + '</td>';
@@ -178,9 +181,7 @@
                         htmItemRow += '<td>' + item.pi_discount_amount + '</td>';
                         htmItemRow += '<td>' + item.pi_item_tax + '</td>';
                         htmItemRow += '<td>' + item.pi_tax_amount + '</td>';
-                        htmItemRow += '<td>' + item.pi_net_amount + '</td>';
-                        htmItemRow += '<td></td>';
-                        htmItemRow += '<td style="border-right:none;"></td>';
+                        htmItemRow += '<td>' + item.pi_net_amount + '</td>';                        
                         htmItemRow += '</tr>';
                         $("#tbodyItems").append(htmItemRow);
                     });
@@ -811,18 +812,21 @@
                                             <thead  style="background-color:#f1eeee;color:#525252">
                                                 <tr>
                                                     <td>Item Code</td>
+                                                    <td>System Batch No</td>
+                                                    <td>Supplier Batch No</td>
                                                     <td style="width: 300px;">Name</td>
                                                     <td>QTY</td>
-                                                    <td>Price</td>
-                                                    
+                                                    <td>UOM</td>
+                                                    <td>Price</td>                                                    
                                                     <td>Amt</td>
                                                     <td>Dis %</td>
                                                     <td>Dis Amt</td>
                                                     <td>Tax Perc</td>
                                                     <td>Tax Amt</td>
                                                     <td>Net Amt</td>
-                                                    <td>Paid</td>
-                                                    <td>Balance</td>
+                                                   <%-- <td>Paid</td>
+                                                    <td>Balance</td>--%>
+
 
 
                                                 </tr>
@@ -836,19 +840,15 @@
 
 
                                                 <tr>
-                                                    <td colspan="4" style="text-align: right;"><b>Round Off Value: <label id="lblRoundoff" style="color:#900c0c"></label></b></td>
-                                                    <td colspan="5" style="text-align: right;"><b>Total</b></td>
+                                                    <td colspan="5" style="text-align: right;"><b>Round Off Value: <label id="lblRoundoff" style="color:#900c0c"></label></b></td>
+                                                    <td colspan="7" style="text-align: right;"><b>Total</b></td>
 
                                                     <td>
                                                         <label id="txtTotalAmt">0</label></td>
-                                                    <td>
-                                                        <label id="">--</label></td>
-                                                    <td>
-                                                        <label id="Label2">--</label></td>
 
                                                 </tr>
                                                 <tr>
-                                                    <td colspan="10" style="text-align: right;"><b>Previous Payment</b></td>
+                                                    <td colspan="11" style="text-align: right;"><b>Previous Payment</b></td>
 
                                                     <td style="font-weight: bold;">
                                                         <label id="txtPreviousPaid"></label>
@@ -859,15 +859,13 @@
 
                                                 </tr>
                                                 <tr>
-                                                    <td colspan="10" style="text-align: right;"><b>Current Payment</b></td>
+                                                    <td colspan="11" style="text-align: right;"><b>Current Payment</b></td>
                                                     <td style="color: red; font-weight: bold;">
                                                         <input style="width: 97%; background: none; border: none;" id="txtTotalCurrentAmount" value="0" disabled="" type="text" /></td>
                                                     <td style="color: red; font-weight: bold;">
                                                         <input style="width: 97%; background: none; border: none;" id="txtTotalBalanceAmount" value="0.00" disabled="" type="text" /></td>
                                                 </tr>
                                             </tbody>
-
-
 
                                         </table>
                                     </div>

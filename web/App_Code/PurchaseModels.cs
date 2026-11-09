@@ -31,6 +31,7 @@ public class PurchaseFilters
 
 public class PurchaseItem
 {
+    public int? pi_id { get; set; }
     public int? row_no { get; set; }
     public int? itm_id { get; set; }
     public string itm_code { get; set; }
@@ -58,6 +59,7 @@ public class PurchaseItem
     public decimal? itbh_costotal { get; set; }
     public string itbh_createddate { get; set; }
     public string itbh_createduser { get; set; }
+	public int? itsv_uom_purchase { get; set; }
 }
 
 public class PurchaseSaveRequest

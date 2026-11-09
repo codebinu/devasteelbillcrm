@@ -24,3 +24,5 @@ commonfunction/obj/
 Thumbs.db
 Desktop.ini
 $RECYCLE.BIN/
+InvoiceMe/
+web/log/*.txt

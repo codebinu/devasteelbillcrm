@@ -34,7 +34,7 @@ public partial class web_sales_editorder : System.Web.UI.Page
     /// </summary>
     public void getSystemSettingsData()
     {
-        string qry = "select ss_decimal_accuracy from tbl_system_settings";
+        string qry = "select ss_price_change,ss_discount_change,ss_foc_change,ss_decimal_accuracy,ss_allow_zero_stock_order from tbl_system_settings";
         DataTable dtSetings = db.SelectQuery(qry);
         settings = JsonConvert.SerializeObject(dtSetings, Formatting.Indented);
     }
@@ -143,13 +143,22 @@ public partial class web_sales_editorder : System.Web.UI.Page
     //stop: Item Pos Search Details
 
     [WebMethod(EnableSession = true)]
-    public static string GetAutoCompleteData(string variable, string BranchId)
+    public static string GetAutoCompleteData(string variable, string BranchId, int allowZeroStockOrder)
     {
 
         List<string> itemNames = new List<string>();
         mySqlConnection db = new mySqlConnection();
         StringBuilder sb = new StringBuilder();
-        string sqlQuery = "select itm_id,itm_name from tbl_itembranch_stock tis left join tbl_item_brand tib on tib.brand_id=tis.itm_brand_id left join tbl_item_category tic on tic.cat_id=tis.itm_category_id where itm_name like '%" + variable + "%' and branch_id='" + BranchId + "' and itbs_stock>0 ";
+        string sqlQuery = "";
+        if(allowZeroStockOrder == 0)
+        {
+            sqlQuery = "select itm_id,itm_name from tbl_itembranch_stock tis left join tbl_item_brand tib on tib.brand_id=tis.itm_brand_id left join tbl_item_category tic on tic.cat_id=tis.itm_category_id where itm_name like '%" + variable + "%' and branch_id='" + BranchId + "' and itbs_stock>0 ";
+        }
+        else
+        {
+            sqlQuery = "select itm_id,itm_name from tbl_itembranch_stock tis left join tbl_item_brand tib on tib.brand_id=tis.itm_brand_id left join tbl_item_category tic on tic.cat_id=tis.itm_category_id where itm_name like '%" + variable + "%' and branch_id='" + BranchId + "' ";
+        }
+        
         DataTable dt = db.SelectQuery(sqlQuery);
         if (dt.Rows.Count > 0)
         {
@@ -213,15 +222,21 @@ public partial class web_sales_editorder : System.Web.UI.Page
     }
 
     [WebMethod]
-    public static string SearchItem(string searchName, string BranchId, string type, string cust_id, string customertype)
+    public static string SearchItem(string searchName, string BranchId, string type, string cust_id, string customertype, int allowZeroStockOrder)
     {
         mySqlConnection db = new mySqlConnection();
         string itemQry = "";
        
         if (type == "0")
         {
-            itemQry = "SELECT itbs_id,tis.itm_id,itbs_stock,itbs_reorder,tis.itm_code,tis.itm_name,tis.itm_brand_id,tis.itm_category_id,itm_mrp,(select tip_price from tbl_item_pricelist tip inner join tbl_price_master tpm on tpm.tpm_id=tip.tpm_id where tpm.tpm_id=" + customertype + " and tip.itbs_id=tis.itbs_id) as classPrice,itm_type,tib.brand_name,tic.cat_name,tp_tax_percentage,tp_cess from tbl_itembranch_stock tis inner join tbl_item_master im on im.itm_id=tis.itm_id left join tbl_item_brand tib on tib.brand_id=tis.itm_brand_id left join tbl_item_category tic on tic.cat_id=tis.itm_category_id inner join tbl_tax_profile tp on tp.tp_tax_code=tis.tp_tax_code where tis.itm_name = '" + searchName + "' and branch_id= '" + BranchId + "'";
-
+            if (allowZeroStockOrder == 0)
+            {
+                itemQry = "SELECT itbs_id,tis.itm_id,itbs_stock,itbs_reorder,tis.itm_code,tis.itm_name,tis.itm_brand_id,tis.itm_category_id,itm_mrp,(select tip_price from tbl_item_pricelist tip inner join tbl_price_master tpm on tpm.tpm_id=tip.tpm_id where tpm.tpm_id=" + customertype + " and tip.itbs_id=tis.itbs_id) as classPrice,itm_type,tib.brand_name,tic.cat_name,tp_tax_percentage,tp_cess from tbl_itembranch_stock tis inner join tbl_item_master im on im.itm_id=tis.itm_id left join tbl_item_brand tib on tib.brand_id=tis.itm_brand_id left join tbl_item_category tic on tic.cat_id=tis.itm_category_id inner join tbl_tax_profile tp on tp.tp_tax_code=tis.tp_tax_code where tis.itm_name = '" + searchName + "' and branch_id= '" + BranchId + "' ";
+            }
+            else
+            {
+                itemQry = "SELECT itbs_id,tis.itm_id,itbs_stock,itbs_reorder,tis.itm_code,tis.itm_name,tis.itm_brand_id,tis.itm_category_id,itm_mrp,(select tip_price from tbl_item_pricelist tip inner join tbl_price_master tpm on tpm.tpm_id=tip.tpm_id where tpm.tpm_id=" + customertype + " and tip.itbs_id=tis.itbs_id) as classPrice,itm_type,tib.brand_name,tic.cat_name,tp_tax_percentage,tp_cess from tbl_itembranch_stock tis inner join tbl_item_master im on im.itm_id=tis.itm_id left join tbl_item_brand tib on tib.brand_id=tis.itm_brand_id left join tbl_item_category tic on tic.cat_id=tis.itm_category_id inner join tbl_tax_profile tp on tp.tp_tax_code=tis.tp_tax_code where tis.itm_name = '" + searchName + "' and branch_id= '" + BranchId + "' and itbs_stock>0 ";
+            }
         }
         else if (type == "1")
         {

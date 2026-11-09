@@ -607,7 +607,7 @@
             $.ajax({
                 type: "POST",
                 url: "neworder.aspx/SearchItem",
-                data: "{'searchName':'" + searchName + "',BranchId:'" + BranchId + "',type:'" + type + "',cust_id:'" + memberid + "',customertype:'" + customertype + "'}",
+                data: "{'searchName':'" + searchName + "',BranchId:'" + BranchId + "',type:'" + type + "',cust_id:'" + memberid + "',customertype:'" + customertype + "','allowZeroStockOrder':'" + allowZeroStockOrder +"'}",
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function (msg) {

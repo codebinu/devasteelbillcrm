@@ -67,7 +67,7 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
         dt = db.SelectQuery(query);
         return JsonConvert.SerializeObject(dt, Formatting.Indented);
     }
-        
+
     [WebMethod(EnableSession = true)]
     public static string SavePurchaseEntryNew(PurchaseSaveRequest request)
     {
@@ -215,43 +215,34 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
         {
 
             string query_condition = " where 1=1 ";
-            if (filters.Count > 0)
+            var sqlParams = new List<MySqlParameter>();
+            if (filters.ContainsKey("itemname"))
             {
-                if (filters.ContainsKey("itemname"))
-                {
-                    query_condition += " and tim.itm_name  LIKE '%" + filters["itemname"] + "%'";
-                }
-                if (filters.ContainsKey("itemcode"))
-                {
-                    query_condition += " and tim.itm_code  LIKE '%" + filters["itemcode"] + "%'";
-                }
-                if (filters.ContainsKey("itemBrand"))
-                {
-                    query_condition += " and tim.itm_brand_id  = " + filters["itemBrand"] + "";
-                }
-                if (filters.ContainsKey("itemCategory"))
-                {
-                    query_condition += " and tim.itm_category_id  = " + filters["itemCategory"] + "";
-                }
+                query_condition += " and tim.itm_name LIKE @itemname";
+                sqlParams.Add(new MySqlParameter("@itemname", "%" + filters["itemname"] + "%"));
             }
+            if (filters.ContainsKey("itemcode"))
+            {
+                query_condition += " and tim.itm_code LIKE @itemcode";
+                sqlParams.Add(new MySqlParameter("@itemcode", "%" + filters["itemcode"] + "%"));
+            }
+            sqlParams.Add(new MySqlParameter("@branch", Convert.ToInt32(filters["warehouse"])));
             int per_page = perpage;
             int offset = (page - 1) * per_page;
             mySqlConnection db = new mySqlConnection();
-            string innerqry = "";
-            string countQry = "SELECT count(*) FROM tbl_item_master tim " + query_condition;
-            double numrows = Convert.ToInt32(db.SelectScalar(countQry));
-            if (numrows == 0)
-            {
-                return "N";
-            }
-            int total_pages = Convert.ToInt32(Math.Ceiling(numrows / per_page));
 
-            innerqry = "SELECT tim.itm_id,brand_name,cat_name,tim.itm_code,tim.itm_name,IFNULL(itbs_stock,0) as stock,IFNULL(itbs_id,0) as itbsId from tbl_item_master tim left join tbl_itembranch_stock tis on tis.itm_id=tim.itm_id and branch_id=" + filters["warehouse"] + " inner join tbl_item_brand ib on ib.brand_id=tim.itm_brand_id inner join tbl_item_category ic on ic.cat_id=tim.itm_category_id";
-            innerqry = innerqry + query_condition + "   order by itm_id LIMIT " + offset.ToString() + " ," + per_page;
-            DataTable dt = db.SelectQuery(innerqry);
+            // Page the item list first, then join stock for just those rows (tbl_itembranch_stock has no itm_id index, so joining everything is very slow).
+            // The total comes from the same query (window function) to avoid a second round trip.
+            string innerqry = "SELECT p.itm_id,p.itm_code,p.itm_name,IFNULL(tis.itbs_stock,0) as stock,IFNULL(tis.itbs_id,0) as itbsId,p.total_count"
+                + " FROM (SELECT tim.itm_id,tim.itm_code,tim.itm_name,COUNT(*) OVER() as total_count FROM tbl_item_master tim" + query_condition
+                + " ORDER BY tim.itm_id LIMIT " + offset.ToString() + " ," + per_page + ") p"
+                + " LEFT JOIN tbl_itembranch_stock tis ON tis.itm_id=p.itm_id AND tis.branch_id=@branch ORDER BY p.itm_id";
+            DataTable dt = db.SelectQuery(innerqry, sqlParams.ToArray());
             string jsonResponse = "";
             if (dt.Rows.Count > 0)
             {
+                double numrows = Convert.ToDouble(dt.Rows[0]["total_count"]);
+                dt.Columns.Remove("total_count");
                 string jsonData = JsonConvert.SerializeObject(dt, Formatting.Indented);
                 jsonResponse = "{\"count\":\"" + numrows + "\",\"data\":" + jsonData + "}";
             }

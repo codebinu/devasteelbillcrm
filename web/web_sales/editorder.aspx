@@ -96,8 +96,9 @@
     <script type="text/javascript">
         //object to keep details of order
         var customer_id = -1;
-        var current_class = 0;
-        var new_class = 0;
+var current_class = 0;
+var new_class = 0;
+        var allowZeroStockOrder = 0;
 
         var orderObj;
         var exactwalletamt = 0;
@@ -120,8 +121,9 @@
         $(document).ready(function () {
 
             $("#customerNames").val('');
-            $('[data-toggle="tooltip"]').tooltip();   
-            accuracyNum=systemSettings[0].ss_decimal_accuracy;
+            $('[data-toggle="tooltip"]').tooltip();
+            accuracyNum = systemSettings[0].ss_decimal_accuracy;
+            allowZeroStockOrder = systemSettings[0].ss_allow_zero_stock_order;
             BillNo = getQueryString('orderId');
           //  alert(BillNo);
             if (BillNo == undefined) {
@@ -1552,7 +1554,7 @@
                         //SearchAutoItem();
                         //alert("SearchAutoItem()");
                         parUrl = "editorder.aspx/GetAutoCompleteData";
-                        parData = "{'variable':'" + $("#txtNames").val() + "','BranchId':'" + BranchId + "'}";
+                        parData = "{'variable':'" + $("#txtNames").val() + "','BranchId':'" + BranchId + "','allowZeroStockOrder':'" + allowZeroStockOrder +"'}";
                     }
 
                     $.ajax({
@@ -1601,7 +1603,7 @@
             $.ajax({
                 type: "POST",
                 url: "editorder.aspx/SearchItem",
-                data: "{'searchName':'" + searchName + "',BranchId:'" + BranchId + "',type:'" + type + "',cust_id:'" + memberid + "',customertype:'" + customertype + "'}",
+                data: "{'searchName':'" + searchName + "',BranchId:'" + BranchId + "',type:'" + type + "',cust_id:'" + memberid + "',customertype:'" + customertype + "','allowZeroStockOrder':'" + allowZeroStockOrder +"'}",
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function (msg) {

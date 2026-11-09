@@ -172,8 +172,8 @@ function fillItemSpecUom(uom_type) {
             $('.footerDivContent').html("Copyright " + new Date().getFullYear() + " Â© ");
             SearchAutoVendor();
             searchAutoItems();
+            bindItemModalSearch();
             showBranches();
-            getBrands();
             loadUomData(0);
             $("#vendorNames").val("");
             $("#txtinvoiceId").val("");
@@ -401,105 +401,101 @@ function fillItemSpecUom(uom_type) {
                 alert("Please choose a isinclusive/exclusive");
                 return false;
             }
-            for (var i = 1; i <= 2; i++) {
-                $("#searchposContent" + i).val('');
-            }
-            $("#selBrand").val(-1);
-            $("#selCategory").val(-1);
+            $("#searchposContent1,#searchposContent2").val('');
             searchOrderitems(1);
         }
 
+        var itemReqId = 0, itemTimer = null;
+
+        function itemEsc(s) { return $("<div>").text(s == null ? "" : s).html(); }
+        function itemHl(text, q) {
+            var t = text == null ? "" : String(text), s = $.trim(q || "");
+            var i = s ? t.toLowerCase().indexOf(s.toLowerCase()) : -1;
+            if (i < 0) return itemEsc(t);
+            return itemEsc(t.substring(0, i)) + "<mark>" + itemEsc(t.substring(i, i + s.length)) + "</mark>" + itemEsc(t.substring(i + s.length));
+        }
+        function itemCleanTerm(v) { return $.trim(String(v || "").replace(/['"\\]/g, "")); }
+        function itemModalState(text, isErr) {
+            $("#tableItemlist tbody").html('<tr><td colspan="3" style="text-align:center;padding:12px;font-weight:bold;' + (isErr ? 'color:#c9302c;' : '') + '">' + text + '</td></tr>');
+        }
+
+        // Live search while typing (debounced), results of an outdated request are ignored
+        function bindItemModalSearch() {
+            $("#searchposContent1,#searchposContent2").on("input", function () {
+                clearTimeout(itemTimer);
+                itemTimer = setTimeout(function () { searchOrderitems(1); }, 300);
+            }).on("keydown", function (e) {
+                if (e.which === 13) { e.preventDefault(); clearTimeout(itemTimer); searchOrderitems(1); }
+            });
+            $("#popupItems").on("shown.bs.modal", function () { $("#searchposContent2").focus(); });
+            $("#tableItemlist tbody").on("click", "tr[data-itbs]", function () { selectOrderItem($(this).attr("data-itbs")); });
+            $("#tableItemlist tbody").on("click", "button[data-additem]", function (e) {
+                e.stopPropagation();
+                showAddItemPopUp($(this).attr("data-additem"), $(this).attr("data-name"));
+            });
+        }
+
         function searchOrderitems(page) {
-            var filters = {};
-            // alert(filters.warehouse);
-            //     var CountryId = "0";
-            //  alert($("#txtvendorId").text());
             if ($("#txtvendorId").text() == "") {
                 alert("Please Select a supplier...!");
                 return false;
             }
-            if ($("#searchposContent2").val() !== undefined && $("#searchposContent2").val() != "") {
-                filters.itemname = $("#searchposContent2").val();
+            var warehouse = $("#warehousediv").val();
+            if (!warehouse || warehouse == 0 || warehouse == -1) {
+                alert("Please Select a Branch...!");
+                return false;
             }
+            var code = itemCleanTerm($("#searchposContent1").val()), name = itemCleanTerm($("#searchposContent2").val());
+            var filters = { warehouse: String(warehouse) };
+            if (name) filters.itemname = name;
+            if (code) filters.itemcode = code;
+            var perpage = parseInt($("#txtpospageno").val()) || 25;
+            var reqId = ++itemReqId;
 
-            //  alert(itemcode);
-            if ($("#searchposContent1").val() !== undefined && $("#searchposContent1").val() != "") {
-                filters.itemcode = $("#searchposContent1").val();
-            }
-            if ($("#warehousediv").val() != 0 && $("#warehousediv").val() != "") {
-                filters.warehouse = $("#warehousediv").val();
-            }
-            if ($("#selBrand").val() != -1 && $("#selBrand").val() != "") {
-                filters.itemBrand = $("#selBrand").val();
-            }
-            if ($("#selCategory").val() != -1 && $("#selCategory").val() != "") {
-                filters.itemCategory = $("#selCategory").val();
-            }
-            var perpage = $("#txtpospageno").val();
-            console.log(JSON.stringify(filters));
-            //    alert("{ 'page': " + page + ", 'searchResult1': '" + searchResult + "', 'perpage': '" + perpage + "', 'customertype': '" + customertype + "' }");
-            // alert(searchResult);
-            loading();
+            // Open the popup straight away and fill it when the data arrives
+            $("#popupItems").modal('show');
+            itemModalState('<i class="fa fa-spinner fa-spin"></i> Loading...');
+            $("#paginatedivone").empty();
 
             $.ajax({
                 type: "POST",
                 url: "purchaseentry.aspx/searchOrderitems",
-                data: "{'page':" + page + ",'filters':" + JSON.stringify(filters) + ",'perpage':" + perpage + "}",
+                data: JSON.stringify({ page: page, filters: filters, perpage: perpage }),
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function (msg) {
-
-                    // alert(msg.d);
+                    if (reqId !== itemReqId) return;
                     if (msg.d == "N") {
                         $("#lblItemTotalrecords").text(0);
-                        $('#tableItemlist tbody').html('<td colspan="6" style="background:#ebebeb; padding:5px;font-weight:bold;"><div style="width:100%;text-align:center"><div style="display:inline-block">Nothing Found...</div></div></td>');
-                        $("#paginatedivone").html("");
+                        itemModalState("No items match your search.");
                         return;
                     }
-                    else {
-                        var obj = JSON.parse(msg.d);
-                        //  console.log(obj);
-                        $("#lblItemTotalrecords").text(obj.count);
-                        var htm = "";
-                        //   htm += "<tr class='overeffect' style='font-size:12px;'><td style='padding:5px; text-align:center; overflow:hidden; border-right:none;' colspan='7' class='nonheadtext'><div><span style='margin-left:0px;float:right;margin-top:4px;text-align:right;font-size:14px;color:#660000;'>Total Records: " + obj.count + "</span></div></td> </tr>";
-                        $.each(obj.data, function (i, row) {
-                            if (row.itbsId == 0) {
-                                htm += "<tr ";
-                                htm += "  style='cursor:pointer;color: #a7a7a7;'><td>" + getHighlightedValue(filters.itemcode, row.itm_code.toString()) + "</td><td>" + getHighlightedValue(filters.itemname, row.itm_name) + "  <button type='button' class='btn btn-primary btn-sm pull-right' onclick='showAddItemPopUp(" + row.itm_id + ",\"" + row.itm_name + "\");'><label style='font-weight:950'> + </label></button></td><td>" + row.brand_name + "/"+row.cat_name+"</td><td>" + row.stock + "</td></tr>";
-                            } else {
-                                htm += "<tr ";
-                                htm += " onclick=javascript:selectOrderItem('" + row.itbsId + "'); style='cursor:pointer;'><td>" + getHighlightedValue(filters.itemcode, row.itm_code.toString()) + "</td><td>" + getHighlightedValue(filters.itemname, row.itm_name) + "</td><td>" + row.brand_name + "/" + row.cat_name + "</td><td>" + row.stock + "</td></tr>";
-                            }
-
-
-                        });
-                        htm += '<tr>';
-                        htm += '<td colspan="6">';
-                        htm += '<div  id="paginatedivone" style="text-align: center;">';
-                        htm += '</div>';
-                        htm += '</td>';
-                        htm += '</tr>';
-                        Unloading();
-                        //   alert(htm);
-                        $('#tableItemlist tbody').html(htm);
-                        $("#popupItems").modal('show');
-                        $("#paginatedivone").html(paginate(obj.count, perpage, page, "searchOrderitems"));
-
-
+                    var obj;
+                    try { obj = JSON.parse(msg.d); } catch (ex) {
+                        $("#lblItemTotalrecords").text(0);
+                        itemModalState("Unable to load items.", true);
                         return;
                     }
-
-
+                    $("#lblItemTotalrecords").text(obj.count);
+                    var htm = "";
+                    $.each(obj.data, function (i, row) {
+                        var cells = "<td>" + itemHl(row.itm_code, code) + "</td><td>" + itemHl(row.itm_name, name);
+                        if (row.itbsId == 0) {
+                            htm += "<tr style='cursor:pointer;color: #a7a7a7;'>" + cells
+                                + "  <button type='button' class='btn btn-primary btn-sm pull-right' data-additem='" + row.itm_id + "' data-name=\"" + itemEsc(row.itm_name).replace(/"/g, "&quot;") + "\"><label style='font-weight:950'> + </label></button></td><td>" + itemEsc(row.stock) + "</td></tr>";
+                        } else {
+                            htm += "<tr data-itbs='" + row.itbsId + "' style='cursor:pointer;'>" + cells + "</td><td>" + itemEsc(row.stock) + "</td></tr>";
+                        }
+                    });
+                    htm += '<tr><td colspan="3"><div id="paginatedivone" style="text-align: center;"></div></td></tr>';
+                    $("#tableItemlist tbody").html(htm);
+                    $("#paginatedivone").html(paginate(obj.count, perpage, page, "searchOrderitems"));
                 },
-                error: function (xhr, status) {
-                    Unloading();
-                    console.log(xhr);
-                    console.log(status);
-                    var msgObj = JSON.parse(xhr.responseJSON.d);
-                    alert(msgObj.message);
+                error: function () {
+                    if (reqId !== itemReqId) return;
+                    itemModalState('Could not load items. <a href="javascript:void(0);" onclick="searchOrderitems(' + page + ');">Retry</a>', true);
                 }
             });
-
         }
         //function for select vendor
         function selectVendor() {
@@ -590,6 +586,8 @@ function fillItemSpecUom(uom_type) {
 						fillItemSpecUom();
 						$("#itemSpec_Uom").val(defId);
 					} else {
+                      specItem.defUomId = null;
+                        specItem.defUomName = null;
 						fillItemSpecUom();
 						$("#itemSpec_Uom").val("-1");
 					}
@@ -1705,8 +1703,12 @@ function fillItemSpecUom(uom_type) {
                 var qty = num(cell(2));
                 var cost = num(d.NetCost);
                 var uom = num(d.uom);
+              var defaultUom = num(d.defUomId);
                 if (d.itm_id === undefined || d.itm_id === null) {
                     missingItem = true;
+                }
+                if (defaultUom === null || defaultUom < 0) {
+                    defaultUom = (uom === null || uom < 0) ? null : uom;
                 }
                 items.push({
                     row_no: i + 1,
@@ -1735,7 +1737,8 @@ function fillItemSpecUom(uom_type) {
                     itbh_costwithoutinvoice: num(d.CostWithout),
                     itbh_costotal: (cost === null || qty === null) ? null : cost * qty,
                     itbh_createddate: null,
-                    itbh_createduser: txt(filters.userid)
+                    itbh_createduser: txt(filters.userid),
+                 itsv_uom_purchase: defaultUom
                 });
             });
             if (items.length == 0) {
@@ -1970,58 +1973,6 @@ function fillItemSpecUom(uom_type) {
             $("#" + divId + "").modal('hide');
         }
 
-        function getBrands() {
-            loading();
-            $.ajax({
-                type: "POST",
-                url: "purchaseentry.aspx/getBrands",
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
-                success: function (msg) {
-                    Unloading();
-                    var obj = JSON.parse(msg.d);
-                    var htm = "";
-                    htm += '<option value="-1" selected="selected">-Brands--</option>';
-                    $.each(obj, function (i, row) {
-                        htm += '<option value="' + row.brand_id + '">' + row.brand_name + '</option>';
-                    });
-                    $("#selBrand").html(htm);
-                    getCategories();
-
-                },
-                error: function (xhr, status) {
-                    Unloading();
-                    // alert("fail" + status + ":::" + xhr.d);
-                    alert("Internet Problem..!");
-                }
-            });
-        }
-
-        function getCategories() {
-            loading();
-            $.ajax({
-                type: "POST",
-                url: "purchaseentry.aspx/getCategories",
-                contentType: "application/json; charset=utf-8",
-                dataType: "json",
-                success: function (msg) {
-                    Unloading();
-                    var obj = JSON.parse(msg.d);
-                    var htm = "";
-                    htm += '<option value="-1" selected="selected">-Categories--</option>';
-                    $.each(obj, function (i, row) {
-                        htm += '<option value="' + row.cat_id + '">' + row.cat_name + '</option>';
-                    });
-                    $("#selCategory").html(htm);
-
-                },
-                error: function (xhr, status) {
-                    Unloading();
-                    // alert("fail" + status + ":::" + xhr.d);
-                    alert("Internet Problem..!");
-                }
-            });
-        }
     </script>
 
     <style>
@@ -2434,21 +2385,6 @@ function fillItemSpecUom(uom_type) {
                                                             </div>
 
                                                             <div class="col-md-9 col-sm-4 col-xs-12 pull-right">
-                                                                            <div class="col-md-3 col-sm-12 col-xs-3">
-                                                                    <select id="selBrand" class="form-control" onchange="searchOrderitems(1);">
-                                                                        <option value="0" selected="selected" taxtype="-1">--Warehouse--</option>
-                                                                        <option value="2" taxtype="0">YANA SOLA</option>
-                                                                        <option value="1" taxtype="0">Five star</option>
-                                                                    </select>
-                                                                </div>
-                                                                <div class="col-md-3 col-sm-12 col-xs-3">
-                                                                    <select id="selCategory" class="form-control" onchange="searchOrderitems(1);">
-                                                                        <option value="0" selected="selected" taxtype="-1">--Warehouse--</option>
-                                                                        <option value="2" taxtype="0">YANA SOLA</option>
-                                                                        <option value="1" taxtype="0">Five star</option>
-                                                                    </select>
-                                                                </div>
-                                                            
                                                                 <div class="col-md-4 col-sm-12 col-xs-12">
                                                                       <div class="pull-right" onclick="javascript:resetItemlist();">
                                                                         <button class="btn btn-primary mybtnstyl" type="reset">
@@ -2466,6 +2402,8 @@ function fillItemSpecUom(uom_type) {
                                                                 </div>
                                                                     <div class="col-md-2 col-sm-12 col-xs-3 pull-right">
                                                                     <select id="txtpospageno" onchange="javascript:searchOrderitems(1);" name="datatable-checkbox_length" aria-controls="datatable-checkbox" class=" input-sm">
+                                                                        <option value="10">10</option>
+                                                                        <option value="25" selected="selected">25</option>
                                                                         <option value="50">50</option>
                                                                         <option value="100">100</option>
                                                                         <option value="250">250</option>
@@ -2487,7 +2425,6 @@ function fillItemSpecUom(uom_type) {
                                                                             <th>Name
                                         <div onclick="javascript:addNewItem();" class="btn btn-success btn-xs pull-right" style="background-color: #d86612; border-color: #d86612;"><span style="color: #fff; margin-right: 5px; font-size: 14px;" class="fa fa-plus-square"></span>New Item</div>
                                                                             </th>
-                                                                            <th>Brand/Category</th>
                                                                             <th>Current Stock</th>
 
 

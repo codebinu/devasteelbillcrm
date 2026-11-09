@@ -20,40 +20,6 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
         purchase.checkPageAcess(6);
     }
 
-    [WebMethod(EnableSession = true)]
-    public static string GetAutoCompleteItemData(string variable)
-    {
-        StringBuilder sb = new StringBuilder();
-        //List<string> custNames = new List<string>();
-        mySqlConnection db = new mySqlConnection();
-        string sqlQuery = "SELECT itm_name,itm_id from tbl_item_master where 1 and itm_name like '%" + variable + "%' ";
-        DataTable QryTable = db.SelectQuery(sqlQuery);
-        if (QryTable.Rows.Count > 0)
-        {
-            sb.Append("[");
-            foreach (DataRow row in QryTable.Rows)
-            {
-                sb.Append("{\"id\":\"" + Convert.ToString(row["itm_id"]) + "\",");
-                sb.Append("\"label\":\"" + Convert.ToString(row["itm_name"]) + "\",");
-                sb.Append("\"value\":\"" + Convert.ToString(row["itm_name"]) + "\"}");
-
-                //sb.Append("'name':'" + Convert.ToString(row["cust_name"]) + "'}");
-                sb.Append(",");
-            }
-            sb.Remove(sb.Length - 1, 1);
-            sb.Append("]");
-        }
-        else
-        {
-            sb.Append("N");
-        }
-
-
-        //var a = "[{\"label\":\"Avacado Supermarket\",\"value\":\"2\"}]";
-        return sb.ToString();
-
-    }
-
     [WebMethod]
     public static string retrieveData(string purchaseId)
     {
@@ -65,8 +31,8 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
         string selectvar2 = "";
         string qry = "";
         selectvar2 = selectvar2 + " row_no, ibs.itm_code,";
-        selectvar2 = selectvar2 + " ibs.itm_name ,pi.itbs_id as itm_id, pi_qty, pi_price,pi_total, pi_discount_rate, pi_discount_amount, pi_net_amount,pi_tax_amount,pi_id,pi_tax_excluded_total,pi_item_tax,pi_item_cess ";
-        qry = "select " + selectvar2 + " from tbl_purchase_items pi inner join tbl_itembranch_stock ibs on ibs.itbs_id=pi.itbs_id  where pm_id='" + purchaseId + "' order by row_no";
+        selectvar2 = selectvar2 + " ibs.itm_name,pi.itbs_id as itbs_id,ibs.itm_id, pi_qty, pi_price,pi_total, pi_discount_rate, pi_discount_amount, pi_net_amount,pi_tax_amount,pi_id,pi_tax_excluded_total,pi_item_tax,pi_item_cess, tp.tp_tax_title, IFNULL(im.itsv_uom_purchase,0) as itsv_uom_purchase,ib.itbh_no_piece,ib.itbh_length,ib.itbh_width,ib.itbh_kg,ib.tum_id ";
+        qry = "select " + selectvar2 + " from tbl_purchase_items pi inner join tbl_itembranch_stock ibs on ibs.itbs_id=pi.itbs_id left join tbl_item_master im on im.itm_id=ibs.itm_id INNER JOIN tbl_item_batch ib ON ib.itbh_id=pi.itbh_id left join tbl_tax_profile tp on tp.tp_tax_code=ibs.tp_tax_code where pm_id='" + purchaseId + "' order by row_no";
         dtItems = db.SelectQuery(qry);
         sb.Append("\"items\":");
         sb.Append(JsonConvert.SerializeObject(dtItems, Formatting.Indented));
@@ -97,6 +63,104 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
         return sb.ToString();
     }
 
+    [WebMethod(EnableSession = true)]
+    public static string UpdatePurchaseEntryNew(PurchaseSaveRequest request)
+    {
+        try
+        {
+            if (request == null || request.purchase_filters == null)
+                return JsonConvert.SerializeObject(new { status = false, message = "Invalid request." });
+
+            PurchaseFilters h = request.purchase_filters;
+            if (h.pm_id == null || h.pm_id <= 0)
+                return JsonConvert.SerializeObject(new { status = false, message = "Invalid purchase id." });
+            if (string.IsNullOrWhiteSpace(h.vendorId) || string.IsNullOrWhiteSpace(h.purchasedate)
+                || string.IsNullOrWhiteSpace(h.warehouse) || string.IsNullOrWhiteSpace(h.userid))
+                return JsonConvert.SerializeObject(new { status = false, message = "Vendor, purchase date, warehouse and user are required." });
+            if (request.purchase_items == null || request.purchase_items.Count == 0)
+                return JsonConvert.SerializeObject(new { status = false, message = "At least one purchase item is required." });
+
+            foreach (PurchaseItem it in request.purchase_items)
+            {
+                if (it == null || it.itm_id == null || it.pi_qty == null || it.pi_qty <= 0 || it.pi_price == null || it.pi_price < 0)
+                    return JsonConvert.SerializeObject(new { status = false, message = "Each item needs item id, positive quantity and valid price." });
+            }
+
+            string currentDateTime;
+            try
+            {
+                TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById(string.IsNullOrEmpty(request.time_zone) ? TimeZoneInfo.Local.Id : request.time_zone);
+                currentDateTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz).ToString("yyyy-MM-dd HH:mm:ss");
+            }
+            catch
+            {
+                return JsonConvert.SerializeObject(new { status = false, message = "Invalid time zone." });
+            }
+
+            JsonSerializerSettings settings = new JsonSerializerSettings();
+            string filtersJson = JsonConvert.SerializeObject(h, settings);
+            string itemsJson = JsonConvert.SerializeObject(request.purchase_items, settings);
+
+            using (MySqlConnection con = new MySqlConnection(System.Configuration.ConfigurationManager.AppSettings["db_connect_mysql"]))
+            using (MySqlCommand cmd = new MySqlCommand("sp_save_purchase_entry", con))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                con.Open();
+                List<string> spParams = new List<string>();
+                using (MySqlCommand pcmd = new MySqlCommand("select parameter_name from information_schema.parameters where specific_schema=database() and specific_name=@spname and parameter_name is not null order by ordinal_position", con))
+                {
+                    pcmd.Parameters.AddWithValue("@spname", "sp_save_purchase_entry");
+                    using (MySqlDataReader rd = pcmd.ExecuteReader())
+                    {
+                        while (rd.Read())
+                            spParams.Add(Convert.ToString(rd[0]));
+                    }
+                }
+
+                if (spParams.Count != 5)
+                    throw new InvalidOperationException("sp_save_purchase_entry expected 5 parameters but found " + spParams.Count);
+
+                cmd.Parameters.Add(new MySqlParameter(spParams[0], MySqlDbType.JSON) { Value = filtersJson });
+                cmd.Parameters.Add(new MySqlParameter(spParams[1], MySqlDbType.JSON) { Value = itemsJson });
+                cmd.Parameters.Add(new MySqlParameter(spParams[2], MySqlDbType.VarChar) { Value = currentDateTime });
+                cmd.Parameters.Add(new MySqlParameter(spParams[3], MySqlDbType.Int32) { Direction = ParameterDirection.Output });
+                cmd.Parameters.Add(new MySqlParameter(spParams[4], MySqlDbType.JSON) { Direction = ParameterDirection.Output });
+
+                using (MySqlTransaction trans = con.BeginTransaction())
+                {
+                    cmd.Transaction = trans;
+                    try
+                    {
+                        cmd.ExecuteNonQuery();
+                        object pid = cmd.Parameters[spParams[3]].Value;
+                        object res = cmd.Parameters[spParams[4]].Value;
+                        int purchaseId = (pid == null || pid == DBNull.Value) ? 0 : Convert.ToInt32(pid);
+                        string resultText = (res == null || res == DBNull.Value) ? null : Convert.ToString(res);
+                        if (purchaseId <= 0 || string.IsNullOrEmpty(resultText))
+                        {
+                            trans.Rollback();
+                            return JsonConvert.SerializeObject(new { status = false, message = "Purchase could not be updated." });
+                        }
+                        trans.Commit();
+                        object resultObj = JsonConvert.DeserializeObject(resultText);
+                        return JsonConvert.SerializeObject(new { status = true, message = "Purchase updated.", purchase_id = purchaseId, result = resultObj });
+                    }
+                    catch
+                    {
+                        trans.Rollback();
+                        throw;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            LogClass log = new LogClass("editPurchase");
+            log.write(ex);
+            return JsonConvert.SerializeObject(new { status = false, message = "Unable to update purchase. Please try again." });
+        }
+    }
+
 
     [WebMethod]
     public static string searchOrderitems(int page, Dictionary<string, string> filters, int perpage)
@@ -109,35 +173,34 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
         {
 
             string query_condition = " where 1=1 ";
-            if (filters.Count > 0)
+            var sqlParams = new List<MySqlParameter>();
+            if (filters.ContainsKey("itemname"))
             {
-                if (filters.ContainsKey("itemname"))
-                {
-                    query_condition += " and tim.itm_name  LIKE '%" + filters["itemname"] + "%'";
-                }
-                if (filters.ContainsKey("itemcode"))
-                {
-                    query_condition += " and tim.itm_code  LIKE '%" + filters["itemcode"] + "%'";
-                }
+                query_condition += " and tim.itm_name LIKE @itemname";
+                sqlParams.Add(new MySqlParameter("@itemname", "%" + filters["itemname"] + "%"));
             }
+            if (filters.ContainsKey("itemcode"))
+            {
+                query_condition += " and tim.itm_code LIKE @itemcode";
+                sqlParams.Add(new MySqlParameter("@itemcode", "%" + filters["itemcode"] + "%"));
+            }
+            sqlParams.Add(new MySqlParameter("@branch", Convert.ToInt32(filters["warehouse"])));
             int per_page = perpage;
             int offset = (page - 1) * per_page;
             mySqlConnection db = new mySqlConnection();
-            string innerqry = "";
-            string countQry = "SELECT count(*) FROM tbl_item_master tim " + query_condition;
-            double numrows = Convert.ToInt32(db.SelectScalar(countQry));
-            if (numrows == 0)
-            {
-                return "N";
-            }
-            int total_pages = Convert.ToInt32(Math.Ceiling(numrows / per_page));
 
-            innerqry = "SELECT tim.itm_id,tim.itm_code,tim.itm_name,IFNULL(itbs_stock,0) as stock,IFNULL(itbs_id,0) as itbsId from tbl_item_master tim left join tbl_itembranch_stock tis on tis.itm_id=tim.itm_id and branch_id=" + filters["warehouse"] + " ";
-            innerqry = innerqry + query_condition + "   order by itm_id LIMIT " + offset.ToString() + " ," + per_page;
-            DataTable dt = db.SelectQuery(innerqry);
+            // Page the item list first, then join stock for just those rows (tbl_itembranch_stock has no itm_id index, so joining everything is very slow).
+            // The total comes from the same query (window function) to avoid a second round trip.
+            string innerqry = "SELECT p.itm_id,p.itm_code,p.itm_name,IFNULL(tis.itbs_stock,0) as stock,IFNULL(tis.itbs_id,0) as itbsId,p.total_count"
+                + " FROM (SELECT tim.itm_id,tim.itm_code,tim.itm_name,COUNT(*) OVER() as total_count FROM tbl_item_master tim" + query_condition
+                + " ORDER BY tim.itm_id LIMIT " + offset.ToString() + " ," + per_page + ") p"
+                + " LEFT JOIN tbl_itembranch_stock tis ON tis.itm_id=p.itm_id AND tis.branch_id=@branch ORDER BY p.itm_id";
+            DataTable dt = db.SelectQuery(innerqry, sqlParams.ToArray());
             string jsonResponse = "";
             if (dt.Rows.Count > 0)
             {
+                double numrows = Convert.ToDouble(dt.Rows[0]["total_count"]);
+                dt.Columns.Remove("total_count");
                 string jsonData = JsonConvert.SerializeObject(dt, Formatting.Indented);
                 jsonResponse = "{\"count\":\"" + numrows + "\",\"data\":" + jsonData + "}";
             }
@@ -1079,8 +1142,8 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
     {
         mySqlConnection db = new mySqlConnection();
         DataTable dt = new DataTable();
-        string query = "select itm_code,itm_name,tp_tax_percentage,tp_cess,itbs_purchase_price from tbl_itembranch_stock tis inner join"
-            + " tbl_tax_profile tp on tp.tp_tax_code=tis.tp_tax_code"
+        string query = "select tis.itm_id,tis.itm_code,tis.itm_name,tp_tax_percentage,tp_cess,tis.itbs_purchase_price,tp_tax_title,itm.itsv_uom_purchase from tbl_itembranch_stock tis inner join"
+            + " tbl_tax_profile tp on tp.tp_tax_code=tis.tp_tax_code inner join tbl_item_master itm on itm.itm_id=tis.itm_id"
         + "  where itbs_id=" + itemId + "";
         //    query = query + " order by tbl_branch.branch_id";
         dt = db.SelectQuery(query);
@@ -1092,16 +1155,19 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
         StringBuilder sb = new StringBuilder();
         //List<string> custNames = new List<string>();
         mySqlConnection db = new mySqlConnection();
-        string sqlQuery = "SELECT itm_name,itbs_id from tbl_itembranch_stock where 1 and itm_name like '%" + variable + "%' and itm_code not in ('1234567891234') and branch_id='" + BranchId + "'";
-        DataTable QryTable = db.SelectQuery(sqlQuery);
+        DataTable QryTable = db.SelectQuery(
+            "SELECT itm_name,itbs_id from tbl_itembranch_stock where itm_name like @name and itm_code not in ('1234567891234') and branch_id=@branch limit 20",
+            new MySqlParameter[] {
+                new MySqlParameter("@name", "%" + (variable ?? "").Trim() + "%"),
+                new MySqlParameter("@branch", BranchId) });
         if (QryTable.Rows.Count > 0)
         {
             sb.Append("[");
             foreach (DataRow row in QryTable.Rows)
             {
-                sb.Append("{\"id\":\"" + Convert.ToString(row["itbs_id"]) + "\",");
-                sb.Append("\"label\":\"" + Convert.ToString(row["itm_name"]) + "\",");
-                sb.Append("\"value\":\"" + Convert.ToString(row["itm_name"]) + "\"}");
+                sb.Append("{\"id\":" + JsonConvert.ToString(Convert.ToString(row["itbs_id"])) + ",");
+                sb.Append("\"label\":" + JsonConvert.ToString(Convert.ToString(row["itm_name"])) + ",");
+                sb.Append("\"value\":" + JsonConvert.ToString(Convert.ToString(row["itm_name"])) + "}");
 
                 //sb.Append("'name':'" + Convert.ToString(row["cust_name"]) + "'}");
                 sb.Append(",");
@@ -1118,5 +1184,26 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
         //var a = "[{\"label\":\"Avacado Supermarket\",\"value\":\"2\"}]";
         return sb.ToString();
 
+    }
+
+    [WebMethod]
+    public static string loadUomTypes()
+    {
+        mySqlConnection db = new mySqlConnection();
+        DataTable dt = db.SelectQuery("SELECT tumt_id, tumt_name, IFNULL(tum_id,0) AS tum_id FROM tbl_item_uom_type");
+        return JsonConvert.SerializeObject(dt, Formatting.Indented);
+    }
+
+    [WebMethod]
+    public static string loadUomData(int uom_type = 0)
+    {
+        mySqlConnection db = new mySqlConnection();
+        string query = "SELECT tbl_item_uom.tum_id, tbl_item_uom.tum_name, tbl_item_uom.tum_type_id, tbl_item_uom.tum_convertion_fac, IFNULL(tbl_item_uom.tum_subunit_Id,0) AS tum_subunit_Id FROM tbl_item_uom";
+        if (uom_type != 0)
+        {
+            query += " WHERE tbl_item_uom.tum_type_id=" + uom_type;
+        }
+        DataTable dt = db.SelectQuery(query);
+        return JsonConvert.SerializeObject(dt, Formatting.Indented);
     }
 }

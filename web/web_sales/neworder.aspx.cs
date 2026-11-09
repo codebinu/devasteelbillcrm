@@ -300,13 +300,34 @@ public partial class web_sales_neworder : System.Web.UI.Page
     [WebMethod]// 
     public static string saveToSalesMaster(Dictionary<string, string> neworder) // ,createNewCouponOrder string item_details
     {
+        bool completed;
+        return SaveInvoice(new mySqlConnection(), neworder, null, out completed);
+    }
+
+    // Creates an invoice for a sales order (sales_order_invoice.aspx). The invoice itself is saved by SaveInvoice, exactly like
+    // a normal bill; the sales order specific validation, reservation and batch updates run in the same transaction.
+    [WebMethod]
+    public static string saveSalesOrderInvoice(SalesOrderInvoiceRequest request)
+    {
+        return JsonConvert.SerializeObject(SalesOrderStock.CreateInvoice(request, SaveInvoice));
+    }
+
+    // Shared invoice creation. link == null: normal bill, the method owns the transaction (begin / commit).
+    // link != null: sales order invoice, the caller already opened the transaction and commits it only when completed is true.
+    // completed is false whenever the transaction has been rolled back here.
+    public static string SaveInvoice(mySqlConnection db, Dictionary<string, string> neworder, SalesOrderInvoiceLink link, out bool completed)
+    {
+        completed = false;
         string result = "";
         string message = "";
+        bool ownsTransaction = link == null;
 
-        mySqlConnection db = new mySqlConnection();
         try
         {
-            db.BeginTransaction();
+            if (ownsTransaction)
+            {
+                db.BeginTransaction();
+            }
 
             // FOR SALES_MASTER
             string cust_name = "";
@@ -461,7 +482,7 @@ public partial class web_sales_neworder : System.Web.UI.Page
                 string sm_date = DateTime.Parse(TimeNow.ToString()).ToString("yyyy-MM-dd HH:mm:ss");
 
                 //
-                string insert_to_salsesQry = "INSERT INTO tbl_sales_master(cust_id,branch_id,sm_userid,sm_date,sm_specialnote,sm_delivery_status,sm_latitude,sm_longitude,sm_order_type,sm_payment_type,branch_tax_method,branch_tax_inclusive,sm_sales_sessionid,sm_price_class,sm_type,sm_processed_date,sm_last_updated_date) VALUES ('" + neworder["cust_id"] + "','" + neworder["branch"] + "','" + neworder["sm_userid"] + "','" + sm_date + "','" + neworder["sm_specialnote"] + "'," + sm_delivery_status + ",'" + neworder["sm_latitude"] + "','" + neworder["sm_longitude"] + "','" + neworder["sm_order_type"] + "','" + neworder["sm_payment_type"] + "','" + branch_tax_method.ToString() + "','" + branch_tax_inclusive.ToString() + "','" + neworder["sessionId"] + "'," + classType + ",1,'" + sm_date + "','" + sm_date + "');Select last_insert_id();";
+                string insert_to_salsesQry = "INSERT INTO tbl_sales_master(cust_id,branch_id,sm_userid,sm_date,sm_specialnote,sm_delivery_status,sm_latitude,sm_longitude,sm_order_type,sm_payment_type,branch_tax_method,branch_tax_inclusive,sm_sales_sessionid,sm_price_class,sm_type,sm_processed_date,sm_last_updated_date" + (link == null ? "" : ",sm_refid,sm_is_inter_stock_transfer_invoice") + ") VALUES ('" + neworder["cust_id"] + "','" + neworder["branch"] + "','" + neworder["sm_userid"] + "','" + sm_date + "','" + neworder["sm_specialnote"] + "'," + sm_delivery_status + ",'" + neworder["sm_latitude"] + "','" + neworder["sm_longitude"] + "','" + neworder["sm_order_type"] + "','" + neworder["sm_payment_type"] + "','" + branch_tax_method.ToString() + "','" + branch_tax_inclusive.ToString() + "','" + neworder["sessionId"] + "'," + classType + ",1,'" + sm_date + "','" + sm_date + "'" + (link == null ? "" : "," + link.SmoId + ",0") + ");Select last_insert_id();";
                 var last_id = db.SelectScalarForTransaction(insert_to_salsesQry);
                 result = last_id;
                 Int32 sm_id = Convert.ToInt32(last_id);
@@ -470,7 +491,7 @@ public partial class web_sales_neworder : System.Web.UI.Page
                 Int32 row_no = 0;
 
                 //start changed by deepika
-                string insert_to_sales_items = "INSERT INTO tbl_sales_items(sm_id,row_no,itbs_id,itm_code,itm_name,itm_batchno,si_org_price,si_price,si_qty,si_total,si_discount_rate,si_discount_amount,si_net_amount,si_foc,si_approval_status,itm_commision,itm_commisionamt,ofr_id,ofritm_id,si_itm_type,si_item_tax,si_item_cgst,si_item_sgst,si_item_igst,si_item_utgst,si_item_cess,si_tax_excluded_total,si_tax_amount,itm_type) VALUES ";
+                string insert_to_sales_items = "INSERT INTO tbl_sales_items(sm_id,row_no,itbs_id,itm_code,itm_name,itm_batchno,si_org_price,si_price,si_qty,si_total,si_discount_rate,si_discount_amount,si_net_amount,si_foc,si_approval_status,itm_commision,itm_commisionamt,ofr_id,ofritm_id,si_itm_type,si_item_tax,si_item_cgst,si_item_sgst,si_item_igst,si_item_utgst,si_item_cess,si_tax_excluded_total,si_tax_amount,itm_type" + (link == null ? "" : ",sio_id") + ") VALUES ";
                 string itbsidString = "";
 
                 foreach (var items in order_data)
@@ -631,7 +652,7 @@ public partial class web_sales_neworder : System.Web.UI.Page
 
                     // INSERTING INTO TBL_SALES_ITEMS
                     
-                    insert_to_sales_items += " (" + "'" + sm_id + "','" + row_no + "', '" + order_data[i].itbs_id + "', '" + itm_code + "', '" + itm_name + "', '0', '" + si_org_price + "', '" + order_data[i].si_price + "', '" + si_qty + "', '" + si_total + "', '" + si_discount_rate + "', '" + si_discount_amount + "', '" + si_net_amount + "', '" + si_foc + "', '" + order_data[i].si_approval_status + "', '" + itm_commision + "', '" + itm_commisionamt + "', '0', '0','" + order_data[i].si_itm_type + "', '" + si_item_tax + "', '" + si_item_cgst + "', '" + si_item_sgst + "', '" + si_item_igst + "', '" + si_item_utgst + "', '" + si_item_cess + "', '" + (si_net_amount - tax_amount) + "', '" + tax_amount + "',"+itm_type+"),";
+                    insert_to_sales_items += " (" + "'" + sm_id + "','" + row_no + "', '" + order_data[i].itbs_id + "', '" + itm_code + "', '" + itm_name + "', '0', '" + si_org_price + "', '" + order_data[i].si_price + "', '" + si_qty + "', '" + si_total + "', '" + si_discount_rate + "', '" + si_discount_amount + "', '" + si_net_amount + "', '" + si_foc + "', '" + order_data[i].si_approval_status + "', '" + itm_commision + "', '" + itm_commisionamt + "', '0', '0','" + order_data[i].si_itm_type + "', '" + si_item_tax + "', '" + si_item_cgst + "', '" + si_item_sgst + "', '" + si_item_igst + "', '" + si_item_utgst + "', '" + si_item_cess + "', '" + (si_net_amount - tax_amount) + "', '" + tax_amount + "',"+itm_type+(link == null ? "" : "," + link.SioIds[i])+"),";
 
                     //  }
 
@@ -651,7 +672,7 @@ public partial class web_sales_neworder : System.Web.UI.Page
                     // HANDLE STOCK
                     if (order_data[i].si_itm_type != "1" && order_data[i].si_itm_type != "3" && order_data[i].si_itm_type != "4")
                     {
-                        if (itm_type== 1)
+                        if (itm_type== 1 && link == null) // sales order invoices deduct batch stock instead (SalesOrderStock.CreateInvoice)
                         {
                             Int32 item_total_qty = Convert.ToInt32(si_foc) + Convert.ToInt32(si_qty);
 
@@ -890,7 +911,11 @@ public partial class web_sales_neworder : System.Web.UI.Page
                 //string str = mailSending(mailId, confirmOrderCount);
                 //sendPushNotification();
             }
-            db.CommitTransaction();
+            if (ownsTransaction)
+            {
+                db.CommitTransaction();
+            }
+            completed = true;
         }
         catch (Exception ex)
         {
@@ -964,15 +989,21 @@ public partial class web_sales_neworder : System.Web.UI.Page
 
     //edited anjana
     [WebMethod]
-    public static string SearchItem(string searchName, string BranchId, string type, string cust_id, string customertype)
+    public static string SearchItem(string searchName, string BranchId, string type, string cust_id, string customertype, int allowZeroStockOrder)
     {
         mySqlConnection db = new mySqlConnection();
         string itemQry = "";
        
         if (type == "0")
         {
-            itemQry = "SELECT itbs_id,tis.itm_id,itm_qty_per_carton,itbs_stock,itbs_reorder,tis.itm_code,tis.itm_name,tis.itm_brand_id,tis.itm_category_id,itm_mrp,tib.brand_name,tic.cat_name,tp_tax_percentage,tp_cess,(select tip_price from tbl_item_pricelist tip inner join tbl_price_master tpm on tpm.tpm_id=tip.tpm_id where tpm.tpm_id=" + customertype + " and tip.itbs_id=tis.itbs_id) as classPrice from tbl_itembranch_stock tis left join tbl_item_brand tib on tib.brand_id=tis.itm_brand_id left join tbl_item_category tic on tic.cat_id=tis.itm_category_id inner join tbl_tax_profile tp on tp.tp_tax_code=tis.tp_tax_code inner join tbl_item_master im on im.itm_id=tis.itm_id where tis.itm_name = '" + searchName + "' and branch_id= '" + BranchId + "' ORDER BY tis.itm_rating asc";
-           
+            if (allowZeroStockOrder == 0)
+            {
+                itemQry = "SELECT itbs_id,tis.itm_id,itm_qty_per_carton,itbs_stock,itbs_reorder,tis.itm_code,tis.itm_name,tis.itm_brand_id,tis.itm_category_id,itm_mrp,tib.brand_name,tic.cat_name,tp_tax_percentage,tp_cess,(select tip_price from tbl_item_pricelist tip inner join tbl_price_master tpm on tpm.tpm_id=tip.tpm_id where tpm.tpm_id=" + customertype + " and tip.itbs_id=tis.itbs_id) as classPrice from tbl_itembranch_stock tis left join tbl_item_brand tib on tib.brand_id=tis.itm_brand_id left join tbl_item_category tic on tic.cat_id=tis.itm_category_id inner join tbl_tax_profile tp on tp.tp_tax_code=tis.tp_tax_code inner join tbl_item_master im on im.itm_id=tis.itm_id where tis.itm_name = '" + searchName + "' and branch_id= '" + BranchId + "' and itbs_stock>0 ORDER BY tis.itm_rating asc";
+            }
+            else
+            {
+                itemQry = "SELECT itbs_id,tis.itm_id,itm_qty_per_carton,itbs_stock,itbs_reorder,tis.itm_code,tis.itm_name,tis.itm_brand_id,tis.itm_category_id,itm_mrp,tib.brand_name,tic.cat_name,tp_tax_percentage,tp_cess,(select tip_price from tbl_item_pricelist tip inner join tbl_price_master tpm on tpm.tpm_id=tip.tpm_id where tpm.tpm_id=" + customertype + " and tip.itbs_id=tis.itbs_id) as classPrice from tbl_itembranch_stock tis left join tbl_item_brand tib on tib.brand_id=tis.itm_brand_id left join tbl_item_category tic on tic.cat_id=tis.itm_category_id inner join tbl_tax_profile tp on tp.tp_tax_code=tis.tp_tax_code inner join tbl_item_master im on im.itm_id=tis.itm_id where tis.itm_name = '" + searchName + "' and branch_id= '" + BranchId + "' ORDER BY tis.itm_rating asc";
+            }
         }
         else if (type == "1")
         {
@@ -1066,7 +1097,7 @@ public partial class web_sales_neworder : System.Web.UI.Page
         mySqlConnection db = new mySqlConnection();
         StringBuilder sb = new StringBuilder();
         string queryCondition = "";
-          if (allowZeroStockOrder== 0)
+          if (allowZeroStockOrder == 0)
             {
                 queryCondition = " where itm_name like '%" + variable + "%' and branch_id='" + BranchId + "' and itbs_available = 1 and tis.itm_code not in ('1234567891234') and itbs_stock>0  ORDER BY itm_rating asc";
             }

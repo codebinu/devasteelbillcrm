@@ -35,8 +35,8 @@ public partial class web_purchase_managepurchase : System.Web.UI.Page
         string selectvar2 = "";
         string qry = "";
         selectvar2 = selectvar2 + " row_no, ibs.itm_code,";
-        selectvar2 = selectvar2 + " ibs.itm_name , pi_qty, pi_price,pi_total,pi_item_tax, pi_discount_rate, pi_discount_amount, pi_net_amount,pi_tax_amount ";
-        qry = "select " + selectvar2 + " from tbl_purchase_items pi inner join tbl_itembranch_stock ibs on ibs.itbs_id=pi.itbs_id  where pm_id='" + purchaseId + "' order by row_no";
+        selectvar2 = selectvar2 + " ibs.itm_name , pi_qty, pi_price,pi_total,pi_item_tax, pi_discount_rate, pi_discount_amount, pi_net_amount,pi_tax_amount, ib.itbh_custbatchid, ib.itbh_no,uo.tum_name ";
+        qry = "select " + selectvar2 + " from tbl_purchase_items pi inner join tbl_itembranch_stock ibs on ibs.itbs_id=pi.itbs_id INNER JOIN tbl_item_batch ib ON ib.itbh_id=pi.itbh_id INNER JOIN tbl_item_uom uo ON pi.itsv_uom_purchase=uo.tum_id  where pm_id='" + purchaseId + "' order by row_no";
         dtItems = db.SelectQuery(qry);
         sb.Append("\"items\":");
         sb.Append(JsonConvert.SerializeObject(dtItems, Formatting.Indented));
