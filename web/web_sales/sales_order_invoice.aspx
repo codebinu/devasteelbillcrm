@@ -159,7 +159,7 @@
                                             </thead>
                                             <tbody>
                                                 <% int sl = 1; foreach (SalesOrderInvoiceLine l in Data.Lines) { bool enabled = Data.CanInvoice && l.MaxQty > 0; %>
-                                                <tr class="inv-row<%= enabled ? "" : " row-disabled" %>" data-sio="<%= l.SioId %>" data-max="<%= l.MaxQty %>" data-price="<%= Inv(l.Price) %>" data-rate="<%= Inv(l.DiscountRate) %>" data-tax="<%= Inv(l.TaxPercent) %>" data-cess="<%= Inv(l.CessPercent) %>">
+                                                <tr class="inv-row<%= enabled ? "" : " row-disabled" %>" data-sio="<%= l.SioId %>" data-max="<%= Inv(l.MaxQty) %>" data-price="<%= Inv(l.Price) %>" data-rate="<%= Inv(l.DiscountRate) %>" data-tax="<%= Inv(l.TaxPercent) %>" data-cess="<%= Inv(l.CessPercent) %>">
                                                     <td><input type="checkbox" class="row-check" <%= enabled ? "" : "disabled=\"disabled\"" %> /></td>
                                                     <td><%= sl++ %></td>
                                                     <td>
@@ -171,7 +171,7 @@
                                                     <td class="text-right"><%= Num(l.Invoiced) %></td>
                                                     <td class="text-right"><%= Num(l.Remaining) %></td>
                                                     <td class="text-right"><%= l.IsProduct ? Num(l.Reserved) : "-" %></td>
-                                                    <td class="text-right"><input type="number" class="form-control input-sm qty-input" min="1" max="<%= l.MaxQty %>" step="1" disabled="disabled" /></td>
+                                                    <td class="text-right"><input type="number" class="form-control input-sm qty-input" min="0.001" max="<%= Inv(l.MaxQty) %>" step="0.001" disabled="disabled" /></td>
                                                     <td class="text-right"><%= Money(l.Price) %></td>
                                                     <td class="text-right"><%= Num(l.DiscountRate) %>%</td>
                                                     <td class="text-right"><%= Data.Header.TaxMethod == 0 ? "-" : Num(l.TaxPercent) + "%" + (l.CessPercent > 0 ? " + " + Num(l.CessPercent) + "% cess" : "") %></td>
@@ -181,7 +181,7 @@
                                             </tbody>
                                         </table>
                                     </div>
-                                    <p class="text-muted" style="font-size: 11px;">Quantities are whole numbers in the order line's unit. A quantity can be invoiced only while it is still remaining on the order and reserved for it. Invoicing reduces the reservation and the batch stock by the invoiced quantity.</p>
+                                    <p class="text-muted" style="font-size: 11px;">Quantities can have up to 3 decimal places and are in the order line's unit. A quantity can be invoiced only while it is still remaining on the order and reserved for it. Invoicing reduces the reservation and the batch stock by the invoiced quantity.</p>
                                 </div>
                             </div>
                         </div>
@@ -301,10 +301,10 @@
 
             function rowQty(row) {
                 var text = $.trim(row.find('.qty-input').val());
-                var max = parseInt(row.attr('data-max'), 10);
-                if (!/^\d+$/.test(text)) return { valid: false, qty: 0 };
-                var qty = parseInt(text, 10);
-                return { valid: qty >= 1 && qty <= max, qty: qty };
+                var max = parseFloat(row.attr('data-max'));
+                if (!/^(\d+(\.\d{1,3})?|\.\d{1,3})$/.test(text)) return { valid: false, qty: 0 };
+                var qty = parseFloat(text);
+                return { valid: qty >= 0.001 && qty <= max + 1e-9, qty: qty };
             }
 
             function recalc() {
@@ -356,7 +356,7 @@
                 if (saving) return;
                 var t = recalc();
                 if (t.selected === 0) { showMessage('warning', 'Select at least one item to invoice.'); return; }
-                if (t.invalid > 0) { showMessage('danger', 'Enter a whole-number quantity between 1 and the available quantity for every selected item.'); return; }
+                if (t.invalid > 0) { showMessage('danger', 'Enter a quantity (up to 3 decimal places) between 0.001 and the available quantity for every selected item.'); return; }
                 if (t.paid < 0 || t.paid > t.grand + 0.005) { showMessage('danger', 'The paid amount cannot be greater than the invoice amount.'); return; }
                 if (num($('#chequeAmount').val()) > 0 && ($.trim($('#chequeNo').val()) === '' || $.trim($('#chequeBank').val()) === '' || $('#chequeDate').val() === '')) {
                     showMessage('danger', 'Enter the cheque number, date and bank.'); return;

@@ -38,7 +38,15 @@ function loadMenu() {
 	// htm += '<li><a href="../web_sales/editorder.aspx">Edit Order</a></li>';
 	// htm += '<li><a href="../web_sales/orderconfirmation.aspx">Confirm Order</a></li>';
 	htm += '</ul>';
-	htm += '</li>';
+    htm += '</li>';
+
+    htm += '<li><a><i class="fa fa-industry"></i><label style="font-size:12px;"> Production</label> <span class="fa fa-chevron-down"></span></a>';
+    htm += '<ul class="nav child_menu">';
+    htm += '<li><a href="../web_production/start_production.aspx"><label style="font-size:12px;">Production Queue</label></a></li>';
+    htm += '<li><a href="../web_production/bulk_production.aspx"><label style="font-size:12px;">Bulk Production</label></a></li>';
+    htm += '<li><a href="../web_production/production_history.aspx"><label style="font-size:12px;">Production History</label></a></li>';
+    htm += '</ul>';
+    htm += '</li>';
 
 	htm += '<li><a><i class="fa fa-shopping-cart"></i><label style="font-size:12px;"> Sales</label> <span class="fa fa-chevron-down"></span></a>';
 	htm+='<ul class="nav child_menu">';

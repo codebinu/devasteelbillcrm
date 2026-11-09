@@ -582,69 +582,70 @@ WHERE sri.sri_recieved_id='0' AND srm.srm_id='" + srm_id + "'";
             mySqlConnection db_select = new mySqlConnection();
 
 
-          //  var item_fetch_query = @"select itm.itm_type,itm.itm_qty_per_carton,brd.brand_name,cat.cat_name,itb.branch_id,tax.tp_tax_title,tax.tp_tax_percentage,tax.tp_cess,itb.itbs_id,itb.itm_id,itb.itm_brand_id,itb.itm_category_id,itb.itm_name,itb.itbs_stock,itb.itm_code,itb.itm_mrp,itb.itm_commision,itb.itm_rating,itb.itbs_available  
-									 //from tbl_itembranch_stock itb 
-									 //join tbl_tax_profile tax on itb.tp_tax_code=tax.tp_tax_code 
-									 //join tbl_user_branches tub on tub.branch_id=itb.branch_id 
-									 //join tbl_item_master itm on itm.itm_id=itb.itm_id 
-									 //join tbl_item_brand brd on brd.brand_id=itm.itm_brand_id 
-									 //join tbl_item_category cat on cat.cat_id=itm.itm_category_id 
-									 //and tub.user_id='" + user_id + "' and itb.itm_code!='1234567891234' order by itb.branch_id asc";
-			var item_fetch_query = @"select itm.itm_type,itm.itm_qty_per_carton,brd.brand_name,cat.cat_name,itb.branch_id,tax.tp_tax_title,tax.tp_tax_percentage,tax.tp_cess,itb.itbs_id,itb.itm_id,itb.itm_brand_id,itb.itm_category_id,itb.itm_name,itb.itbs_stock,itb.itm_code,itb.itm_mrp,itb.itm_commision,itb.itm_rating,itb.itbs_available  
+            //  var item_fetch_query = @"select itm.itm_type,itm.itm_qty_per_carton,brd.brand_name,cat.cat_name,itb.branch_id,tax.tp_tax_title,tax.tp_tax_percentage,tax.tp_cess,itb.itbs_id,itb.itm_id,itb.itm_brand_id,itb.itm_category_id,itb.itm_name,itb.itbs_stock,itb.itm_code,itb.itm_mrp,itb.itm_commision,itb.itm_rating,itb.itbs_available  
+            //from tbl_itembranch_stock itb 
+            //join tbl_tax_profile tax on itb.tp_tax_code=tax.tp_tax_code 
+            //join tbl_user_branches tub on tub.branch_id=itb.branch_id 
+            //join tbl_item_master itm on itm.itm_id=itb.itm_id 
+            //join tbl_item_brand brd on brd.brand_id=itm.itm_brand_id 
+            //join tbl_item_category cat on cat.cat_id=itm.itm_category_id 
+            //and tub.user_id='" + user_id + "' and itb.itm_code!='1234567891234' order by itb.branch_id asc";
+            var item_fetch_query = @"select itm.itm_type,itm.itm_qty_per_carton,brd.brand_name,cat.cat_name,itb.branch_id,tax.tp_tax_title,tax.tp_tax_percentage,tax.tp_cess,itb.itbs_id,itb.itm_id,itb.itm_brand_id,itb.itm_category_id,itb.itm_name,itb.itbs_stock,itb.itm_code,itb.itm_mrp,itb.itm_commision,itb.itm_rating,itb.itbs_available, 
+            itm.itsv_spec_item, itm.itsv_spec_brand, itm.itsv_spec_thickness, itm.itsv_spec_colour,itm.itsv_spec_pitch,itm.itsv_spec_crust,itm.itsv_uom_sales,itm.itsv_printing_name 
 									 from tbl_itembranch_stock itb 
 									 join tbl_tax_profile tax on itb.tp_tax_code=tax.tp_tax_code 
 									 join tbl_item_master itm on itm.itm_id=itb.itm_id 
 									 join tbl_item_brand brd on brd.brand_id=itm.itm_brand_id 
 									 join tbl_item_category cat on cat.cat_id=itm.itm_category_id 
 									 and itb.itm_code!='1234567891234' order by itb.branch_id asc";
-			DataTable dt_item_branchstock = db_select.SelectQuery(item_fetch_query);
+            DataTable dt_item_branchstock = db_select.SelectQuery(item_fetch_query);
 
             // fetching price master
             var price_master_qry = "SELECT pm.tpm_id,pm.tpm_name FROM tbl_price_master pm";
             DataTable dt_price_master = db_select.SelectQuery(price_master_qry);
 
             //fetching item prices from tbl_item_pricelist
-//            var itm_price_qry = @"SELECT ip.tip_id,ip.itbs_id,ip.tpm_id,ip.tip_price FROM tbl_item_pricelist ip 
-//INNER JOIN tbl_itembranch_stock itb ON itb.itbs_id=ip.itbs_id 
-//INNER JOIN tbl_user_branches ub ON ub.branch_id=itb.branch_id 
-//WHERE ub.user_id='" + user_id + "' GROUP BY tip_id";
+            //            var itm_price_qry = @"SELECT ip.tip_id,ip.itbs_id,ip.tpm_id,ip.tip_price FROM tbl_item_pricelist ip 
+            //INNER JOIN tbl_itembranch_stock itb ON itb.itbs_id=ip.itbs_id 
+            //INNER JOIN tbl_user_branches ub ON ub.branch_id=itb.branch_id 
+            //WHERE ub.user_id='" + user_id + "' GROUP BY tip_id";
 
-			var itm_price_qry = @"SELECT ip.tip_id,ip.itbs_id,ip.tpm_id,ip.tip_price FROM tbl_item_pricelist ip 
+            var itm_price_qry = @"SELECT ip.tip_id,ip.itbs_id,ip.tpm_id,ip.tip_price FROM tbl_item_pricelist ip 
 INNER JOIN tbl_itembranch_stock itb ON itb.itbs_id=ip.itbs_id 
 WHERE 1=1 GROUP BY tip_id";
-			DataTable dt_item_price = db_select.SelectQuery(itm_price_qry);
+            DataTable dt_item_price = db_select.SelectQuery(itm_price_qry);
 
-			// 4. fetching branches and tax details
+            // 4. fetching branches and tax details
 
-			//            var branch_query = @"SELECT br.branch_id,br.branch_name,br.branch_timezone,br.branch_tax_method,br.branch_tax_inclusive,br.branch_orderPrefix as branch_prefix,IFNULL(MAX(sm_serialNo),0) AS branch_serial,br.branch_orderSuffix as branch_suffix,br.branch_type as branch_type  
-			//FROM tbl_branch br 
-			//INNER JOIN tbl_user_branches tub ON tub.branch_id=br.branch_id 
-			//LEFT OUTER JOIN tbl_sales_master sm ON sm.branch_id=br.branch_id 
-			//WHERE tub.user_id=" + user_id + "  GROUP BY br.branch_id ORDER BY br.branch_name ASC ";
-			var branch_query = @"SELECT br.branch_id,br.branch_name,br.branch_timezone,br.branch_tax_method,br.branch_tax_inclusive,br.branch_orderPrefix as branch_prefix,0 AS branch_serial,br.branch_orderSuffix as branch_suffix,br.branch_type as branch_type  
+            //            var branch_query = @"SELECT br.branch_id,br.branch_name,br.branch_timezone,br.branch_tax_method,br.branch_tax_inclusive,br.branch_orderPrefix as branch_prefix,IFNULL(MAX(sm_serialNo),0) AS branch_serial,br.branch_orderSuffix as branch_suffix,br.branch_type as branch_type  
+            //FROM tbl_branch br 
+            //INNER JOIN tbl_user_branches tub ON tub.branch_id=br.branch_id 
+            //LEFT OUTER JOIN tbl_sales_master sm ON sm.branch_id=br.branch_id 
+            //WHERE tub.user_id=" + user_id + "  GROUP BY br.branch_id ORDER BY br.branch_name ASC ";
+            var branch_query = @"SELECT br.branch_id,br.branch_name,br.branch_timezone,br.branch_tax_method,br.branch_tax_inclusive,br.branch_orderPrefix as branch_prefix,0 AS branch_serial,br.branch_orderSuffix as branch_suffix,br.branch_type as branch_type  
 FROM tbl_branch br ORDER BY br.branch_name ASC ";
-			DataTable dt_branch = db_select.SelectQuery(branch_query);
+            DataTable dt_branch = db_select.SelectQuery(branch_query);
 
             // 5. fetching customer states , district , locations
             //var cust_location_query = @"select loc.location_id,loc.location_name,tst.state_id,tst.state_name,tst.country_id from tbl_location loc join tbl_district dist on loc.dist_id=dist.dis_id 
-									   //join tbl_state tst on dist.state_id=tst.state_id join tbl_user_locations tul on tul.location_id=loc.location_id and tul.user_id='" + user_id + "' group by loc.location_id";
-			
+            //join tbl_state tst on dist.state_id=tst.state_id join tbl_user_locations tul on tul.location_id=loc.location_id and tul.user_id='" + user_id + "' group by loc.location_id";
+
             var cust_location_query = @"select loc.location_id,loc.location_name,tst.state_id,tst.state_name,tst.country_id from tbl_location loc join tbl_district dist on loc.dist_id=dist.dis_id 
 									   join tbl_state tst on dist.state_id=tst.state_id group by loc.location_id";
 
-			DataTable dt_locations = db_select.SelectQuery(cust_location_query);
+            DataTable dt_locations = db_select.SelectQuery(cust_location_query);
 
             // 6. fetching customers
 
-          //  var customer_query = @"select cu.cust_id,cu.cust_name,cu.cust_address,cu.cust_city,cu.cust_state,cu.cust_country,cu.cust_phone, 
-								  //cu.cust_phone1,cu.cust_email,cu.cust_amount,DATE_FORMAT(cu.cust_joined_date, '%Y-%m-%d %h:%i %p') as cust_joined_date,cu.cust_latitude,cu.cust_longitude,cu.cust_type,cu.cust_note,cu.max_creditamt,cu.max_creditperiod,cu.new_custtype,cu.new_creditamt,cu.new_creditperiod,cu.cust_image,cu.cust_status,DATE_FORMAT(cu.cust_followup_date, '%d-%m-%Y') as cust_followup_date,cu.cust_reg_id,cu.location_id,cu.cust_cat_id,cu.cust_tax_reg_id from tbl_customer cu 
-								  //join tbl_user_locations tul on tul.location_id=cu.location_id and tul.user_id='" + user_id + "' WHERE cu.cust_status!=2 group by cu.cust_id";
+            //  var customer_query = @"select cu.cust_id,cu.cust_name,cu.cust_address,cu.cust_city,cu.cust_state,cu.cust_country,cu.cust_phone, 
+            //cu.cust_phone1,cu.cust_email,cu.cust_amount,DATE_FORMAT(cu.cust_joined_date, '%Y-%m-%d %h:%i %p') as cust_joined_date,cu.cust_latitude,cu.cust_longitude,cu.cust_type,cu.cust_note,cu.max_creditamt,cu.max_creditperiod,cu.new_custtype,cu.new_creditamt,cu.new_creditperiod,cu.cust_image,cu.cust_status,DATE_FORMAT(cu.cust_followup_date, '%d-%m-%Y') as cust_followup_date,cu.cust_reg_id,cu.location_id,cu.cust_cat_id,cu.cust_tax_reg_id from tbl_customer cu 
+            //join tbl_user_locations tul on tul.location_id=cu.location_id and tul.user_id='" + user_id + "' WHERE cu.cust_status!=2 group by cu.cust_id";
 
-			var customer_query = @"select cu.cust_id,cu.cust_name,cu.cust_address,cu.cust_city,cu.cust_state,cu.cust_country,cu.cust_phone, 
+            var customer_query = @"select cu.cust_id,cu.cust_name,cu.cust_address,cu.cust_city,cu.cust_state,cu.cust_country,cu.cust_phone, 
 								  cu.cust_phone1,cu.cust_email,cu.cust_amount,DATE_FORMAT(cu.cust_joined_date, '%Y-%m-%d %h:%i %p') as cust_joined_date,cu.cust_latitude,cu.cust_longitude,cu.cust_type,cu.cust_note,cu.max_creditamt,cu.max_creditperiod,cu.new_custtype,cu.new_creditamt,cu.new_creditperiod,cu.cust_image,cu.cust_status,DATE_FORMAT(cu.cust_followup_date, '%d-%m-%Y') as cust_followup_date,cu.cust_reg_id,cu.location_id,cu.cust_cat_id,cu.cust_tax_reg_id from tbl_customer cu 
 								  join tbl_user_details tul on tul.customer_id=cu.cust_id and tul.user_id='" + user_id + "' WHERE cu.cust_status!=2 group by cu.cust_id";
 
-			DataTable dt_customers = db_select.SelectQuery(customer_query);
+            DataTable dt_customers = db_select.SelectQuery(customer_query);
 
             //7. getting customer types
 
@@ -659,11 +660,18 @@ tpi.comp_reg_enabled,tpi.is_gst_trn
 FROM tbl_print_info tpi ";
             DataTable dt_print_info = db_select.SelectQuery(print_info);
 
-			//9. Favourite items
+            //9. Favourite items
             var favItems_qry = @"SELECT itbs_id FROM tb_retailer_favourites where retailer_id='" + user_id + "'";
             DataTable dt_fav_items = db_select.SelectQuery(favItems_qry);
 
-			var dt_item_branchstockData = JsonConvert.SerializeObject(dt_item_branchstock, Formatting.Indented); //
+            //10. Item UOMs
+            var item_uom_qry = "SELECT uom.tum_id,uom.tum_name,uom.tum_type_id,uom.tum_convertion_fac,IFNULL(uom.tum_subunit_Id,0) AS tum_subunit_Id FROM tbl_item_uom uom";
+            DataTable dt_item_uom = db_select.SelectQuery(item_uom_qry);
+
+            //11. Item master specification values
+            DataTable dt_item_spe_values = db_select.SelectQuery("SELECT * FROM tbl_item_master_spe_values");
+
+            var dt_item_branchstockData = JsonConvert.SerializeObject(dt_item_branchstock, Formatting.Indented); //
             var dt_branchData = JsonConvert.SerializeObject(dt_branch, Formatting.Indented); //
             var dt_locationsData = JsonConvert.SerializeObject(dt_locations, Formatting.Indented); //
             var dt_customersData = JsonConvert.SerializeObject(dt_customers, Formatting.Indented);
@@ -672,9 +680,11 @@ FROM tbl_print_info tpi ";
             var dt_item_price_data = JsonConvert.SerializeObject(dt_item_price, Formatting.Indented);
             var dt_print_data = JsonConvert.SerializeObject(dt_print_info, Formatting.Indented);
             var dt_fav_items_data = JsonConvert.SerializeObject(dt_fav_items, Formatting.Indented);
+            var dt_item_uom_data = JsonConvert.SerializeObject(dt_item_uom, Formatting.Indented);
+            var dt_item_spe_values_data = JsonConvert.SerializeObject(dt_item_spe_values, Formatting.Indented);
 
 
-			result = "{\"dt_price_master\":" + dt_price_master_data + ",\"dt_item_price\":" + dt_item_price_data + ",\"dt_item_branchstockData\":" + dt_item_branchstockData + ",\"dt_branchData\":" + dt_branchData + ",\"dt_locationsData\":" + dt_locationsData + ",\"dt_customersData\":" + dt_customersData + ",\"dt_customer_catData\":" + dt_customer_catData + ",\"dt_printData\":" + dt_print_data + ",\"dt_fav_itemsData\":" + dt_fav_items_data + ",\"sync_time\":" + JsonConvert.SerializeObject(sync_time, Formatting.Indented) + "}";
+            result = "{\"dt_price_master\":" + dt_price_master_data + ",\"dt_item_price\":" + dt_item_price_data + ",\"dt_item_branchstockData\":" + dt_item_branchstockData + ",\"dt_branchData\":" + dt_branchData + ",\"dt_locationsData\":" + dt_locationsData + ",\"dt_customersData\":" + dt_customersData + ",\"dt_customer_catData\":" + dt_customer_catData + ",\"dt_printData\":" + dt_print_data + ",\"dt_fav_itemsData\":" + dt_fav_items_data + ",\"dt_item_uomData\":" + dt_item_uom_data + ",\"dt_item_spe_valuesData\":" + dt_item_spe_values_data + ",\"sync_time\":" + JsonConvert.SerializeObject(sync_time, Formatting.Indented) + "}";
             return result;
         }
         catch (Exception ex)
@@ -995,12 +1005,12 @@ FROM tbl_print_info tpi ";
             //    qry_Condition += " AND sm.sm_userid='" + filters["user_id"] + "' ";
             //}
 
-			if (filters["branch"] != "0" && filters["branch"] != null)
-			{
-				qry_Condition += " AND sm.branch_id='" + filters["branch"] + "' ";
-			}
+            if (filters["branch"] != "0" && filters["branch"] != null)
+            {
+                qry_Condition += " AND sm.branch_id='" + filters["branch"] + "' ";
+            }
 
-			var count_qry = "SELECT sm.sm_id,cu.cust_name,DATE_FORMAT(sm.sm_date, '%Y-%M-%d %h:%i %p') as sm_date,sm.sm_invoice_no,sm.sm_netamount,sum(tr.dr)-sum(tr.cr) as total_balance,sm.sm_delivery_status,sm.sm_packed FROM tbl_sales_master sm INNER JOIN tbl_branch br ON br.branch_id=sm.branch_id INNER JOIN tbl_customer cu ON cu.cust_id=sm.cust_id INNER JOIN tbl_transactions tr ON (tr.action_ref_id=sm.sm_id AND tr.action_type=1) WHERE 1=1 " + cust_condition + qry_Condition + display_cond + " GROUP BY sm.sm_id " + having_cond + " ORDER BY sm.sm_id DESC";
+            var count_qry = "SELECT sm.sm_id,cu.cust_name,DATE_FORMAT(sm.sm_date, '%Y-%M-%d %h:%i %p') as sm_date,sm.sm_invoice_no,sm.sm_netamount,sum(tr.dr)-sum(tr.cr) as total_balance,sm.sm_delivery_status,sm.sm_packed FROM tbl_sales_master sm INNER JOIN tbl_branch br ON br.branch_id=sm.branch_id INNER JOIN tbl_customer cu ON cu.cust_id=sm.cust_id INNER JOIN tbl_transactions tr ON (tr.action_ref_id=sm.sm_id AND tr.action_type=1) WHERE 1=1 " + cust_condition + qry_Condition + display_cond + " GROUP BY sm.sm_id " + having_cond + " ORDER BY sm.sm_id DESC";
             var dt_count = new mySqlConnection().SelectQuery(count_qry);
             totalRows = dt_count.Rows.Count;
             result = "{\"totalRows\":\"" + totalRows + "\",\"perPage\":\"" + perPage + "\",\"order_list\":" + JsonConvert.SerializeObject(new mySqlConnection().SelectQuery(@"SELECT sm.sm_id,br.branch_name,cu.cust_name,DATE_FORMAT(sm.sm_date, '%Y-%M-%d %h:%i %p') as sm_date,IFNULL(sm.sm_invoice_no,'NIL') AS sm_invoice_no,sm.sm_netamount,sum(tr.dr)-sum(tr.cr) as total_balance,sm.sm_delivery_status,sm.sm_packed FROM tbl_sales_master sm INNER JOIN tbl_branch br ON br.branch_id=sm.branch_id INNER JOIN tbl_customer cu ON cu.cust_id=sm.cust_id INNER JOIN tbl_transactions tr ON (tr.action_ref_id=sm.sm_id AND tr.action_type=1) WHERE 1=1 " + cust_condition + qry_Condition + display_cond + " GROUP BY sm.sm_id " + having_cond + " ORDER BY sm.sm_processed_date DESC LIMIT " + perPage + " OFFSET " + lowerBound + ""), Formatting.Indented) + "}";
@@ -1073,45 +1083,45 @@ FROM tbl_print_info tpi ";
             }
 
             var having_cond = "";
-			//if (filters["payment_status"] != "x")
-			//{
-			//    if (filters["payment_status"] == "1")
-			//    {
+            //if (filters["payment_status"] != "x")
+            //{
+            //    if (filters["payment_status"] == "1")
+            //    {
 
-			//        having_cond += " having sum(dr)-sum(cr) > 0 ";
-			//    }
-			//    if (filters["payment_status"] == "2")
-			//    {
-			//        having_cond += " having (sum(dr)-sum(cr) = 0 or sum(dr)-sum(cr) < 0) ";
-			//    }
+            //        having_cond += " having sum(dr)-sum(cr) > 0 ";
+            //    }
+            //    if (filters["payment_status"] == "2")
+            //    {
+            //        having_cond += " having (sum(dr)-sum(cr) = 0 or sum(dr)-sum(cr) < 0) ";
+            //    }
 
-			//}
+            //}
 
 
-			if (filters["approval_status"] != "x")
-			{
-				if (filters["approval_status"] != "1")
-				{
-					qry_Condition += " AND sm.sm_is_retail_approved=0 AND sm.sm_is_dist_approved=1 ";
-				}
+            if (filters["approval_status"] != "x")
+            {
+                if (filters["approval_status"] != "1")
+                {
+                    qry_Condition += " AND sm.sm_is_retail_approved=0 AND sm.sm_is_dist_approved=1 ";
+                }
                 else
                 {
-					qry_Condition += " AND sm.sm_is_retail_approved=1 AND sm.sm_is_dist_approved=0 ";
-				}
-			}
+                    qry_Condition += " AND sm.sm_is_retail_approved=1 AND sm.sm_is_dist_approved=0 ";
+                }
+            }
 
 
-			//if (filters["type"] == "1")
-   //         {
-   //             qry_Condition += " AND sm.sm_userid='" + filters["user_id"] + "' ";
-   //         }
+            //if (filters["type"] == "1")
+            //         {
+            //             qry_Condition += " AND sm.sm_userid='" + filters["user_id"] + "' ";
+            //         }
 
-			if (filters["branch"] != "0" && filters["branch"] != null)
-			{
-				qry_Condition += " AND sm.branch_id='" + filters["branch"] + "' ";
-			}
+            if (filters["branch"] != "0" && filters["branch"] != null)
+            {
+                qry_Condition += " AND sm.branch_id='" + filters["branch"] + "' ";
+            }
 
-			var count_qry = "SELECT sm.sm_id,cu.cust_name,DATE_FORMAT(sm.sm_date, '%Y-%M-%d %h:%i %p') as sm_date,sm.sm_invoice_no,sm.sm_is_retail_approved,sm.sm_is_dist_approved,sm.sm_netamount,sum(tr.dr)-sum(tr.cr) as total_balance,sm.sm_delivery_status,sm.sm_packed FROM tbl_sales_master sm INNER JOIN tbl_customer cu ON cu.cust_id=sm.cust_id INNER JOIN tbl_branch br ON br.branch_id=sm.branch_id INNER JOIN tbl_transactions tr ON (tr.action_ref_id=sm.sm_id AND tr.action_type=1) WHERE 1=1 " + cust_condition + qry_Condition + display_cond + " GROUP BY sm.sm_id " + having_cond + " ORDER BY sm.sm_id DESC";
+            var count_qry = "SELECT sm.sm_id,cu.cust_name,DATE_FORMAT(sm.sm_date, '%Y-%M-%d %h:%i %p') as sm_date,sm.sm_invoice_no,sm.sm_is_retail_approved,sm.sm_is_dist_approved,sm.sm_netamount,sum(tr.dr)-sum(tr.cr) as total_balance,sm.sm_delivery_status,sm.sm_packed FROM tbl_sales_master sm INNER JOIN tbl_customer cu ON cu.cust_id=sm.cust_id INNER JOIN tbl_branch br ON br.branch_id=sm.branch_id INNER JOIN tbl_transactions tr ON (tr.action_ref_id=sm.sm_id AND tr.action_type=1) WHERE 1=1 " + cust_condition + qry_Condition + display_cond + " GROUP BY sm.sm_id " + having_cond + " ORDER BY sm.sm_id DESC";
             var dt_count = new mySqlConnection().SelectQuery(count_qry);
             totalRows = dt_count.Rows.Count;
             result = "{\"totalRows\":\"" + totalRows + "\",\"perPage\":\"" + perPage + "\",\"order_list\":" + JsonConvert.SerializeObject(new mySqlConnection().SelectQuery(@"SELECT sm.sm_id,br.branch_name,cu.cust_name,DATE_FORMAT(sm.sm_date, '%Y-%M-%d %h:%i %p') as sm_date,IFNULL(sm.sm_invoice_no,'NIL') AS sm_invoice_no,sm.sm_is_retail_approved,sm.sm_is_dist_approved,sm.sm_netamount,sum(tr.dr)-sum(tr.cr) as total_balance,sm.sm_delivery_status,sm.sm_packed FROM tbl_sales_master sm INNER JOIN tbl_customer cu ON cu.cust_id=sm.cust_id INNER JOIN tbl_branch br ON br.branch_id=sm.branch_id INNER JOIN tbl_transactions tr ON (tr.action_ref_id=sm.sm_id AND tr.action_type=1) WHERE 1=1 " + cust_condition + qry_Condition + display_cond + " GROUP BY sm.sm_id " + having_cond + " ORDER BY sm.sm_processed_date DESC LIMIT " + perPage + " OFFSET " + lowerBound + ""), Formatting.Indented) + "}";
@@ -1694,7 +1704,7 @@ FROM (select tsm.sm_netamount,tsm.sm_type ,tsm.sm_packed,(tsm.sm_netamount-(sum(
     }
 
     [WebMethod]
-    public static string fetch_full_order_details(string order_id)
+    public static string fetch_full_order_details_old(string order_id)
     {
         StringBuilder sb = new StringBuilder();
         try
@@ -1797,6 +1807,126 @@ where si.sm_id='" + order_id + "'";
 INNER JOIN tbl_customer cu ON cu.cust_id=sm.cust_id 
 LEFT OUTER JOIN tbl_price_master pm1 ON pm1.tpm_id=cu.cust_type 
 LEFT OUTER JOIN tbl_price_master pm2 ON pm2.tpm_id=cu.new_custtype WHERE sm.sm_id='" + order_id + "' GROUP BY cu.cust_id";
+
+            DataTable dt_class = db.SelectQuery(class_qry);
+            sb.Append("\"price_class\":" + JsonConvert.SerializeObject(dt_class, Formatting.Indented));
+            sb.Append("}");
+            string a = sb.ToString();
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        { return "N"; }
+    }
+
+    [WebMethod]
+    public static string fetch_full_order_details(string order_id)
+    {
+        StringBuilder sb = new StringBuilder();
+        try
+        {
+            mySqlConnection db = new mySqlConnection();
+            sb.Append("{");
+            string qry_order = @"
+			
+	 SELECT  app.first_name AS app_first_name, app.last_name AS app_last_name, 
+				del.first_name AS del_first_name, del.last_name AS del_last_name,
+				canc.first_name AS canc_first_name, 
+			canc.last_name AS canc_last_name, 
+				sel.first_name AS sel_first_name, 
+				sel.last_name AS sel_last_name, 
+				pro.first_name AS pro_first_name, 
+			pro.last_name AS pro_last_name, 
+			pak.first_name AS pak_first_name, 
+			pak.last_name AS pak_last_name, 
+			veh.first_name AS veh_first_name, 
+			veh.last_name AS veh_last_name,
+            ret.first_name AS ret_first_name, 
+			ret.last_name AS ret_last_name, 
+			dist.first_name AS dist_first_name, 
+			dist.last_name AS dist_last_name,
+			cust.cust_id,
+				cust.cust_name,
+				cust.cust_city,
+				cust.cust_address,
+				cust.max_creditamt, 
+				cust.max_creditperiod,
+			cust.new_creditamt, 
+				cust.new_creditperiod, 
+			cust.cust_type, 
+				cust.new_custtype,
+			cust.cust_amount,  
+			cust.cust_status,           
+				IFNULL(tbl_sales_master.sm_invoice_no,'NIL') AS sm_invoice_no,
+				tbl_sales_master.sm_order_type,
+				tbl_sales_master.sm_id,
+				tbl_sales_master.sm_netamount,
+				tbl_sales_master.sm_tax_amount,
+				tbl_sales_master.sm_tax_excluded_amt,
+				SUM(tr.dr)-SUM(tr.cr) AS total_balance,
+				tbl_sales_master.sm_netamount-(sum(dr)-sum(cr)) as total_paid,
+				tbl_sales_master.sm_delivery_status,
+				tbl_sales_master.sm_packed,
+				tbl_sales_master.sm_order_type,
+				tbl_sales_master.sm_payment_type,
+				tbl_sales_master.sm_specialnote,
+				tbl_sales_master.sm_vehicle_no,
+				tbl_sales_master.sm_payment_type,
+				tbl_sales_master.branch_tax_method,
+				tbl_sales_master.branch_tax_inclusive,
+				tbl_sales_master.branch_id,
+				tbl_sales_master.sm_price_class,
+				tbl_sales_master.sm_type,tbl_sales_master.sm_is_quote,tbl_sales_master.sm_is_retail_approved,tbl_sales_master.sm_is_dist_approved,
+tbl_sales_master.sm_roundoff,br.branch_name,br.branch_address,br.branch_email,br.branch_phone1,
+
+DATE_FORMAT(tbl_sales_master.sm_dist_appr_date, '%d %M %Y %h:%i %p') AS sm_dist_appr_date,
+			DATE_FORMAT(tbl_sales_master.sm_retail_appr_date, '%d %M %Y %h:%i %p') AS sm_retail_appr_date, 
+
+				IFNULL(tbl_sales_master.sm_approved_id,0) as is_order_approved,
+			  DATE_FORMAT(tbl_sales_master.sm_date, '%d %M %Y %h:%i %p') AS sm_date, 
+			DATE_FORMAT(tbl_sales_master.sm_packed_date, '%d %M %Y %h:%i %p') AS sm_packed_date,
+			DATE_FORMAT(tbl_sales_master.sm_processed_date, '%d %M %Y %h:%i %p') AS sm_processed_date,
+			DATE_FORMAT(tbl_sales_master.sm_delivered_date, '%d %M %Y %h:%i %p') AS sm_delivered_date, 
+			DATE_FORMAT(tbl_sales_master.sm_cancelled_date, '%d %M %Y %h:%i %p') AS sm_cancelled_date,
+DATE_FORMAT(tbl_sales_master.sm_last_updated_date, '%d%m%Y%h%i%s') AS sm_last_updated_date,
+			DATE_FORMAT(tbl_sales_master.sm_approved_date, '%d %m %Y %h:%i %p')   sm_approved_date
+			  FROM  tbl_sales_master 
+INNER JOIN tbl_branch br ON br.branch_id=tbl_sales_master.branch_id 
+			  LEFT OUTER JOIN tbl_transactions tr ON (tr.action_ref_id=tbl_sales_master.sm_id AND tr.action_type=1) 
+				LEFT OUTER JOIN tbl_user_details app ON tbl_sales_master.sm_approved_id = app.user_id 
+				LEFT OUTER JOIN tbl_user_details AS del ON tbl_sales_master.sm_delivered_id = del.user_id 
+				LEFT OUTER JOIN tbl_user_details AS canc ON tbl_sales_master.sm_cancelled_id = canc.user_id 
+				LEFT OUTER JOIN tbl_user_details AS pak ON tbl_sales_master.sm_packed_id = pak.user_id 
+				LEFT OUTER JOIN tbl_user_details AS pro ON tbl_sales_master.sm_processed_id = pro.user_id 
+			LEFT OUTER JOIN tbl_user_details AS veh ON tbl_sales_master.sm_delivery_vehicle_id = veh.user_id 
+				LEFT OUTER JOIN tbl_user_details AS sel ON tbl_sales_master.sm_userid = sel.user_id 
+LEFT OUTER JOIN tbl_user_details AS dist ON tbl_sales_master.sm_dist_appr_user = dist.user_id 
+LEFT OUTER JOIN tbl_user_details AS ret ON tbl_sales_master.sm_retail_appr_user = ret.user_id 
+				LEFT OUTER JOIN tbl_customer AS cust ON tbl_sales_master.cust_id = cust.cust_id 
+			WHERE tbl_sales_master.sm_id='" + order_id + "'";
+
+            DataTable dt_order = new DataTable();
+            dt_order = db.SelectQuery(qry_order);
+            sb.Append("\"order\":" + JsonConvert.SerializeObject(dt_order, Formatting.Indented));
+            sb.Append(",");
+            string qry_items = @"SELECT itm.itm_qty_per_carton,si.itbs_id,si.itm_code,si.itm_name,si.si_org_price,si.si_price,si.si_qty,si.si_total,si.si_discount_rate,si.si_discount_amount,si.si_net_amount,si.si_foc,si.si_approval_status,si.itm_commision,si.itm_commisionamt,si.si_itm_type,si.si_item_tax,si.si_item_cess,            si.si_tax_excluded_total,si.si_tax_amount,si.itm_type,
+            sio.sio_id,sio.tum_id,sio.tum_id_cust,sio.sio_no_piece,sio.sio_length,sio.sio_width,sio.sio_length_cust_fraction,sio.sio_width_cust_fraction,sio.sio_finalqty,
+            uom.tum_name AS uom,uomc.tum_name AS uom_cust from tbl_sales_items si
+            INNER JOIN tbl_itembranch_stock itb ON itb.itbs_id=si.itbs_id 
+            INNER JOIN tbl_item_master itm ON itm.itm_id=itb.itm_id 
+            LEFT OUTER JOIN tbl_sales_items_order sio ON sio.sio_id=si.sio_id
+            LEFT OUTER JOIN tbl_item_uom uom ON uom.tum_id=sio.tum_id
+            LEFT OUTER JOIN tbl_item_uom uomc ON uomc.tum_id=sio.tum_id_cust
+            where si.sm_id='" + order_id + "'";
+            DataTable dt_items = db.SelectQuery(qry_items);
+            sb.Append("\"items\":" + JsonConvert.SerializeObject(dt_items, Formatting.Indented));
+            sb.Append(",");
+            DataTable dt_price_group = db.SelectQuery("SELECT pm.tpm_name as price_group FROM tbl_sales_master sm INNER JOIN tbl_price_master pm ON pm.tpm_id=sm.sm_price_class WHERE sm.sm_id='" + order_id + "'");
+            sb.Append("\"price_group\":" + JsonConvert.SerializeObject(dt_price_group, Formatting.Indented));
+            sb.Append(",");
+            string class_qry = @"SELECT cu.cust_type,cu.new_custtype,pm1.tpm_name AS old_class,pm2.tpm_name AS new_class FROM tbl_sales_master sm 
+            INNER JOIN tbl_customer cu ON cu.cust_id=sm.cust_id 
+            LEFT OUTER JOIN tbl_price_master pm1 ON pm1.tpm_id=cu.cust_type 
+            LEFT OUTER JOIN tbl_price_master pm2 ON pm2.tpm_id=cu.new_custtype WHERE sm.sm_id='" + order_id + "' GROUP BY cu.cust_id";
 
             DataTable dt_class = db.SelectQuery(class_qry);
             sb.Append("\"price_class\":" + JsonConvert.SerializeObject(dt_class, Formatting.Indented));
@@ -2241,7 +2371,7 @@ LEFT OUTER JOIN tbl_price_master pm2 ON pm2.tpm_id=cu.new_custtype WHERE sm.sm_i
                         itbsid_String = itbsid_String.Trim().TrimStart(',');
 
                         // find items and their branches
-                        var itbsqry = "SELECT itbs_id, branch_id FROM tbl_itembranch_stock WHERE itbs_id in ("+ itbsid_String + ")";
+                        var itbsqry = "SELECT itbs_id, branch_id FROM tbl_itembranch_stock WHERE itbs_id in (" + itbsid_String + ")";
                         DataTable dtitbsBranch = db_order.SelectQueryForTransaction(itbsqry);
 
                         //find distinct branch id
@@ -2257,7 +2387,7 @@ LEFT OUTER JOIN tbl_price_master pm2 ON pm2.tpm_id=cu.new_custtype WHERE sm.sm_i
                         {
                             sessionIdIncementer = sessionIdIncementer + 1;
 
-							int targetBranchId = branches;
+                            int targetBranchId = branches;
 
                             // get itbs_ids for the branch
                             var itbsIdsForBranch = dtitbsBranch.AsEnumerable()
@@ -2314,10 +2444,64 @@ LEFT OUTER JOIN tbl_price_master pm2 ON pm2.tpm_id=cu.new_custtype WHERE sm.sm_i
                             sl_mstr["sessionId"] = sl_mstr["sessionId"] + sessionIdIncementer.ToString();
 
 
-							string getsessionexist = "select sm_sales_sessionid from tbl_sales_master where sm_sales_sessionid='" + sl_mstr["sessionId"] + "'";
+                            string getsessionexist = "select sm_sales_sessionid from tbl_sales_master where sm_sales_sessionid='" + sl_mstr["sessionId"] + "'";
                             DataTable dtsession = db_order.SelectQueryForTransaction(getsessionexist);
                             int sess_rows = dtsession.Rows.Count;
-                            if (sess_rows != 0)  // ALREADY SAVED CASE
+                            bool save_as_sales_order = true;
+                            if (save_as_sales_order)
+                            {
+                                // Orders are saved through the sales order procedure (tbl_sales_master_order). No invoice or ledger entries are created here.
+                                if (sm_delivery_status == 4)
+                                {
+                                    // cancelled offline orders are not created
+                                }
+                                else
+                                {
+                                    decimal so_session_id = Convert.ToDecimal(Convert.ToString(sl_mstr["sessionId"]), System.Globalization.CultureInfo.InvariantCulture);
+                                    if (SalesOrderSync.SessionExists(so_session_id))
+                                    {
+                                        // ALREADY SAVED CASE
+                                    }
+                                    else
+                                    {
+                                        SalesOrderSaveRequest so_request = new SalesOrderSaveRequest();
+                                        so_request.master = new SalesOrderMaster
+                                        {
+                                            cust_id = SalesOrderSync.Int(sl_mstr, "cust_id"),
+                                            branch_id = targetBranchId,
+                                            sm_sales_sessionid = so_session_id,
+                                            sm_specialnote = SalesOrderSync.Str(sl_mstr, "sm_specialnote"),
+                                            sm_latitude = SalesOrderSync.Dec(sl_mstr, "sm_latitude"),
+                                            sm_longitude = SalesOrderSync.Dec(sl_mstr, "sm_longitude"),
+                                            sm_order_type = SalesOrderSync.Int(sl_mstr, "sm_order_type"),
+                                            sm_payment_type = SalesOrderSync.Int(sl_mstr, "sm_payment_type")
+                                        };
+                                        so_request.items = new List<SalesOrderItem>();
+                                        foreach (DataRow so_line in order_data.Rows)
+                                        {
+                                            so_request.items.Add(new SalesOrderItem
+                                            {
+                                                itbs_id = SalesOrderSync.Int(so_line, "itbs_id"),
+                                                tum_id = SalesOrderSync.Int(so_line, "tum_id"),
+                                                tum_id_cust = SalesOrderSync.Int(so_line, "tum_id_cust"),
+                                                no_piece = SalesOrderSync.Dec(so_line, "no_piece"),
+                                                length = SalesOrderSync.Dec(so_line, "length"),
+                                                width = SalesOrderSync.Dec(so_line, "width"),
+                                                si_qty = SalesOrderSync.Dec(so_line, "si_qty"),
+                                                si_price = SalesOrderSync.Dec(so_line, "si_price"),
+                                                si_discount_rate = SalesOrderSync.Dec(so_line, "si_discount_rate")
+                                            });
+                                        }
+
+                                        Newtonsoft.Json.Linq.JObject so_result = Newtonsoft.Json.Linq.JObject.Parse(SalesOrderSync.Save(so_request, Convert.ToInt32(sync_data["user_id"])));
+                                        if (!(bool)so_result["status"])
+                                        {
+                                            throw new Exception("Sales order save failed for session " + so_session_id + ": " + Convert.ToString(so_result["message"]));
+                                        }
+                                    }
+                                }
+                            }
+                            else if (sess_rows != 0)  // ALREADY SAVED CASE
                             {
                                 // do nothing
                             }
@@ -2718,7 +2902,7 @@ LEFT OUTER JOIN tbl_price_master pm2 ON pm2.tpm_id=cu.new_custtype WHERE sm.sm_i
 
                                 if (is_need_approval != 0) { add_on_note.Append(" Item Price/Discount/FOC Changed. "); }
 
-                                string update_salesmaster_qry = "UPDATE tbl_sales_master SET sm_total='" + sm_total + "',sm_discount_rate='" + sm_discount_rate + "',sm_discount_amount='" + sm_discount_amount + "',sm_netamount='" + sm_netamount + "',sm_tax_excluded_amt='" + sm_tax_excluded_amt + "',sm_tax_amount='" + sm_tax_amount + "',sm_refno='" + sm_id + "',sm_last_updated_date='" + sl_mstr["sm_date"] + "',sm_roundoff=0 WHERE sm_id='" + sm_id + "'";
+                                string update_salesmaster_qry = "UPDATE tbl_sales_master SET sm_total='" + sm_total + "',sm_discount_rate='" + sm_discount_rate + "',sm_discount_amount='" + sm_discount_amount + "',sm_netamount='" + sm_netamount + "',sm_tax_excluded_amt='" + sm_tax_excluded_amt + "',sm_tax_amount='" + sm_tax_amount + "',sm_refno='" + sm_id + "',sm_last_updated_date='" + sl_mstr["sm_date"] + "',sm_roundoff=0,sm_is_retail_approved=1,sm_retail_appr_user='" + sl_mstr["sm_userid"] + "',sm_retail_appr_date='" + sl_mstr["sm_date"] + "' WHERE sm_id='" + sm_id + "'";
                                 bool update_sales_result = db_order.ExecuteQueryForTransaction(update_salesmaster_qry);
 
 
@@ -2815,7 +2999,8 @@ WHERE ip.tip_last_updated_date>'" + last_device_db_updated + "' GROUP BY tip_id"
                 DataTable dt_system_settings = db_select.SelectQuery(seting_qry);
 
                 // - itm_last_update_date
-                var item_fetch_query = @"select itm.itm_type,itm.itm_qty_per_carton,brd.brand_name,cat.cat_name,itb.branch_id,tax.tp_tax_percentage,tax.tp_tax_title,tax.tp_cess,itb.itbs_id,itb.itm_id,itb.itm_brand_id,itb.itm_category_id,itb.itm_name,itb.itbs_stock,itb.itm_code,itb.itm_mrp,itb.itm_commision,itb.itm_rating,itb.itbs_available 
+                var item_fetch_query = @"select itm.itm_type,itm.itm_qty_per_carton,brd.brand_name,cat.cat_name,itb.branch_id,tax.tp_tax_percentage,tax.tp_tax_title,tax.tp_cess,itb.itbs_id,itb.itm_id,itb.itm_brand_id,itb.itm_category_id,itb.itm_name,itb.itbs_stock,itb.itm_code,itb.itm_mrp,itb.itm_commision,itb.itm_rating,itb.itbs_available,
+                itm.itsv_spec_item, itm.itsv_spec_brand, itm.itsv_spec_thickness, itm.itsv_spec_colour,itm.itsv_spec_pitch,itm.itsv_spec_crust,itm.itsv_uom_sales,itm.itsv_printing_name 
 									 from tbl_itembranch_stock itb 
 									 join tbl_tax_profile tax on itb.tp_tax_code=tax.tp_tax_code 
 									 join tbl_item_master itm on itm.itm_id=itb.itm_id 
@@ -2865,13 +3050,20 @@ tpi.comp_reg_enabled,tpi.is_gst_trn
 FROM tbl_print_info tpi tpi.print_last_update>'" + last_device_db_updated + "'";
                 DataTable dt_print_info = db_select.SelectQuery(print_info);
 
-				//9. favorite items - last_updated
+                //9. favorite items - last_updated
                 var fav_items_qry = @"SELECT fi.itbs_id FROM tb_retailer_favourites fi 
                                      WHERE fi.retailer_id='" + sync_data["user_id"] + "' and fi.last_updated>'" + last_device_db_updated + "'";
                 DataTable dt_fav_items = db_select.SelectQuery(fav_items_qry);
 
+                //10. Item UOMs
+                var item_uom_qry = "SELECT uom.tum_id,uom.tum_name,uom.tum_type_id,uom.tum_convertion_fac,IFNULL(uom.tum_subunit_Id,0) AS tum_subunit_Id FROM tbl_item_uom uom";
+                DataTable dt_item_uom = db_select.SelectQuery(item_uom_qry);
 
-				var dt_item_branchstockData = JsonConvert.SerializeObject(dt_item_branchstock, Formatting.Indented); //
+                //11. Item master specification values
+                DataTable dt_item_spe_values = db_select.SelectQuery("SELECT * FROM tbl_item_master_spe_values WHERE itsv_lastupdate_date>'" + last_device_db_updated + "'");
+
+
+                var dt_item_branchstockData = JsonConvert.SerializeObject(dt_item_branchstock, Formatting.Indented); //
                 var dt_branchData = JsonConvert.SerializeObject(dt_branch, Formatting.Indented); //
                 var dt_locationsData = JsonConvert.SerializeObject(dt_locations, Formatting.Indented); //
                 var dt_customersData = JsonConvert.SerializeObject(dt_customers, Formatting.Indented);
@@ -2881,8 +3073,10 @@ FROM tbl_print_info tpi tpi.print_last_update>'" + last_device_db_updated + "'";
                 var dt_item_price_data = JsonConvert.SerializeObject(dt_item_price, Formatting.Indented);
                 var dt_print_data = JsonConvert.SerializeObject(dt_print_info, Formatting.Indented);
                 var dt_fav_items_data = JsonConvert.SerializeObject(dt_fav_items, Formatting.Indented);
+                var dt_item_uom_data = JsonConvert.SerializeObject(dt_item_uom, Formatting.Indented);
+                var dt_item_spe_values_data = JsonConvert.SerializeObject(dt_item_spe_values, Formatting.Indented);
 
-				jsonResponse = "{\"dt_price_master\":" + dt_price_master_data + ",\"dt_item_price\":" + dt_item_price_data + ",\"settings_data\":" + settings_data + ",\"dt_item_branchstockData\":" + dt_item_branchstockData + ",\"dt_branchData\":" + dt_branchData + ",\"dt_locationsData\":" + dt_locationsData + ",\"dt_customersData\":" + dt_customersData + ",\"dt_print_Data\":" + dt_print_data + ",\"dt_customer_catData\":" + dt_customer_catData + ",\"dt_fav_itemsData\":" + dt_fav_items_data + ",\"sync_time\":" + JsonConvert.SerializeObject(sync_date_time, Formatting.Indented) + "}";
+                jsonResponse = "{\"dt_price_master\":" + dt_price_master_data + ",\"dt_item_price\":" + dt_item_price_data + ",\"settings_data\":" + settings_data + ",\"dt_item_branchstockData\":" + dt_item_branchstockData + ",\"dt_branchData\":" + dt_branchData + ",\"dt_locationsData\":" + dt_locationsData + ",\"dt_customersData\":" + dt_customersData + ",\"dt_print_Data\":" + dt_print_data + ",\"dt_customer_catData\":" + dt_customer_catData + ",\"dt_fav_itemsData\":" + dt_fav_items_data + ",\"dt_item_uom_data\":" + dt_item_uom_data + ",\"dt_item_spe_values_data\":" + dt_item_spe_values_data + ",\"sync_time\":" + JsonConvert.SerializeObject(sync_date_time, Formatting.Indented) + "}";
                 //Send_Push_Notification("COMMON", sync_data["user_id"].ToString());
             }
             catch (Exception ex)
@@ -3431,134 +3625,134 @@ FROM tbl_print_info tpi tpi.print_last_update>'" + last_device_db_updated + "'";
 
             if (dt_sm.Rows[0]["sm_delivery_status"].ToString() == order["order_status"].ToString())
             {
-//                var branch_query = @"SELECT br.branch_id,br.branch_name,br.branch_timezone,br.branch_tax_method,br.branch_tax_inclusive,
+                //                var branch_query = @"SELECT br.branch_id,br.branch_name,br.branch_timezone,br.branch_tax_method,br.branch_tax_inclusive,
 
-//br.branch_orderPrefix as branch_prefix,
-//(SELECT IFNULL(MAX(sm_serialNo),br.branch_orderSerial) FROM tbl_sales_master WHERE branch_id=br.branch_id AND sm_prefix=br.branch_orderPrefix AND sm_suffix=br.branch_orderSuffix) AS branch_serial ,
-//br.branch_orderSuffix as branch_suffix,
+                //br.branch_orderPrefix as branch_prefix,
+                //(SELECT IFNULL(MAX(sm_serialNo),br.branch_orderSerial) FROM tbl_sales_master WHERE branch_id=br.branch_id AND sm_prefix=br.branch_orderPrefix AND sm_suffix=br.branch_orderSuffix) AS branch_serial ,
+                //br.branch_orderSuffix as branch_suffix,
 
 
-//br.branch_type as branch_type  
-//FROM tbl_branch br 
-//INNER JOIN tbl_user_branches tub ON tub.branch_id=br.branch_id 
-//LEFT OUTER JOIN tbl_sales_master sm ON sm.branch_id=br.branch_id 
-//WHERE tub.user_id=" + order["user_id"] + "  GROUP BY sm.branch_id ORDER BY br.branch_name ASC ";
-//                DataTable dt_branch = db.SelectQuery(branch_query);
-//                var dt_branchData = JsonConvert.SerializeObject(dt_branch, Formatting.Indented);
+                //br.branch_type as branch_type  
+                //FROM tbl_branch br 
+                //INNER JOIN tbl_user_branches tub ON tub.branch_id=br.branch_id 
+                //LEFT OUTER JOIN tbl_sales_master sm ON sm.branch_id=br.branch_id 
+                //WHERE tub.user_id=" + order["user_id"] + "  GROUP BY sm.branch_id ORDER BY br.branch_name ASC ";
+                //                DataTable dt_branch = db.SelectQuery(branch_query);
+                //                var dt_branchData = JsonConvert.SerializeObject(dt_branch, Formatting.Indented);
 
                 result = "SUCCESS";
                 result = "{\"result\":\"" + result + "\",\"cust_amount\":" + dt_sm.Rows[0]["cust_amount"].ToString() + "}";
-				//result = "{\"result\":\"" + result + "\",\"cust_amount\":" + dt_sm.Rows[0]["cust_amount"].ToString() + ",\"dt_branchData\":" + dt_branchData + "}";
-				return result;
+                //result = "{\"result\":\"" + result + "\",\"cust_amount\":" + dt_sm.Rows[0]["cust_amount"].ToString() + ",\"dt_branchData\":" + dt_branchData + "}";
+                return result;
             }
             else
             {
-				if (order["order_status"].ToString() == "4")
-				{
+                if (order["order_status"].ToString() == "4")
+                {
 
-					db.BeginTransaction();
-					
-					string update_sales_mstr = "";
-					string status_string = "Cancellation of order #" + order["sm_id"].ToString() + " worth " + dt_sm.Rows[0]["sm_netamount"].ToString() + "";
+                    db.BeginTransaction();
 
-					update_sales_mstr = "UPDATE tbl_sales_master SET sm_delivery_status='4',sm_cancelled_id='" + order["user_id"] + "',sm_cancelled_date='" + action_date + "',sm_packed='0',sm_packed_id='0',sm_packed_date='0',sm_delivered_id='0',sm_delivered_date='0',sm_processed_id='0',sm_delivery_vehicle_id='0',sm_vehicle_no='0',sm_last_updated_date='" + action_date + "' where sm_id='" + order["sm_id"] + "'";
-					db.ExecuteQueryForTransaction(update_sales_mstr);
+                    string update_sales_mstr = "";
+                    string status_string = "Cancellation of order #" + order["sm_id"].ToString() + " worth " + dt_sm.Rows[0]["sm_netamount"].ToString() + "";
 
-					//inserts to transaction table
-					MySqlCommand cmdInsCr = new MySqlCommand();
-					cmdInsCr.CommandText = "INSERT INTO `tbl_transactions` " +
-						" (`action_type`, `action_ref_id`, `partner_id`,`partner_type`,`branch_id`, `user_id`, `narration`, `cr`,  `date`,`is_reconciliation`,`closing_balance`)" +
-						" select @action_type, @action_ref_id, @partner_id,@partner_type,@branch_id, @user_id, @narration, @cr, @date,@is_reconciliation,(ifnull(sum(dr)-sum(cr),0)-@cr) from tbl_transactions where partner_id=@partner_id and partner_type=@partner_type and branch_id=@branch_id  ";
-					cmdInsCr.Parameters.AddWithValue("@action_type", (int)Constants.ActionType.SALES);
-					cmdInsCr.Parameters.AddWithValue("@action_ref_id", order["sm_id"]);
-					cmdInsCr.Parameters.AddWithValue("@partner_id", dt_sm.Rows[0]["cust_id"].ToString());
-					cmdInsCr.Parameters.AddWithValue("@partner_type", (int)Constants.PartnerType.CUSTOMER);
-					cmdInsCr.Parameters.AddWithValue("@branch_id", dt_sm.Rows[0]["branch_id"].ToString());
-					cmdInsCr.Parameters.AddWithValue("@user_id", order["user_id"]);
-					cmdInsCr.Parameters.AddWithValue("@narration", status_string);
-					cmdInsCr.Parameters.AddWithValue("@cr", dt_sm.Rows[0]["sm_netamount"].ToString());
-					cmdInsCr.Parameters.AddWithValue("@date", action_date);
-					cmdInsCr.Parameters.AddWithValue("@is_reconciliation", "1");
-					db.ExecuteQueryForTransaction(cmdInsCr);
+                    update_sales_mstr = "UPDATE tbl_sales_master SET sm_delivery_status='4',sm_cancelled_id='" + order["user_id"] + "',sm_cancelled_date='" + action_date + "',sm_packed='0',sm_packed_id='0',sm_packed_date='0',sm_delivered_id='0',sm_delivered_date='0',sm_processed_id='0',sm_delivery_vehicle_id='0',sm_vehicle_no='0',sm_last_updated_date='" + action_date + "' where sm_id='" + order["sm_id"] + "'";
+                    db.ExecuteQueryForTransaction(update_sales_mstr);
 
-					string update_tbl_customer = "UPDATE tbl_customer SET cust_last_updated_date='" + action_date + "',cust_amount=(select (sum(dr)-sum(cr)) from tbl_transactions where partner_id='" + dt_sm.Rows[0]["cust_id"].ToString() + "' and partner_type=" + (int)Constants.PartnerType.CUSTOMER + ") where cust_id=" + dt_sm.Rows[0]["cust_id"].ToString() + ";SELECT cust_amount FROM tbl_customer WHERE cust_id=" + dt_sm.Rows[0]["cust_id"].ToString() + "";
-					string cust_amount = db.SelectScalarForTransaction(update_tbl_customer);
-					result = "SUCCESS";
+                    //inserts to transaction table
+                    MySqlCommand cmdInsCr = new MySqlCommand();
+                    cmdInsCr.CommandText = "INSERT INTO `tbl_transactions` " +
+                        " (`action_type`, `action_ref_id`, `partner_id`,`partner_type`,`branch_id`, `user_id`, `narration`, `cr`,  `date`,`is_reconciliation`,`closing_balance`)" +
+                        " select @action_type, @action_ref_id, @partner_id,@partner_type,@branch_id, @user_id, @narration, @cr, @date,@is_reconciliation,(ifnull(sum(dr)-sum(cr),0)-@cr) from tbl_transactions where partner_id=@partner_id and partner_type=@partner_type and branch_id=@branch_id  ";
+                    cmdInsCr.Parameters.AddWithValue("@action_type", (int)Constants.ActionType.SALES);
+                    cmdInsCr.Parameters.AddWithValue("@action_ref_id", order["sm_id"]);
+                    cmdInsCr.Parameters.AddWithValue("@partner_id", dt_sm.Rows[0]["cust_id"].ToString());
+                    cmdInsCr.Parameters.AddWithValue("@partner_type", (int)Constants.PartnerType.CUSTOMER);
+                    cmdInsCr.Parameters.AddWithValue("@branch_id", dt_sm.Rows[0]["branch_id"].ToString());
+                    cmdInsCr.Parameters.AddWithValue("@user_id", order["user_id"]);
+                    cmdInsCr.Parameters.AddWithValue("@narration", status_string);
+                    cmdInsCr.Parameters.AddWithValue("@cr", dt_sm.Rows[0]["sm_netamount"].ToString());
+                    cmdInsCr.Parameters.AddWithValue("@date", action_date);
+                    cmdInsCr.Parameters.AddWithValue("@is_reconciliation", "1");
+                    db.ExecuteQueryForTransaction(cmdInsCr);
 
-//					var branch_query = @"SELECT br.branch_id,br.branch_name,br.branch_timezone,br.branch_tax_method,br.branch_tax_inclusive,
+                    string update_tbl_customer = "UPDATE tbl_customer SET cust_last_updated_date='" + action_date + "',cust_amount=(select (sum(dr)-sum(cr)) from tbl_transactions where partner_id='" + dt_sm.Rows[0]["cust_id"].ToString() + "' and partner_type=" + (int)Constants.PartnerType.CUSTOMER + ") where cust_id=" + dt_sm.Rows[0]["cust_id"].ToString() + ";SELECT cust_amount FROM tbl_customer WHERE cust_id=" + dt_sm.Rows[0]["cust_id"].ToString() + "";
+                    string cust_amount = db.SelectScalarForTransaction(update_tbl_customer);
+                    result = "SUCCESS";
 
-//br.branch_orderPrefix as branch_prefix,
-//(SELECT IFNULL(MAX(sm_serialNo),br.branch_orderSerial) FROM tbl_sales_master WHERE branch_id=br.branch_id AND sm_prefix=br.branch_orderPrefix AND sm_suffix=br.branch_orderSuffix) AS branch_serial ,
-//br.branch_orderSuffix as branch_suffix,
+                    //					var branch_query = @"SELECT br.branch_id,br.branch_name,br.branch_timezone,br.branch_tax_method,br.branch_tax_inclusive,
 
-//br.branch_type as branch_type  
-//FROM tbl_branch br 
-//INNER JOIN tbl_user_branches tub ON tub.branch_id=br.branch_id 
-//LEFT OUTER JOIN tbl_sales_master sm ON sm.branch_id=br.branch_id 
-//WHERE tub.user_id=" + order["user_id"] + "  GROUP BY sm.branch_id ORDER BY br.branch_name ASC ";
-//					DataTable dt_branch = db.SelectQueryForTransaction(branch_query);
-//					var dt_branchData = JsonConvert.SerializeObject(dt_branch, Formatting.Indented);
+                    //br.branch_orderPrefix as branch_prefix,
+                    //(SELECT IFNULL(MAX(sm_serialNo),br.branch_orderSerial) FROM tbl_sales_master WHERE branch_id=br.branch_id AND sm_prefix=br.branch_orderPrefix AND sm_suffix=br.branch_orderSuffix) AS branch_serial ,
+                    //br.branch_orderSuffix as branch_suffix,
 
-					result = "{\"result\":\"" + result + "\",\"cust_amount\":" + cust_amount + "}";
+                    //br.branch_type as branch_type  
+                    //FROM tbl_branch br 
+                    //INNER JOIN tbl_user_branches tub ON tub.branch_id=br.branch_id 
+                    //LEFT OUTER JOIN tbl_sales_master sm ON sm.branch_id=br.branch_id 
+                    //WHERE tub.user_id=" + order["user_id"] + "  GROUP BY sm.branch_id ORDER BY br.branch_name ASC ";
+                    //					DataTable dt_branch = db.SelectQueryForTransaction(branch_query);
+                    //					var dt_branchData = JsonConvert.SerializeObject(dt_branch, Formatting.Indented);
 
-					db.CommitTransaction();
-					Send_Push_Notification("CANCEL", order["sm_id"]);
+                    result = "{\"result\":\"" + result + "\",\"cust_amount\":" + cust_amount + "}";
 
-				}
-				else if (order["order_status"].ToString() == "0")
-				{
-					string update_sales_mstr = "";
-					db.BeginTransaction();
+                    db.CommitTransaction();
+                    Send_Push_Notification("CANCEL", order["sm_id"]);
 
-					// IF NOT APPROVED
-					if (Convert.ToString(dt_sm.Rows[0]["sm_is_retail_approved"]) == "0")
-					{
-						if (Convert.ToString(dt_sm.Rows[0]["sm_is_dist_approved"]) == "0")
-						{
-							update_sales_mstr = "UPDATE tbl_sales_master SET sm_is_retail_approved='1', sm_retail_appr_user='" + order["user_id"] + "', sm_retail_appr_date='" + action_date + "', sm_last_updated_date='" + action_date + "' WHERE sm_id='" + order["sm_id"] + "'";
-							db.ExecuteQueryForTransaction(update_sales_mstr);
+                }
+                else if (order["order_status"].ToString() == "0")
+                {
+                    string update_sales_mstr = "";
+                    db.BeginTransaction();
 
-						}
-						else
-						{
-							update_sales_mstr = "UPDATE tbl_sales_master SET sm_is_retail_approved='1', sm_retail_appr_user='" + order["user_id"] + "', sm_retail_appr_date='" + action_date + "',sm_delivery_status='0',sm_is_quote=0, sm_last_updated_date='" + action_date + "' WHERE sm_id='" + order["sm_id"] + "'";
-							db.ExecuteQueryForTransaction(update_sales_mstr);
-						}
-					}
+                    // IF NOT APPROVED
+                    if (Convert.ToString(dt_sm.Rows[0]["sm_is_retail_approved"]) == "0")
+                    {
+                        if (Convert.ToString(dt_sm.Rows[0]["sm_is_dist_approved"]) == "0")
+                        {
+                            update_sales_mstr = "UPDATE tbl_sales_master SET sm_is_retail_approved='1', sm_retail_appr_user='" + order["user_id"] + "', sm_retail_appr_date='" + action_date + "', sm_last_updated_date='" + action_date + "' WHERE sm_id='" + order["sm_id"] + "'";
+                            db.ExecuteQueryForTransaction(update_sales_mstr);
+
+                        }
+                        else
+                        {
+                            update_sales_mstr = "UPDATE tbl_sales_master SET sm_is_retail_approved='1', sm_retail_appr_user='" + order["user_id"] + "', sm_retail_appr_date='" + action_date + "',sm_delivery_status='0',sm_is_quote=0, sm_last_updated_date='" + action_date + "' WHERE sm_id='" + order["sm_id"] + "'";
+                            db.ExecuteQueryForTransaction(update_sales_mstr);
+                        }
+                    }
 
 
 
-					string update_tbl_customer = "SELECT cust_amount FROM tbl_customer WHERE cust_id=" + dt_sm.Rows[0]["cust_id"].ToString() + "";
-					string cust_amount = db.SelectScalarForTransaction(update_tbl_customer);
+                    string update_tbl_customer = "SELECT cust_amount FROM tbl_customer WHERE cust_id=" + dt_sm.Rows[0]["cust_id"].ToString() + "";
+                    string cust_amount = db.SelectScalarForTransaction(update_tbl_customer);
 
-					result = "SUCCESS";
+                    result = "SUCCESS";
 
-//					var branch_query = @"SELECT br.branch_id,br.branch_name,br.branch_timezone,br.branch_tax_method,br.branch_tax_inclusive,
+                    //					var branch_query = @"SELECT br.branch_id,br.branch_name,br.branch_timezone,br.branch_tax_method,br.branch_tax_inclusive,
 
-//br.branch_orderPrefix as branch_prefix,
-//(SELECT IFNULL(MAX(sm_serialNo),br.branch_orderSerial) FROM tbl_sales_master WHERE branch_id=br.branch_id AND sm_prefix=br.branch_orderPrefix AND sm_suffix=br.branch_orderSuffix) AS branch_serial ,
-//br.branch_orderSuffix as branch_suffix,
+                    //br.branch_orderPrefix as branch_prefix,
+                    //(SELECT IFNULL(MAX(sm_serialNo),br.branch_orderSerial) FROM tbl_sales_master WHERE branch_id=br.branch_id AND sm_prefix=br.branch_orderPrefix AND sm_suffix=br.branch_orderSuffix) AS branch_serial ,
+                    //br.branch_orderSuffix as branch_suffix,
 
-//br.branch_unRegOrderPrefix as branch_prefix_un,
-//(SELECT IFNULL(MAX(sm_serialNo),br.branch_unRegOrderSerial) FROM tbl_sales_master WHERE branch_id=br.branch_id AND sm_prefix=br.branch_unRegOrderPrefix AND sm_suffix=br.branch_unRegOrderSuffix) AS branch_serial_un ,
-//br.branch_unRegOrderSuffix as branch_suffix_un,
+                    //br.branch_unRegOrderPrefix as branch_prefix_un,
+                    //(SELECT IFNULL(MAX(sm_serialNo),br.branch_unRegOrderSerial) FROM tbl_sales_master WHERE branch_id=br.branch_id AND sm_prefix=br.branch_unRegOrderPrefix AND sm_suffix=br.branch_unRegOrderSuffix) AS branch_serial_un ,
+                    //br.branch_unRegOrderSuffix as branch_suffix_un,
 
-//br.branch_type as branch_type  
-//FROM tbl_branch br 
-//INNER JOIN tbl_user_branches tub ON tub.branch_id=br.branch_id 
-//LEFT OUTER JOIN tbl_sales_master sm ON sm.branch_id=br.branch_id 
-//WHERE tub.user_id=" + order["user_id"] + "  GROUP BY sm.branch_id ORDER BY br.branch_name ASC ";
-//					DataTable dt_branch = db.SelectQueryForTransaction(branch_query);
-//					var dt_branchData = JsonConvert.SerializeObject(dt_branch, Formatting.Indented);
-					db.CommitTransaction();
-					//result = "{\"result\":\"" + result + "\",\"cust_amount\":" + cust_amount + ",\"dt_branchData\":" + dt_branchData + "}";
-					result = "{\"result\":\"" + result + "\",\"cust_amount\":" + cust_amount + "}";
-				}
-				else
-				{
+                    //br.branch_type as branch_type  
+                    //FROM tbl_branch br 
+                    //INNER JOIN tbl_user_branches tub ON tub.branch_id=br.branch_id 
+                    //LEFT OUTER JOIN tbl_sales_master sm ON sm.branch_id=br.branch_id 
+                    //WHERE tub.user_id=" + order["user_id"] + "  GROUP BY sm.branch_id ORDER BY br.branch_name ASC ";
+                    //					DataTable dt_branch = db.SelectQueryForTransaction(branch_query);
+                    //					var dt_branchData = JsonConvert.SerializeObject(dt_branch, Formatting.Indented);
+                    db.CommitTransaction();
+                    //result = "{\"result\":\"" + result + "\",\"cust_amount\":" + cust_amount + ",\"dt_branchData\":" + dt_branchData + "}";
+                    result = "{\"result\":\"" + result + "\",\"cust_amount\":" + cust_amount + "}";
+                }
+                else
+                {
 
-				}
-			}
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -4210,12 +4404,12 @@ FROM tbl_print_info tpi tpi.print_last_update>'" + last_device_db_updated + "'";
                 //    if (cust_amount > max_allowed_credit) { sm_delivery_status = 3; add_on_note.Append(" Max Credit Limit Exceeded on Edit.<br />"); }
                 //}
 
-				db.ExecuteQueryForTransaction("UPDATE tbl_sales_master SET sm_specialnote=CONCAT(sm_specialnote ,'" + add_on_note.ToString() + "'),sm_delivery_status=3, sm_is_quote=1, sm_is_dist_approved=0, sm_dist_appr_user=0, sm_dist_appr_date=NULL WHERE sm_id='" + editedorder["sm_id"] + "'");
-				//if (sm_delivery_status == 3)
-    //            {
-    //                sent_notification = true;
-    //                db.ExecuteQueryForTransaction("UPDATE tbl_sales_master SET sm_specialnote=CONCAT(sm_specialnote ,'" + add_on_note.ToString() + "'),sm_delivery_status=3 WHERE sm_id='" + editedorder["sm_id"] + "'");
-    //            }
+                db.ExecuteQueryForTransaction("UPDATE tbl_sales_master SET sm_specialnote=CONCAT(sm_specialnote ,'" + add_on_note.ToString() + "'),sm_delivery_status=3, sm_is_quote=1, sm_is_dist_approved=0, sm_dist_appr_user=0, sm_dist_appr_date=NULL WHERE sm_id='" + editedorder["sm_id"] + "'");
+                //if (sm_delivery_status == 3)
+                //            {
+                //                sent_notification = true;
+                //                db.ExecuteQueryForTransaction("UPDATE tbl_sales_master SET sm_specialnote=CONCAT(sm_specialnote ,'" + add_on_note.ToString() + "'),sm_delivery_status=3 WHERE sm_id='" + editedorder["sm_id"] + "'");
+                //            }
 
             }
             #endregion
@@ -5520,59 +5714,59 @@ WHERE sri.srm_id='" + filters["srm_id"] + "' GROUP BY sri.sri_id";
         return result;
     }
 
-	[WebMethod]// get location on chekin in
-	public static string Make_it_Favorite(string itbs_id, string retailer_id, string timezone)
-	{
-		string result = "N";
-		try
-		{
-			mySqlConnection db = new mySqlConnection();
+    [WebMethod]// get location on chekin in
+    public static string Make_it_Favorite(string itbs_id, string retailer_id, string timezone)
+    {
+        string result = "N";
+        try
+        {
+            mySqlConnection db = new mySqlConnection();
 
-			string currdatetime = Get_Current_Date_Time(timezone);
-			//checking - weather the customer in which salesman checked in is available within 300 meters.
-			//--------------------------------------------------------------------------------------------
-			string cust_qry = "select itbs_id from tbl_itembranch_stock where itbs_id='" + itbs_id + "'";
-			DataTable dt = db.SelectQuery(cust_qry);
-			if (dt.Rows.Count > 0)
-			{
-				//----------Checking if the item is already marked as favorite---------------------------------
-				string visitqry = "select itbs_id from tb_retailer_favourites where itbs_id='" + itbs_id + "' and retailer_id='" + retailer_id + "'";
-				DataTable dt1 = db.SelectQuery(visitqry);
-				if (dt1.Rows.Count != 0)
-				{
-					// if already marked as favorite -> remove from favorite
+            string currdatetime = Get_Current_Date_Time(timezone);
+            //checking - weather the customer in which salesman checked in is available within 300 meters.
+            //--------------------------------------------------------------------------------------------
+            string cust_qry = "select itbs_id from tbl_itembranch_stock where itbs_id='" + itbs_id + "'";
+            DataTable dt = db.SelectQuery(cust_qry);
+            if (dt.Rows.Count > 0)
+            {
+                //----------Checking if the item is already marked as favorite---------------------------------
+                string visitqry = "select itbs_id from tb_retailer_favourites where itbs_id='" + itbs_id + "' and retailer_id='" + retailer_id + "'";
+                DataTable dt1 = db.SelectQuery(visitqry);
+                if (dt1.Rows.Count != 0)
+                {
+                    // if already marked as favorite -> remove from favorite
 
-					string updateqry = "DELETE FROM tb_retailer_favourites WHERE itbs_id='" + itbs_id + "' and retailer_id='" + retailer_id + "'";
-					db.ExecuteQuery(updateqry);
-					result = "REMOVED";
+                    string updateqry = "DELETE FROM tb_retailer_favourites WHERE itbs_id='" + itbs_id + "' and retailer_id='" + retailer_id + "'";
+                    db.ExecuteQuery(updateqry);
+                    result = "REMOVED";
 
-				}
-				else
-				{
+                }
+                else
+                {
                     // if not marked as favorite -> mark as favorite
                     string insertqry = "INSERT INTO tb_retailer_favourites(itbs_id,retailer_id,last_updated) VALUES('" + itbs_id + "','" + retailer_id + "','" + currdatetime + "')";
                     db.ExecuteQuery(insertqry);
-					result = "ADDED";
-				}
+                    result = "ADDED";
+                }
 
-				
-			}
-			else 
-			{
+
+            }
+            else
+            {
                 result = "ITEMNOTFOUND";
                 return result;
-			}
-		}
+            }
+        }
 
-		catch (Exception ex)
-		{
-			LogClass log = new LogClass("Make_it_Favorite");
-			log.write(ex);
-			result = "ERROR";
-			return result;
-		}
+        catch (Exception ex)
+        {
+            LogClass log = new LogClass("Make_it_Favorite");
+            log.write(ex);
+            result = "ERROR";
+            return result;
+        }
 
-		return result;
+        return result;
 
-	}
+    }
 }

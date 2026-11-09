@@ -145,6 +145,27 @@ public partial class web_sales_new_sales_order : System.Web.UI.Page
         return Math.Round(v, acc, MidpointRounding.AwayFromZero);
     }
 
+    class UomInfo
+    {
+        public int TypeId;
+        public decimal Factor;
+        public string TypeName;
+    }
+
+    // Converts a customer-UOM length/width into the linear unit of the sales UOM (the unit is the UOM itself for Length,
+    // and its square root-scaled linear unit for Area). Returns null when the sales UOM has no length/width (or width) dimension.
+    static decimal? ToSalesLinear(decimal? value, UomInfo cust, UomInfo sales, bool isWidth)
+    {
+        if (value == null) return null;
+        bool length = string.Equals(sales.TypeName, "Length", StringComparison.OrdinalIgnoreCase);
+        bool area = string.Equals(sales.TypeName, "Area", StringComparison.OrdinalIgnoreCase);
+        if (!length && !area) return null;
+        if (length && isWidth) return null;
+        decimal ratio = cust.Factor / sales.Factor;
+        decimal linear = area ? (decimal)Math.Sqrt((double)ratio) : ratio;
+        return Math.Round(value.Value * linear, 4, MidpointRounding.AwayFromZero);
+    }
+
     // Saves the order through sp_save_sales_order_json. Amounts are recalculated here from DB tax/price data.
     [WebMethod(EnableSession = true)]
     public static string SaveSalesOrder(SalesOrderSaveRequest request)
@@ -166,7 +187,7 @@ public partial class web_sales_new_sales_order : System.Web.UI.Page
             {
                 if (it == null || it.itbs_id == null || it.itbs_id <= 0)
                     return JsonConvert.SerializeObject(Fail("Each item needs a valid item selection."));
-                if (it.tum_id == null || it.tum_id <= 0)
+                if (it.tum_id_cust == null || it.tum_id_cust <= 0)
                     return JsonConvert.SerializeObject(Fail("Each item needs a unit of measure."));
                 if (it.si_qty == null || it.si_qty <= 0)
                     return JsonConvert.SerializeObject(Fail("Each item needs a positive final quantity."));
@@ -204,6 +225,15 @@ public partial class web_sales_new_sales_order : System.Web.UI.Page
                 + "where tis.branch_id=@b and tis.itbs_id in (" + ids + ")",
                 new MySqlParameter[] { new MySqlParameter("@tpm", custType), new MySqlParameter("@b", m.branch_id.Value) });
 
+            Dictionary<int, UomInfo> uoms = new Dictionary<int, UomInfo>();
+            foreach (DataRow ur in db.SelectQuery("select u.tum_id,u.tum_type_id,u.tum_convertion_fac,t.tumt_name from tbl_item_uom u left join tbl_item_uom_type t on t.tumt_id=u.tum_type_id").Rows)
+                uoms[Convert.ToInt32(ur["tum_id"])] = new UomInfo
+                {
+                    TypeId = ur["tum_type_id"] == DBNull.Value ? 0 : Convert.ToInt32(ur["tum_type_id"]),
+                    Factor = ur["tum_convertion_fac"] == DBNull.Value ? 0m : Convert.ToDecimal(ur["tum_convertion_fac"]),
+                    TypeName = Convert.ToString(ur["tumt_name"])
+                };
+
             decimal sTotal = 0, sDisc = 0, sNet = 0, sTaxable = 0, sTax = 0;
             int row = 0;
             foreach (SalesOrderItem it in request.items)
@@ -240,6 +270,20 @@ public partial class web_sales_new_sales_order : System.Web.UI.Page
                 int salesUom = d["itsv_uom_sales"] == DBNull.Value ? 0 : Convert.ToInt32(d["itsv_uom_sales"]);
                 if (salesUom <= 0)
                     return JsonConvert.SerializeObject(Fail("Sales unit of measure is not configured for " + nm + "."));
+
+                // length/width arrive in the customer's UOM; keep them as entered and store the sales-UOM equivalents in length/width
+                UomInfo custU, salesU;
+                if (!uoms.TryGetValue(it.tum_id_cust.Value, out custU) || custU.Factor <= 0)
+                    return JsonConvert.SerializeObject(Fail("Selected unit of measure is invalid for " + nm + "."));
+                if (!uoms.TryGetValue(salesUom, out salesU) || salesU.Factor <= 0)
+                    return JsonConvert.SerializeObject(Fail("Sales unit of measure is invalid for " + nm + "."));
+                if (custU.TypeId != salesU.TypeId)
+                    return JsonConvert.SerializeObject(Fail("Selected unit of measure cannot be converted to the sales unit for " + nm + "."));
+                decimal? custLen = it.length > 0 ? it.length : null, custWid = it.width > 0 ? it.width : null;
+                it.sio_length_cust_fraction = custLen;
+                it.sio_width_cust_fraction = custWid;
+                it.length = ToSalesLinear(custLen, custU, salesU, false);
+                it.width = ToSalesLinear(custWid, custU, salesU, true);
 
                 it.row_no = row++;
                 it.tum_id = salesUom;
@@ -308,7 +352,7 @@ public partial class web_sales_new_sales_order : System.Web.UI.Page
                 if (p.Name.StartsWith("smo_")) p.SetValue(m, null, null);
             foreach (SalesOrderItem it in request.items)
                 foreach (System.Reflection.PropertyInfo p in typeof(SalesOrderItem).GetProperties())
-                    if (p.Name.StartsWith("sio_")) p.SetValue(it, null, null);
+                    if (p.Name.StartsWith("sio_") && !p.Name.EndsWith("_cust_fraction")) p.SetValue(it, null, null);
 
             JsonSerializerSettings js = new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore };
             string orderJson = JsonConvert.SerializeObject(request, js);

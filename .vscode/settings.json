@@ -1,0 +1,4 @@
+{
+  "dotnet.defaultSolution": "InvoiceMe.sln",
+  "dotnet.preferCSharpExtension": true
+}

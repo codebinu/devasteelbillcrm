@@ -29,7 +29,7 @@ public class SalesOrderInvoiceRequest
 public class SalesOrderInvoiceLineRequest
 {
     public int sioId { get; set; }
-    public int qty { get; set; }
+    public decimal qty { get; set; }
 }
 
 public class SalesOrderInvoiceResult
@@ -47,7 +47,7 @@ public class SalesOrderInvoiceLine
     public string Name, Code, Uom;
     public decimal Ordered, Invoiced, Remaining, Reserved;
     public decimal Price, OrgPrice, DiscountRate, TaxPercent, CessPercent;
-    public int MaxQty, InvoiceableQty;
+    public decimal MaxQty, InvoiceableQty;
     public bool IsProduct;
     public string Issue;
 }

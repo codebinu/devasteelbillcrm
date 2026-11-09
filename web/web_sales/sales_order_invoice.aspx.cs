@@ -79,11 +79,11 @@ public partial class web_sales_sales_order_invoice : System.Web.UI.Page
         if (l.Issue != null)
             return l.Issue;
         if (l.InvoiceableQty <= 0)
-            return l.Remaining > 0 ? "Remaining quantity is less than one unit." : "Fully invoiced.";
+            return l.Remaining > 0 ? "Remaining quantity is too small to invoice." : "Fully invoiced.";
         if (l.MaxQty <= 0)
             return "No reserved stock. Reserve stock in the Reserved Items tab.";
         if (l.MaxQty < l.InvoiceableQty)
-            return "Only " + l.MaxQty + " " + l.Uom + " reserved.";
+            return "Only " + Num(l.MaxQty) + " " + l.Uom + " reserved.";
         return "";
     }
 }

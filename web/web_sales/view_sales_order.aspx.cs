@@ -116,16 +116,32 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
                 case "failed": ActionMessage = "The status could not be changed because the order was modified or is not in a valid state."; break;
             }
 
-            DataTable items = db.SelectQuery("select sio.row_no,sio.itm_name,sio.sio_finalqty,sio.sio_price,sio.sio_total,sio.sio_discount_rate,sio.sio_discount_amount,sio.sio_item_tax,sio.sio_item_cess,sio.sio_tax_amount,sio.sio_net_amount,"
+            DataTable items = db.SelectQuery("select sio.*,"
                 + "(select tis.itm_code from tbl_itembranch_stock tis where tis.itbs_id=sio.itbs_id limit 1) as itm_code,"
                 + "(select u.tum_name from tbl_item_uom u where u.tum_id=sio.tum_id limit 1) as uom "
                 + "from tbl_sales_items_order sio where sio.smo_id=@id order by sio.row_no",
                 new MySqlParameter[] { new MySqlParameter("@id", smoId) });
             int sl = 1;
             items.Columns.Add("sl", typeof(int));
+            items.Columns.Add("cust_qty", typeof(string));
+            items.Columns.Add("cust_size", typeof(string));
+            items.Columns.Add("cust_uom", typeof(string));
+            Dictionary<int, string> uomNames = new Dictionary<int, string>();
+            foreach (DataRow ur in db.SelectQuery("select tum_id,tum_name from tbl_item_uom").Rows)
+                uomNames[Convert.ToInt32(ur["tum_id"])] = Convert.ToString(ur["tum_name"]);
+            bool hasCustUom = items.Columns.Contains("tum_id_cust"), hasPiece = items.Columns.Contains("sio_no_piece");
+            bool hasCustLen = items.Columns.Contains("sio_length_cust_fraction"), hasCustWid = items.Columns.Contains("sio_width_cust_fraction");
             foreach (DataRow r in items.Rows)
             {
                 r["sl"] = sl++;
+                // customer-entered values: pieces, length x width and the UOM those dimensions were typed in
+                if (hasPiece && r["sio_no_piece"] != DBNull.Value && Dec(r["sio_no_piece"]) > 0)
+                    r["cust_qty"] = Dec(r["sio_no_piece"]).ToString("0.##");
+                decimal custLen = hasCustLen ? Dec(r["sio_length_cust_fraction"]) : 0, custWid = hasCustWid ? Dec(r["sio_width_cust_fraction"]) : 0;
+                r["cust_size"] = custLen > 0 ? custLen.ToString("0.####") + (custWid > 0 ? " x " + custWid.ToString("0.####") : "") : "";
+                string cu;
+                if (hasCustUom && r["tum_id_cust"] != DBNull.Value && uomNames.TryGetValue(Convert.ToInt32(r["tum_id_cust"]), out cu))
+                    r["cust_uom"] = cu;
                 ItemsQty += Dec(r["sio_finalqty"]);
                 ItemsTotal += Dec(r["sio_total"]);
                 ItemsDiscount += Dec(r["sio_discount_amount"]);

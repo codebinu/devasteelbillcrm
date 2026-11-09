@@ -1125,6 +1125,11 @@
                                     <label style="font-weight: bold; font-size: 16px;">Sales Order Details</label>
                                 </div>
                                 <div class="col-md-6 col-xs-5">
+                                    <% if (Order != null) { %>
+                                    <a href="edit_sales_order.aspx?smoId=<%= Enc(Order["smo_id"]) %>">
+                                        <div class="btn btn-success btn-xs pull-right" style="margin-top: 5px; margin-left: 5px"><label style="color: #fff; margin-right: 5px; font-size: 14px;" class="fa fa-pencil"></label>Edit</div>
+                                    </a>
+                                    <% } %>
                                     <a href="sales_order_list.aspx">
                                         <div class="btn btn-primary btn-xs pull-right" style="margin-top: 5px"><label style="color: #fff; margin-right: 5px; font-size: 14px;" class="fa fa-arrow-left"></label>Back to Sales Orders</div>
                                     </a>
@@ -1199,7 +1204,10 @@
                                                             <th>Item Code</th>
                                                             <th>Item Name</th>
                                                             <th style="text-align: right;">Qty</th>
+                                                            <th>Size (L x W)</th>
                                                             <th>UOM</th>
+                                                            <th style="text-align: right;">Final Qty</th>
+                                                            <th>Final UOM</th>
                                                             <th style="text-align: right;">Unit Price</th>
                                                             <th style="text-align: right;">Discount</th>
                                                             <th style="text-align: right;">Tax / GST</th>
@@ -1213,6 +1221,9 @@
                                                                     <td><%# Eval("sl") %></td>
                                                                     <td><%# Enc(Eval("itm_code")) %></td>
                                                                     <td><%# Enc(Eval("itm_name")) %></td>
+                                                                    <td style="text-align: right;"><%# Enc(Eval("cust_qty")) %></td>
+                                                                    <td><%# Enc(Eval("cust_size")) %></td>
+                                                                    <td><%# Enc(Eval("cust_uom")) %></td>
                                                                     <td style="text-align: right;"><%# Num(Eval("sio_finalqty")) %></td>
                                                                     <td><%# Enc(Eval("uom")) %></td>
                                                                     <td style="text-align: right;"><%# Money(Eval("sio_price")) %></td>
@@ -1223,10 +1234,11 @@
                                                             </ItemTemplate>
                                                         </asp:Repeater>
                                                         <% if (ItemCount == 0) { %>
-                                                        <tr><td colspan="9" style="text-align: center">No items found for this sales order.</td></tr>
+                                                        <tr><td colspan="12" style="text-align: center">No items found for this sales order.</td></tr>
                                                         <% } else { %>
                                                         <tr style="font-weight: bold; background: #f9f9f9;">
                                                             <td colspan="3" style="text-align: right;">Total</td>
+                                                                                                                    <td colspan="3"></td>
                                                             <td style="text-align: right;"><%= Num(ItemsQty) %></td>
                                                             <td colspan="2"></td>
                                                             <td style="text-align: right;"><%= Money(ItemsDiscount) %></td>

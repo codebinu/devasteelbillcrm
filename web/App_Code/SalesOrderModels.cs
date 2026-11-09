@@ -132,6 +132,10 @@ public class SalesOrderItem
     public decimal? sio_width { get; set; }
     public decimal? width { get; set; }
 
+    public int? tum_id_cust { get; set; }
+    public decimal? sio_length_cust_fraction { get; set; }
+    public decimal? sio_width_cust_fraction { get; set; }
+
     public decimal? sio_finalqty { get; set; }
     public decimal? si_qty { get; set; }
 

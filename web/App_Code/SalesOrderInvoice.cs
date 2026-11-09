@@ -29,7 +29,7 @@ public static partial class SalesOrderStock
     sealed class InvoiceLineStock
     {
         public SalesOrderInvoiceLine Line;
-        public int Qty;
+        public decimal Qty;
         public decimal NeedBatch;
     }
 
@@ -148,8 +148,7 @@ public static partial class SalesOrderStock
             };
             l.Remaining = Math.Max(0m, l.Ordered - l.Invoiced);
             l.Uom = UomName(uoms, lineTum > 0 ? lineTum : salesTum);
-            decimal whole = Math.Floor(l.Remaining + WholeTolerance);
-            l.InvoiceableQty = (int)Math.Min(int.MaxValue, whole);
+            l.InvoiceableQty = Floor3(l.Remaining + WholeTolerance);
             l.MaxQty = l.InvoiceableQty;
 
             if (l.ItmId <= 0 || l.ItbsId <= 0)
@@ -168,8 +167,7 @@ public static partial class SalesOrderStock
                 {
                     factors[l.SioId] = new decimal[] { lineToSales.Value, f.Value };
                     l.Reserved = Round6(D(r["reserved_batch"]) * f.Value / lineToSales.Value);
-                    decimal reservedWhole = Math.Floor(l.Reserved + Tolerance);
-                    l.MaxQty = (int)Math.Min(l.MaxQty, Math.Min(int.MaxValue, reservedWhole));
+                    l.MaxQty = Math.Min(l.MaxQty, Floor3(l.Reserved + WholeTolerance));
                 }
             }
             if (l.Issue != null)
@@ -314,6 +312,8 @@ public static partial class SalesOrderStock
             throw new StockException("The same item is selected more than once.");
         if (rq.lines.Any(x => x.qty <= 0))
             throw new StockException("The quantity of every selected item must be greater than zero.");
+        if (rq.lines.Any(x => Math.Round(x.qty, 3, MidpointRounding.AwayFromZero) != x.qty))
+            throw new StockException("The quantity can have at most 3 decimal places.");
         if (rq.paymentMode < 1 || rq.paymentMode > 3)
             throw new StockException("Select a payment mode.");
         if (rq.cashAmount < 0 || rq.chequeAmount < 0 || rq.cashAmount > 9999999999m || rq.chequeAmount > 9999999999m)
@@ -383,9 +383,9 @@ public static partial class SalesOrderStock
                 if (l.Issue != null)
                     throw new StockException(l.Name + ": " + l.Issue);
                 if (q.qty > l.InvoiceableQty)
-                    throw new StockException(l.Name + ": only " + l.InvoiceableQty + " " + l.Uom + " remain to be invoiced.");
+                    throw new StockException(l.Name + ": only " + Fmt(l.InvoiceableQty) + " " + l.Uom + " remain to be invoiced.");
                 if (q.qty > l.MaxQty)
-                    throw new StockException(l.Name + ": only " + Fmt(l.Reserved) + " " + l.Uom + " are reserved for this order. Reserve more stock before invoicing " + q.qty + ".");
+                    throw new StockException(l.Name + ": only " + Fmt(l.Reserved) + " " + l.Uom + " are reserved for this order. Reserve more stock before invoicing " + Fmt(q.qty) + ".");
                 var p = new InvoiceLineStock { Line = l, Qty = q.qty };
                 if (l.IsProduct)
                 {

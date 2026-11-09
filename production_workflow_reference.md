@@ -238,8 +238,18 @@ Output-reservation defaults (`branch_id = 0`, zero `itbrs_date`, `itbrs_by = 0`)
 Rules enforced before the call (the procedure itself does not): order is in an open status; finished stock is reserved first (a partial
 shortfall is produced only after the available finished quantity is reserved); the BOM has exactly one component; the chosen reservation belongs to
 **this** order line, is a BOM component, is in the order's warehouse, and would not produce more than the pending quantity; the output has at most
-3 decimals (reservation column precision); no entry exists yet for the order. The existing Reserved Items "Move to production" button
-(`SalesOrderStock.MoveToProduction`) is intentionally **unchanged**.
+3 decimals (reservation column precision); no entry exists yet for the order; total produced for the line would not exceed the ordered quantity.
+The pending quantity is the ordered quantity less what is already invoiced, so invoicing finished stock does not re-open production.
+After the procedure succeeds, `SalesOrderStock.ApplyProductionStock` applies the movements the procedure omits, in one transaction:
+the raw-material batch and `itbs_stock` are reduced, the finished `itbs_stock` is increased, and `tbl_stock_transactions` rows
+(`action_type = 12`) are written. If that step fails the entry stays saved and the user sees a warning. The existing Reserved Items
+"Move to production" button (`SalesOrderStock.MoveToProduction`) applies the same total-produced cap.
+Both production buttons are labelled **Produce** and share the same checks and messages (open status, BOM, finished stock first, total-produced cap).
+The Production tab's stored-procedure route adds its own limits (one raw material, one production per order, one reservation chosen by the user) and says so.
+Each production job has an **Undo** action (`SalesOrderStock.UndoProduction`, web method `UndoProduction`): it retires the finished batch
+(quantity 0, `itbh_status = 0`), removes its reservation, returns the raw material to its batches and re-reserves it for the line, reverses
+`itbs_stock` and writes reversing ledger rows (only when the job had ledger rows), then deletes the `tbl_item_pro_master` / `tbl_item_pro_items`
+rows. It is refused once finished stock has been invoiced or used, or is reserved by another order, and only while the order is Approved or Processed.
 
 ## 13. Workflow diagram
 

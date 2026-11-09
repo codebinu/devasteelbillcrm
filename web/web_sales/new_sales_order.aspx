@@ -551,9 +551,10 @@
                 var a = lineAmounts(l.finalQty, l.price, l.discount, num(l.tax), num(l.cess));
                 t.total += a.total; t.disc += a.disc; t.tax += a.tax; t.net += a.net;
                 var dims = (l.length ? l.length : "") + (l.width ? " x " + l.width : "");
+                var fu = l.defUomId && UomConversion.findUom(l.defUomId), finalUom = fu && fu.tum_name ? " " + esc(fu.tum_name) : "";
                 $b.append('<tr><td>' + (i + 1) + '</td><td>' + esc(l.code) + '</td><td>' + esc(l.name) + '</td><td>' + esc(l.uomName) + '</td>'
                     + '<td class="text-right">' + l.no_piece + '</td><td>' + esc(dims) + '</td>'
-                    + '<td class="text-right">' + l.finalQty.toFixed(2) + '</td><td class="text-right">' + l.price.toFixed(accuracyNum) + '</td>'
+                    + '<td class="text-right">' + l.finalQty.toFixed(2) + finalUom + '</td><td class="text-right">' + l.price.toFixed(accuracyNum) + '</td>'
                     + '<td class="text-right">' + l.discount + '%</td>'
                                         + '<td class="text-right">' + (taxMethod == 0 ? 0 : num(l.tax)) + '%</td><td class="text-right">' + a.tax.toFixed(accuracyNum) + '</td>'
                                         + '<td class="text-right">' + a.net.toFixed(accuracyNum) + '</td>'
@@ -581,7 +582,7 @@
         function buildRequest() {
             var items = $.map(soItems, function (l, i) {
                 return {
-                    row_no: i, itbs_id: l.itbs_id, itm_id: l.itm_id, itm_name: l.name, tum_id: l.defUomId,
+                    row_no: i, itbs_id: l.itbs_id, itm_id: l.itm_id, itm_name: l.name, tum_id: l.defUomId, tum_id_cust: l.tum_id,
                     no_piece: l.no_piece, length: l.length, width: l.width,
                     si_qty: l.finalQty, si_price: l.price, si_discount_rate: l.discount
                 };
