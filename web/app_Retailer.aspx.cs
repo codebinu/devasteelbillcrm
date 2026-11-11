@@ -1027,7 +1027,7 @@ FROM tbl_print_info tpi ";
     }
 
     [WebMethod]
-    public static string Get_Quotations_with_date_range(Dictionary<string, string> filters)
+    public static string Get_Quotations_with_date_range_old(Dictionary<string, string> filters)
     {
         var result = "";
         var auth_result = authenticate_user(filters["user_id"].ToString(), filters["password"].ToString(), filters["device_id"].ToString());
@@ -1130,7 +1130,91 @@ FROM tbl_print_info tpi ";
         }
         catch (Exception ex)
         {
-            var log = new LogClass("Get_Orders_with_date_range");
+            var log = new LogClass("Get_Orders_with_date_range_old");
+            log.write(ex);
+            result = "ERROR";
+            return result;
+        }
+    }
+
+    [WebMethod]
+    public static string Get_Quotations_with_date_range(Dictionary<string, string> filters)
+    {
+        var result = "";
+        var auth_result = authenticate_user(filters["user_id"].ToString(), filters["password"].ToString(), filters["device_id"].ToString());
+        if (auth_result == "0")
+        {
+            result = "BLOCKED";
+            return result;
+        }
+
+        try
+        {
+            var perPage = 10;
+            var totalRows = 0;
+            var lowerBound = ((Convert.ToInt32(filters["page"]) - 1) * perPage);
+            var upperBound = perPage + lowerBound - 1;
+
+
+            var display_cond = "";
+            if (filters["display_type"] == "1")
+            {
+                display_cond += " AND sm.smo_invoice_no IS NULL ";
+            }
+            else if (filters["display_type"] == "2")
+            {
+                display_cond += " AND sm.smo_invoice_no IS NOT NULL ";
+            }
+
+            var cust_condition = "";
+            if (filters["customer_id"] != "0")
+            {
+                cust_condition += " AND sm.cust_id='" + filters["customer_id"] + "' ";
+            }
+
+            var qry_Condition = " AND sm.smo_is_quote!=0 ";
+            if (filters["order_status"] != "x")
+            {
+                qry_Condition += " AND sm.smo_delivery_status='" + filters["order_status"] + "' ";
+            }
+
+            if (filters["orders_from"] != "0000-00-00")
+            {
+                qry_Condition += " AND date(sm.smo_date)>='" + filters["orders_from"] + "' ";
+            }
+
+            if (filters["orders_to"] != "0000-00-00")
+            {
+                qry_Condition += "  AND date(sm.smo_date)<='" + filters["orders_to"] + "' ";
+            }
+
+            if (filters["approval_status"] != "x")
+            {
+                if (filters["approval_status"] != "1")
+                {
+                    qry_Condition += " AND sm.smo_is_retail_approved=0 AND sm.smo_is_dist_approved=1 ";
+                }
+                else
+                {
+                    qry_Condition += " AND sm.smo_is_retail_approved=1 AND sm.smo_is_dist_approved=0 ";
+                }
+            }
+
+            if (filters["branch"] != "0" && filters["branch"] != null)
+            {
+                qry_Condition += " AND sm.branch_id='" + filters["branch"] + "' ";
+            }
+
+            var count_qry = "SELECT sm.smo_id as sm_id,cu.cust_name,DATE_FORMAT(sm.smo_date, '%Y-%M-%d %h:%i %p') as sm_date,sm.smo_invoice_no as sm_invoice_no,sm.smo_is_retail_approved as sm_is_retail_approved,sm.smo_is_dist_approved as sm_is_dist_approved,sm.smo_netamount as sm_netamount,sm.smo_netamount as total_balance,sm.smo_delivery_status as sm_delivery_status,sm.smo_packed,smo_is_quote as sm_is_quote FROM tbl_sales_master_order sm INNER JOIN tbl_customer cu ON cu.cust_id=sm.cust_id INNER JOIN tbl_branch br ON br.branch_id=sm.branch_id WHERE 1=1 " + cust_condition + qry_Condition + display_cond + " ORDER BY sm.smo_id DESC";
+            var dt_count = new mySqlConnection().SelectQuery(count_qry);
+            totalRows = dt_count.Rows.Count;
+            result = "{\"totalRows\":\"" + totalRows + "\",\"perPage\":\"" + perPage + "\",\"order_list\":" + JsonConvert.SerializeObject(new mySqlConnection().SelectQuery(@"SELECT sm.smo_id as sm_id,br.branch_name,cu.cust_name,DATE_FORMAT(sm.smo_date, '%Y-%M-%d %h:%i %p') as sm_date,IFNULL(sm.smo_invoice_no,'NIL') AS sm_invoice_no,sm.smo_is_retail_approved as sm_is_retail_approved,sm.smo_is_dist_approved as sm_is_dist_approved,sm.smo_netamount as sm_netamount,sm.smo_netamount as total_balance,sm.smo_delivery_status as sm_delivery_status,sm.smo_packed as sm_packed,sm.smo_is_quote as sm_is_quote FROM tbl_sales_master_order sm INNER JOIN tbl_customer cu ON cu.cust_id=sm.cust_id INNER JOIN tbl_branch br ON br.branch_id=sm.branch_id WHERE 1=1 " + cust_condition + qry_Condition + display_cond + " ORDER BY sm.smo_processed_date DESC LIMIT " + perPage + " OFFSET " + lowerBound + ""), Formatting.Indented) + "}";
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            var log = new LogClass("Get_Quotations_with_date_range");
             log.write(ex);
             result = "ERROR";
             return result;
@@ -1927,6 +2011,109 @@ LEFT OUTER JOIN tbl_user_details AS ret ON tbl_sales_master.sm_retail_appr_user 
             INNER JOIN tbl_customer cu ON cu.cust_id=sm.cust_id 
             LEFT OUTER JOIN tbl_price_master pm1 ON pm1.tpm_id=cu.cust_type 
             LEFT OUTER JOIN tbl_price_master pm2 ON pm2.tpm_id=cu.new_custtype WHERE sm.sm_id='" + order_id + "' GROUP BY cu.cust_id";
+
+            DataTable dt_class = db.SelectQuery(class_qry);
+            sb.Append("\"price_class\":" + JsonConvert.SerializeObject(dt_class, Formatting.Indented));
+            sb.Append("}");
+            string a = sb.ToString();
+            return sb.ToString();
+        }
+        catch (Exception ex)
+        { return "N"; }
+    }
+
+    [WebMethod]
+    public static string fetch_full_quotation_details(string order_id)
+    {
+        StringBuilder sb = new StringBuilder();
+        try
+        {
+            mySqlConnection db = new mySqlConnection();
+            sb.Append("{");
+            string qry_order = @"
+SELECT  app.first_name AS app_first_name, app.last_name AS app_last_name,
+    del.first_name AS del_first_name, del.last_name AS del_last_name,
+    canc.first_name AS canc_first_name, canc.last_name AS canc_last_name,
+    sel.first_name AS sel_first_name, sel.last_name AS sel_last_name,
+    pro.first_name AS pro_first_name, pro.last_name AS pro_last_name,
+    pak.first_name AS pak_first_name, pak.last_name AS pak_last_name,
+    veh.first_name AS veh_first_name, veh.last_name AS veh_last_name,
+    ret.first_name AS ret_first_name, ret.last_name AS ret_last_name,
+    dist.first_name AS dist_first_name, dist.last_name AS dist_last_name,
+    cust.cust_id, cust.cust_name, cust.cust_city, cust.cust_address,
+    cust.max_creditamt, cust.max_creditperiod, cust.new_creditamt, cust.new_creditperiod,
+    cust.cust_type, cust.new_custtype, cust.cust_amount, cust.cust_status,
+    IFNULL(smo.smo_invoice_no,'NIL') AS sm_invoice_no,
+    smo.smo_order_type AS sm_order_type,
+    smo.smo_id AS sm_id,
+    smo.smo_netamount AS sm_netamount,
+    smo.smo_tax_amount AS sm_tax_amount,
+    smo.smo_tax_excluded_amt AS sm_tax_excluded_amt,
+    smo.smo_netamount AS total_balance,
+    0 AS total_paid,
+    smo.smo_delivery_status AS sm_delivery_status,
+    smo.smo_packed AS sm_packed,
+    smo.smo_payment_type AS sm_payment_type,
+    smo.smo_specialnote AS sm_specialnote,
+    smo.smo_vehicle_no AS sm_vehicle_no,
+    smo.branch_tax_method,
+    smo.branch_tax_inclusive,
+    smo.branch_id,
+    smo.smo_price_class AS sm_price_class,
+    smo.smo_type AS sm_type,
+    smo.smo_is_quote AS sm_is_quote,
+    smo.smo_is_retail_approved AS sm_is_retail_approved,
+    smo.smo_is_dist_approved AS sm_is_dist_approved,
+    smo.smo_roundoff AS sm_roundoff,
+    br.branch_name, br.branch_address, br.branch_email, br.branch_phone1,
+    DATE_FORMAT(smo.smo_dist_appr_date, '%d %M %Y %h:%i %p') AS sm_dist_appr_date,
+    DATE_FORMAT(smo.smo_retail_appr_date, '%d %M %Y %h:%i %p') AS sm_retail_appr_date,
+    IFNULL(smo.smo_approved_id,0) AS is_order_approved,
+    DATE_FORMAT(smo.smo_date, '%d %M %Y %h:%i %p') AS sm_date,
+    DATE_FORMAT(smo.smo_packed_date, '%d %M %Y %h:%i %p') AS sm_packed_date,
+    DATE_FORMAT(smo.smo_processed_date, '%d %M %Y %h:%i %p') AS sm_processed_date,
+    DATE_FORMAT(smo.smo_delivered_date, '%d %M %Y %h:%i %p') AS sm_delivered_date,
+    DATE_FORMAT(smo.smo_cancelled_date, '%d %M %Y %h:%i %p') AS sm_cancelled_date,
+    DATE_FORMAT(smo.smo_last_updated_date, '%d%m%Y%h%i%s') AS sm_last_updated_date,
+    DATE_FORMAT(smo.smo_approved_date, '%d %m %Y %h:%i %p') AS sm_approved_date
+FROM tbl_sales_master_order smo
+INNER JOIN tbl_branch br ON br.branch_id=smo.branch_id
+LEFT OUTER JOIN tbl_user_details app ON smo.smo_approved_id = app.user_id
+LEFT OUTER JOIN tbl_user_details AS del ON smo.smo_delivered_id = del.user_id
+LEFT OUTER JOIN tbl_user_details AS canc ON smo.smo_cancelled_id = canc.user_id
+LEFT OUTER JOIN tbl_user_details AS pak ON smo.smo_packed_id = pak.user_id
+LEFT OUTER JOIN tbl_user_details AS pro ON smo.smo_processed_id = pro.user_id
+LEFT OUTER JOIN tbl_user_details AS veh ON smo.smo_delivery_vehicle_id = veh.user_id
+LEFT OUTER JOIN tbl_user_details AS sel ON smo.smo_userid = sel.user_id
+LEFT OUTER JOIN tbl_user_details AS dist ON smo.smo_dist_appr_user = dist.user_id
+LEFT OUTER JOIN tbl_user_details AS ret ON smo.smo_retail_appr_user = ret.user_id
+LEFT OUTER JOIN tbl_customer AS cust ON smo.cust_id = cust.cust_id
+WHERE smo.smo_id='" + order_id + "'";
+
+            DataTable dt_order = new DataTable();
+            dt_order = db.SelectQuery(qry_order);
+            sb.Append("\"order\":" + JsonConvert.SerializeObject(dt_order, Formatting.Indented));
+            sb.Append(",");
+            string qry_items = @"SELECT itm.itm_qty_per_carton,
+            si.itbs_id,itm.itm_code,si.itm_name,
+            si.sio_org_price as si_org_price,si.sio_price as si_price,si.sio_finalqty as si_qty,si.sio_total as si_total,si.sio_discount_rate as si_discount_rate,si.sio_discount_amount as si_discount_amount,si.sio_net_amount as si_net_amount,si.sio_foc as si_foc,si.sio_approval_status as si_approval_status,si.itm_commision,si.itm_commisionamt,si.sio_itm_type as si_itm_type,si.sio_item_tax as si_item_tax,si.sio_item_cess as si_item_cess,si.sio_tax_excluded_total as si_tax_excluded_total,si.sio_tax_amount as si_tax_amount,si.itm_type,
+            si.sio_id as si_id,si.tum_id,si.tum_id_cust,si.sio_no_piece,si.sio_length,si.sio_width,si.sio_length_cust_fraction,si.sio_width_cust_fraction,si.sio_finalqty,
+            uom.tum_name AS uom,uomc.tum_name AS uom_cust from tbl_sales_items_order si
+            INNER JOIN tbl_itembranch_stock itb ON itb.itbs_id=si.itbs_id 
+            INNER JOIN tbl_item_master itm ON itm.itm_id=itb.itm_id 
+            LEFT OUTER JOIN tbl_item_uom uom ON uom.tum_id=si.tum_id
+            LEFT OUTER JOIN tbl_item_uom uomc ON uomc.tum_id=si.tum_id_cust
+            where si.smo_id='" + order_id + "'";
+            DataTable dt_items = db.SelectQuery(qry_items);
+            sb.Append("\"items\":" + JsonConvert.SerializeObject(dt_items, Formatting.Indented));
+            sb.Append(",");
+            DataTable dt_price_group = db.SelectQuery("SELECT pm.tpm_name as price_group FROM tbl_sales_master_order smo INNER JOIN tbl_price_master pm ON pm.tpm_id=smo.smo_price_class WHERE smo.smo_id='" + order_id + "'");
+            sb.Append("\"price_group\":" + JsonConvert.SerializeObject(dt_price_group, Formatting.Indented));
+            sb.Append(",");
+            string class_qry = @"SELECT cu.cust_type,cu.new_custtype,pm1.tpm_name AS old_class,pm2.tpm_name AS new_class FROM tbl_sales_master_order smo 
+            INNER JOIN tbl_customer cu ON cu.cust_id=smo.cust_id 
+            LEFT OUTER JOIN tbl_price_master pm1 ON pm1.tpm_id=cu.cust_type 
+            LEFT OUTER JOIN tbl_price_master pm2 ON pm2.tpm_id=cu.new_custtype WHERE smo.smo_id='" + order_id + "' GROUP BY cu.cust_id";
 
             DataTable dt_class = db.SelectQuery(class_qry);
             sb.Append("\"price_class\":" + JsonConvert.SerializeObject(dt_class, Formatting.Indented));
