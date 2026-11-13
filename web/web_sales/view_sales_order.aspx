@@ -1334,7 +1334,7 @@
                                                 <% } else { %>
                                                 <span class="btn btn-success pull-right disabled" title="<%= Enc(InvoiceHint) %>"><i class="fa fa-plus"></i> Create Invoice</span>
                                                 <% } %>
-                                                <% if (InvoiceHint != "") { %><span class="text-muted" style="line-height: 34px;"><%= Enc(InvoiceHint) %></span><% } %>
+                                                                                               <a href="sales_order_interstock_transfer.aspx?smoId=<%= Enc(Order["smo_id"]) %>" class="btn btn-primary pull-right" style="margin-right: 5px;"><i class="fa fa-exchange"></i> Inter Stock Transfer</a>                                                <% if (InvoiceHint != "") { %><span class="text-muted" style="line-height: 34px;"><%= Enc(InvoiceHint) %></span><% } %>
                                             </div>
                                             <% if (Invoices.Count == 0) { %>
                                             <div class="tab-empty">No invoices have been created for this sales order.</div>

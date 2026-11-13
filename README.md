@@ -100,15 +100,28 @@ The **Invoices** tab of the order view lists the invoices created for the order,
 - Orders in status Approved or Processed can be invoiced. Saving locks the order row, creates the invoice and then consumes the line's own reservations (oldest batch first, same item only): `tbl_item_batch.itbh_currentqty` and `tbl_itembranch_stock.itbs_stock` are reduced by the invoiced quantity converted to the batch UOM, reservation rows are reduced or deleted, and a batch-level `tbl_stock_transactions` row is written. Product lines can only be invoiced up to their reserved quantity. Everything runs in one transaction; the shared saver's `sm_sales_sessionid` check rejects a repeated submission.
 - Cancelling or rejecting an invoice through `manageorders.aspx` still restores only `itbs_stock`; batch quantities and reservations are not restored.
 
+### Inter-warehouse stock transfer
+
+**Inter Stock Transfer** on the Invoices tab opens [`web/web_sales/sales_order_interstock_transfer.aspx`](web/web_sales/sales_order_interstock_transfer.aspx) (`?smoId=`); the logic is in [`web/App_Code/SalesOrderInterStock.cs`](web/App_Code/SalesOrderInterStock.cs) (a partial of `SalesOrderStock`). It moves stock reserved for the order in a source warehouse to another warehouse.
+
+- Flow: source warehouse (one of the user's `tbl_user_branches` that has both `tbl_branch.cust_id` and `tbl_branch.vn_id`) -> target customer (the `cust_id` of every other warehouse that is linked to exactly one warehouse) -> reserved batches of the order in the source warehouse -> whole-number transfer quantities per batch. The target customer's state must equal its warehouse's state, because the invoice procedure decides CGST/SGST or IGST by comparing the customer's state with the source warehouse's state.
+- `sp_save_sales_entry1.1` saves the invoice with `branch_id` = source warehouse, `cust_id` = the target customer, `sm_is_inter_stock_transfer_invoice = 1` and per row `itbs_id` / `itbh_id` / `sio_id` of the source warehouse. It reduces `itbs_stock`, the batch and the order line's reservation, but does not check that the reservation covers the quantity, so the page limits each row to `MIN(reservation row, batch quantity, itbs_stock)`. The page then sets `sm_refid = smo_id`; transfer invoices are not counted as invoices of the order (`sm_is_inter_stock_transfer_invoice = 1`).
+- `sp_create_purchase_from_sales` creates the purchase in the target warehouse (the single `tbl_branch` with `cust_id` = the invoice customer) against the source warehouse's `vn_id`, with `pm_ref_no` = the invoice id and the same `sio_id`, so the received batch is reserved for the same order line. The page then sets `tbl_purchase_master.sm_id` and `pm_is_inter_stock_transfer_invoice = 1`.
+- Both procedures commit internally, so the invoice and the purchase cannot share a transaction. The invoice is saved first; if the purchase fails, the invoice stays, the page reports an incomplete transfer, and **Retry Purchase** calls the purchase procedure again. A purchase already linked to the invoice (by `sm_id`, or by `pm_ref_no`, vendor and warehouse) is never created twice. A named MySQL lock per order serialises concurrent transfers.
+
 
 ## Stored procedures
 
 The configured database currently exposes these procedures:
 
+- `sp_create_purchase_from_sales`
 - `sp_save_production_entry`
+- `sp_save_production_entry1.0`
 - `sp_save_purchase_entry`
 - `sp_save_purchase_entry1.0`
 - `sp_save_purchase_json`
+- `sp_save_sales_entry1.0`
+- `sp_save_sales_entry1.1`
 - `sp_save_sales_order_json`
 
 Stored procedures can own business rules and transaction boundaries. Inspect their live definitions and callers before changing table writes or reproducing their behavior in application code.
