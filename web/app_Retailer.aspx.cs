@@ -962,10 +962,10 @@ FROM tbl_print_info tpi ";
             var cust_condition = "";
             if (filters["customer_id"] != "0")
             {
-                cust_condition += " AND sm.sm_is_quote=0 AND sm.cust_id='" + filters["customer_id"] + "' ";
+                cust_condition += " AND sm.cust_id='" + filters["customer_id"] + "' ";
             }
 
-            var qry_Condition = " AND sm.sm_is_quote!=1 ";
+            var qry_Condition = " ";
             if (filters["order_status"] != "x")
             {
                 qry_Condition += " AND sm.sm_delivery_status='" + filters["order_status"] + "' ";
