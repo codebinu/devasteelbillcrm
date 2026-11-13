@@ -1809,10 +1809,6 @@ FROM (select tsm.sm_netamount,tsm.sm_type ,tsm.sm_packed,(tsm.sm_netamount-(sum(
 			pak.last_name AS pak_last_name, 
 			veh.first_name AS veh_first_name, 
 			veh.last_name AS veh_last_name,
-            ret.first_name AS ret_first_name, 
-			ret.last_name AS ret_last_name, 
-			dist.first_name AS dist_first_name, 
-			dist.last_name AS dist_last_name,
 			cust.cust_id,
 				cust.cust_name,
 				cust.cust_city,
@@ -1844,11 +1840,9 @@ FROM (select tsm.sm_netamount,tsm.sm_type ,tsm.sm_packed,(tsm.sm_netamount-(sum(
 				tbl_sales_master.branch_tax_inclusive,
 				tbl_sales_master.branch_id,
 				tbl_sales_master.sm_price_class,
-				tbl_sales_master.sm_type,tbl_sales_master.sm_is_quote,tbl_sales_master.sm_is_retail_approved,tbl_sales_master.sm_is_dist_approved,
+				tbl_sales_master.sm_type,
 tbl_sales_master.sm_roundoff,br.branch_name,br.branch_address,br.branch_email,br.branch_phone1,
 
-DATE_FORMAT(tbl_sales_master.sm_dist_appr_date, '%d %M %Y %h:%i %p') AS sm_dist_appr_date,
-			DATE_FORMAT(tbl_sales_master.sm_retail_appr_date, '%d %M %Y %h:%i %p') AS sm_retail_appr_date, 
 
 				IFNULL(tbl_sales_master.sm_approved_id,0) as is_order_approved,
 			  DATE_FORMAT(tbl_sales_master.sm_date, '%d %M %Y %h:%i %p') AS sm_date, 
@@ -1868,8 +1862,6 @@ INNER JOIN tbl_branch br ON br.branch_id=tbl_sales_master.branch_id
 				LEFT OUTER JOIN tbl_user_details AS pro ON tbl_sales_master.sm_processed_id = pro.user_id 
 			LEFT OUTER JOIN tbl_user_details AS veh ON tbl_sales_master.sm_delivery_vehicle_id = veh.user_id 
 				LEFT OUTER JOIN tbl_user_details AS sel ON tbl_sales_master.sm_userid = sel.user_id 
-LEFT OUTER JOIN tbl_user_details AS dist ON tbl_sales_master.sm_dist_appr_user = dist.user_id 
-LEFT OUTER JOIN tbl_user_details AS ret ON tbl_sales_master.sm_retail_appr_user = ret.user_id 
 				LEFT OUTER JOIN tbl_customer AS cust ON tbl_sales_master.cust_id = cust.cust_id 
 			WHERE tbl_sales_master.sm_id='" + order_id + "'";
 
@@ -1924,10 +1916,6 @@ LEFT OUTER JOIN tbl_price_master pm2 ON pm2.tpm_id=cu.new_custtype WHERE sm.sm_i
 			pak.last_name AS pak_last_name, 
 			veh.first_name AS veh_first_name, 
 			veh.last_name AS veh_last_name,
-            ret.first_name AS ret_first_name, 
-			ret.last_name AS ret_last_name, 
-			dist.first_name AS dist_first_name, 
-			dist.last_name AS dist_last_name,
 			cust.cust_id,
 				cust.cust_name,
 				cust.cust_city,
@@ -1959,11 +1947,9 @@ LEFT OUTER JOIN tbl_price_master pm2 ON pm2.tpm_id=cu.new_custtype WHERE sm.sm_i
 				tbl_sales_master.branch_tax_inclusive,
 				tbl_sales_master.branch_id,
 				tbl_sales_master.sm_price_class,
-				tbl_sales_master.sm_type,tbl_sales_master.sm_is_quote,tbl_sales_master.sm_is_retail_approved,tbl_sales_master.sm_is_dist_approved,
+				tbl_sales_master.sm_type,
 tbl_sales_master.sm_roundoff,br.branch_name,br.branch_address,br.branch_email,br.branch_phone1,
 
-DATE_FORMAT(tbl_sales_master.sm_dist_appr_date, '%d %M %Y %h:%i %p') AS sm_dist_appr_date,
-			DATE_FORMAT(tbl_sales_master.sm_retail_appr_date, '%d %M %Y %h:%i %p') AS sm_retail_appr_date, 
 
 				IFNULL(tbl_sales_master.sm_approved_id,0) as is_order_approved,
 			  DATE_FORMAT(tbl_sales_master.sm_date, '%d %M %Y %h:%i %p') AS sm_date, 
@@ -1983,8 +1969,6 @@ INNER JOIN tbl_branch br ON br.branch_id=tbl_sales_master.branch_id
 				LEFT OUTER JOIN tbl_user_details AS pro ON tbl_sales_master.sm_processed_id = pro.user_id 
 			LEFT OUTER JOIN tbl_user_details AS veh ON tbl_sales_master.sm_delivery_vehicle_id = veh.user_id 
 				LEFT OUTER JOIN tbl_user_details AS sel ON tbl_sales_master.sm_userid = sel.user_id 
-LEFT OUTER JOIN tbl_user_details AS dist ON tbl_sales_master.sm_dist_appr_user = dist.user_id 
-LEFT OUTER JOIN tbl_user_details AS ret ON tbl_sales_master.sm_retail_appr_user = ret.user_id 
 				LEFT OUTER JOIN tbl_customer AS cust ON tbl_sales_master.cust_id = cust.cust_id 
 			WHERE tbl_sales_master.sm_id='" + order_id + "'";
 
