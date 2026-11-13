@@ -60,6 +60,7 @@
         #batchModal .batch-table-wrap { max-height: 320px; overflow: auto; }
         #tabInterstock .sub-note { display: block; color: #777; font-size: 11px; }
         #tabInterstock .it-actions .btn { margin-right: 4px; white-space: nowrap; }
+        #tabInterstock .it-toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
         #tabInterstock tr.it-detail > td { background: #fafafa; }
         #tabInterstock .it-box { display: flex; flex-wrap: wrap; gap: 16px; }
         #tabInterstock .it-section { flex: 1 1 420px; min-width: 0; }
@@ -1092,14 +1093,32 @@
             });
 
             // Interstock Transfer Invoices tab: search, expandable details of both documents, and purchase retry.
-            $('#transferSearch').on('input', function () {
-                var q = $.trim($(this).val()).toLowerCase();
+            // Every typed word must appear in the row (invoice, purchase, warehouses, customer, date, status).
+            var transferTimer = null;
+            function filterTransfers() {
+                var words = $.trim($('#transferSearch').val()).toLowerCase().replace(/#/g, '').split(/\s+/), shown = 0, total = 0;
                 $('#transferList tr.it-row').each(function () {
-                    var row = $(this), show = q === '' || row.text().toLowerCase().indexOf(q) >= 0;
+                    var row = $(this), text = row.text().toLowerCase().replace(/#/g, ''), show = true;
+                    total++;
+                    for (var i = 0; show && i < words.length; i++) {
+                        if (words[i] !== '' && text.indexOf(words[i]) < 0) show = false;
+                    }
                     row.toggle(show);
                     if (!show) row.next('.it-detail').hide();
+                    if (show) shown++;
                 });
+                $('#transferList tr.it-empty').toggle(total > 0 && shown === 0);
+                $('#transferSearchClear').toggle($.trim($('#transferSearch').val()) !== '');
+                $('#transferCount').text(shown === total ? total + ' transfer(s)' : 'Showing ' + shown + ' of ' + total);
+            }
+            $('#transferSearch').on('input', function () {
+                clearTimeout(transferTimer);
+                transferTimer = setTimeout(filterTransfers, 150);
+            }).on('keydown', function (e) {
+                if (e.which === 27) { $(this).val(''); filterTransfers(); }
             });
+            $('#transferSearchClear').on('click', function () { $('#transferSearch').val('').focus(); filterTransfers(); });
+            if ($('#transferList').length) filterTransfers();
 
             function itNum(v) { var n = parseFloat(v); return (isFinite(n) ? n : 0).toFixed(2); }
             function itQty(v) { var n = parseFloat(v); return String(isFinite(n) ? Math.round(n * 10000) / 10000 : 0); }
@@ -1501,7 +1520,16 @@
                                                 <% } else { %>
                                                 <span class="btn btn-success pull-right disabled" title="<%= Enc(TransferHint) %>"><i class="fa fa-plus"></i> Create New Transfer</span>
                                                 <% } %>
-                                                <% if (Transfers.Count > 0) { %><input type="text" id="transferSearch" class="form-control input-sm" style="width: 240px; display: inline-block;" placeholder="Search transfers" /><% } %>
+                                                <% if (Transfers.Count > 0) { %>
+                                                <div class="it-toolbar">
+                                                    <div class="input-group input-group-sm" style="width: 280px;">
+                                                        <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                                                        <input type="text" id="transferSearch" class="form-control" placeholder="Search invoice, purchase, warehouse, customer..." autocomplete="off" />
+                                                        <span class="input-group-btn"><button type="button" id="transferSearchClear" class="btn btn-default" title="Clear search" style="display: none;"><i class="fa fa-times"></i></button></span>
+                                                    </div>
+                                                    <span id="transferCount" class="text-muted"></span>
+                                                </div>
+                                                <% } %>
                                                 <% if (TransferHint != "") { %><span class="text-muted" style="line-height: 34px; margin-left: 8px;"><%= Enc(TransferHint) %></span><% } %>
                                             </div>
                                             <% if (Transfers.Count == 0) { %>
@@ -1543,6 +1571,7 @@
                                                         </tr>
                                                         <tr class="it-detail" style="display: none;"><td colspan="6"></td></tr>
                                                         <% } %>
+                                                        <tr class="it-empty" style="display: none;"><td colspan="6" class="text-center text-muted">No transfers match your search.</td></tr>
                                                     </tbody>
                                                 </table>
                                             </div>
