@@ -152,6 +152,7 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
             rptItems.DataBind();
             ItemCount = items.Rows.Count;
             LoadInvoices(smoId, staffId, staffType);
+            LoadTransfers(smoId);
         }
         catch (Exception ex)
         {
@@ -457,6 +458,74 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
             new LogClass("salesordererror").write(ex);
             InvoiceHint = "Unable to load the invoices of this sales order. Please try again.";
         }
+    }
+
+    protected List<InterStockTransferRow> Transfers = new List<InterStockTransferRow>();
+    protected bool CanCreateTransfer;
+    protected string TransferHint = "";
+    protected string TransferMessage = "";
+    protected string TransferMessageCss = "alert alert-success";
+
+    // Inter-warehouse transfers of this order (sm_refid = smo_id and sm_is_inter_stock_transfer_invoice = 1), each with its purchase.
+    void LoadTransfers(int smoId)
+    {
+        try
+        {
+            Transfers = SalesOrderStock.LoadInterStockTransfers(smoId);
+            CanCreateTransfer = SalesOrderStatus.CanReserve(Convert.ToInt32(Order["smo_delivery_status"]));
+            if (!CanCreateTransfer)
+                TransferHint = "Stock can be transferred only for an Approved or Processed sales order.";
+            string invoiceId = Convert.ToString(Request.QueryString["invoiceId"]), purchaseId = Convert.ToString(Request.QueryString["purchaseId"]);
+            int n;
+            if (!int.TryParse(invoiceId, out n)) invoiceId = "";
+            if (!int.TryParse(purchaseId, out n)) purchaseId = "";
+            if (Request.QueryString["done"] == "transferred")
+                TransferMessage = "Stock transfer completed: invoice #" + invoiceId + " and purchase #" + purchaseId + " were created.";
+            else if (Request.QueryString["done"] == "transferpartial")
+            {
+                TransferMessage = "Invoice #" + invoiceId + " was created, but its purchase entry could not be generated. The transfer is incomplete: use Retry Purchase below.";
+                TransferMessageCss = "alert alert-danger";
+            }
+        }
+        catch (Exception ex)
+        {
+            new LogClass("salesordererror").write(ex);
+            TransferHint = "Unable to load the stock transfers of this sales order. Please try again.";
+        }
+    }
+
+    protected static string TransferStatusText(string status)
+    {
+        return status == "completed" ? "Purchase created" : (status == "cancelled" ? "Purchase cancelled" : "Purchase pending");
+    }
+
+    protected static string TransferStatusCss(string status)
+    {
+        return status == "completed" ? "label label-success" : (status == "cancelled" ? "label label-danger" : "label label-warning");
+    }
+
+    [WebMethod]
+    public static InterStockTransferDetail LoadTransferDetail(int smoId, int smId)
+    {
+        try
+        {
+            return SalesOrderStock.LoadInterStockTransferDetail(smoId, smId);
+        }
+        catch (HttpException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            new LogClass("salesordererror").write(ex);
+            return new InterStockTransferDetail { ok = false, message = "Unable to load the transfer details. Please try again." };
+        }
+    }
+
+    [WebMethod]
+    public static InterStockResult RetryTransferPurchase(int smoId, int smId)
+    {
+        return SalesOrderStock.RetryInterStockPurchase(smoId, smId);
     }
     protected bool HasActions;
     protected string ActionHint = "";

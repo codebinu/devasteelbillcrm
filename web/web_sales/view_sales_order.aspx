@@ -58,6 +58,17 @@
         #batchModal .pick-totals { float: left; text-align: left; line-height: 30px; font-weight: 600; }
         #batchModal.processing .modal-body, #batchModal.processing .modal-footer .pick-totals { opacity: .6; }
         #batchModal .batch-table-wrap { max-height: 320px; overflow: auto; }
+        #tabInterstock .sub-note { display: block; color: #777; font-size: 11px; }
+        #tabInterstock .it-actions .btn { margin-right: 4px; white-space: nowrap; }
+        #tabInterstock tr.it-detail > td { background: #fafafa; }
+        #tabInterstock .it-box { display: flex; flex-wrap: wrap; gap: 16px; }
+        #tabInterstock .it-section { flex: 1 1 420px; min-width: 0; }
+        #tabInterstock .it-section h5 { font-weight: bold; margin: 0 0 6px 0; }
+        #tabInterstock .it-pair { overflow: hidden; padding: 2px 0; font-size: 12px; }
+        #tabInterstock .it-pair .k { float: left; width: 90px; color: #777; }
+        #tabInterstock .it-pair .v { font-weight: 600; }
+        #tabInterstock .it-section table { margin: 6px 0; background: #fff; font-size: 12px; }
+        #tabInterstock .it-totals { margin-bottom: 6px; font-size: 12px; font-weight: 600; }
     </style>
 
     <script type="text/javascript">
@@ -1080,7 +1091,116 @@
                 });
             });
 
-            if (location.hash === '#tabReserved' || location.hash === '#tabProduction' || location.hash === '#tabInvoices') {
+            // Interstock Transfer Invoices tab: search, expandable details of both documents, and purchase retry.
+            $('#transferSearch').on('input', function () {
+                var q = $.trim($(this).val()).toLowerCase();
+                $('#transferList tr.it-row').each(function () {
+                    var row = $(this), show = q === '' || row.text().toLowerCase().indexOf(q) >= 0;
+                    row.toggle(show);
+                    if (!show) row.next('.it-detail').hide();
+                });
+            });
+
+            function itNum(v) { var n = parseFloat(v); return (isFinite(n) ? n : 0).toFixed(2); }
+            function itQty(v) { var n = parseFloat(v); return String(isFinite(n) ? Math.round(n * 10000) / 10000 : 0); }
+            function itPair(k, v) {
+                return $('<div class="it-pair"></div>').append($('<span class="k"></span>').text(k)).append($('<span class="v"></span>').text(v));
+            }
+            function itItems(items, totals) {
+                var table = $('<table class="table table-bordered table-condensed"></table>');
+                table.append('<thead><tr><th>Item</th><th>Batch</th><th class="text-right">Qty</th><th class="text-right">Price</th><th class="text-right">Tax %</th><th class="text-right">CGST</th><th class="text-right">SGST</th><th class="text-right">IGST</th><th class="text-right">Net</th></tr></thead>');
+                var body = $('<tbody></tbody>');
+                $.each(items, function (i, x) {
+                    var name = $('<td></td>').text(x.name);
+                    if (x.code) name.append($('<span class="sub-note"></span>').text(x.code));
+                    body.append($('<tr></tr>').append(name).append($('<td></td>').text(x.batchNo || '-'))
+                        .append($('<td class="text-right"></td>').text(itQty(x.qty) + (x.uom ? ' ' + x.uom : '')))
+                        .append($('<td class="text-right"></td>').text(itNum(x.price)))
+                        .append($('<td class="text-right"></td>').text(itQty(x.taxPercent) + '%'))
+                        .append($('<td class="text-right"></td>').text(x.cgst > 0 ? itQty(x.cgst) + '%' : '-'))
+                        .append($('<td class="text-right"></td>').text(x.sgst > 0 ? itQty(x.sgst) + '%' : '-'))
+                        .append($('<td class="text-right"></td>').text(x.igst > 0 ? itQty(x.igst) + '%' : '-'))
+                        .append($('<td class="text-right"></td>').text(itNum(x.netAmount))));
+                });
+                table.append(body);
+                var foot = $('<div class="it-totals"></div>').text('Total ' + itNum(totals.total) + '  |  Discount ' + itNum(totals.discount) + '  |  Tax ' + itNum(totals.tax) + '  |  Net ' + itNum(totals.net));
+                return $('<div style="overflow-x: auto;"></div>').append(table).append(foot);
+            }
+            function itRender(d) {
+                var h = d.header, box = $('<div class="it-box"></div>');
+                var sales = $('<div class="it-section"></div>').append($('<h5></h5>').text('Sales invoice (source warehouse)'));
+                sales.append(itPair('Invoice', '#' + h.salesId + (h.invoiceNo ? ' (' + h.invoiceNo + ')' : '')))
+                    .append(itPair('Date', h.date)).append(itPair('Source', h.source)).append(itPair('Target', h.targetWarehouse))
+                    .append(itPair('Customer', h.customer)).append(itPair('GST', d.gstType));
+                sales.append(itItems(d.salesItems, d.salesTotals));
+                sales.append($('<a class="btn btn-primary btn-xs"></a>').attr('href', 'manageorders.aspx?orderId=' + h.salesId).html('<i class="fa fa-eye"></i> View Invoice'));
+                var pur = $('<div class="it-section"></div>').append($('<h5></h5>').text('Associated purchase (target warehouse)'));
+                if (h.purchaseId > 0) {
+                    pur.append(itPair('Purchase', '#' + h.purchaseId)).append(itPair('Vendor', h.vendor)).append(itPair('Warehouse', h.purchaseWarehouse))
+                        .append(itPair('Status', h.purchaseStatus === 'cancelled' ? 'Cancelled' : 'Completed'));
+                    pur.append(itItems(d.purchaseItems, d.purchaseTotals));
+                    pur.append($('<a class="btn btn-primary btn-xs"></a>').attr('href', '../web_purchase/managepurchase.aspx?purchaseId=' + h.purchaseId).html('<i class="fa fa-eye"></i> View Purchase'));
+                } else {
+                    pur.append($('<p class="text-muted"></p>').text('The purchase entry has not been created yet. Use Retry Purchase to generate it.'));
+                }
+                return box.append(sales).append(pur);
+            }
+
+            $('#transferList').on('click', '.it-toggle', function () {
+                var row = $(this).closest('tr.it-row'), detail = row.next('.it-detail'), cell = detail.children('td');
+                if (detail.is(':visible')) { detail.hide(); return; }
+                detail.show();
+                if (detail.data('loaded') || detail.data('loading')) return;
+                detail.data('loading', true);
+                cell.text('Loading details...');
+                $.ajax({
+                    type: 'POST',
+                    url: 'view_sales_order.aspx/LoadTransferDetail',
+                    data: JSON.stringify({ smoId: parseInt($('#tabInterstock').attr('data-order-id'), 10), smId: parseInt(row.attr('data-sm'), 10) }),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    success: function (response) {
+                        var d = response.d;
+                        if (!d || !d.ok) { cell.text(d && d.message ? d.message : 'Unable to load the transfer details.'); return; }
+                        cell.empty().append(itRender(d));
+                        detail.data('loaded', true);
+                    },
+                    error: function () { cell.text('Unable to load the transfer details. Please try again.'); },
+                    complete: function () { detail.data('loading', false); }
+                });
+            });
+
+            var retrying = false;
+            $('#transferList').on('click', '.it-retry', function () {
+                if (retrying) return;
+                var btn = $(this), smId = parseInt(btn.closest('tr.it-row').attr('data-sm'), 10), smoId = parseInt($('#tabInterstock').attr('data-order-id'), 10);
+                retrying = true;
+                btn.prop('disabled', true);
+                $.ajax({
+                    type: 'POST',
+                    url: 'view_sales_order.aspx/RetryTransferPurchase',
+                    data: JSON.stringify({ smoId: smoId, smId: smId }),
+                    contentType: 'application/json; charset=utf-8',
+                    dataType: 'json',
+                    success: function (response) {
+                        var r = response.d;
+                        if (r && r.ok) {
+                            location.href = 'view_sales_order.aspx?smoId=' + smoId + '&done=transferred&invoiceId=' + smId + '&purchaseId=' + r.purchaseId + '#tabInterstock';
+                            return;
+                        }
+                        retrying = false;
+                        btn.prop('disabled', false);
+                        $('#transferResult').html($('<div class="alert alert-danger"></div>').text(r && r.message ? r.message : 'The purchase could not be generated.'));
+                    },
+                    error: function () {
+                        retrying = false;
+                        btn.prop('disabled', false);
+                        $('#transferResult').html($('<div class="alert alert-danger"></div>').text('The purchase could not be generated. Please check the list before trying again.'));
+                    }
+                });
+            });
+
+            if (location.hash === '#tabReserved' || location.hash === '#tabProduction' || location.hash === '#tabInvoices' || location.hash === '#tabInterstock') {
                 $('#soTabs a[href="' + location.hash + '"]').trigger('click');
             }
         });
@@ -1191,6 +1311,7 @@
                                             <li><a href="#tabReserved">Reserved Items</a></li>
                                             <li><a href="#tabProduction">Production Details</a></li>
                                             <li><a href="#tabInvoices">Invoices</a></li>
+                                            <li><a href="#tabInterstock">Interstock Transfer Invoices</a></li>
                                             <li><a href="#tabNotes">Notes / Remarks</a></li>
                                         </ul>
                                     </div>
@@ -1334,7 +1455,7 @@
                                                 <% } else { %>
                                                 <span class="btn btn-success pull-right disabled" title="<%= Enc(InvoiceHint) %>"><i class="fa fa-plus"></i> Create Invoice</span>
                                                 <% } %>
-                                                                                               <a href="sales_order_interstock_transfer.aspx?smoId=<%= Enc(Order["smo_id"]) %>" class="btn btn-primary pull-right" style="margin-right: 5px;"><i class="fa fa-exchange"></i> Inter Stock Transfer</a>                                                <% if (InvoiceHint != "") { %><span class="text-muted" style="line-height: 34px;"><%= Enc(InvoiceHint) %></span><% } %>
+                                                <% if (InvoiceHint != "") { %><span class="text-muted" style="line-height: 34px;"><%= Enc(InvoiceHint) %></span><% } %>
                                             </div>
                                             <% if (Invoices.Count == 0) { %>
                                             <div class="tab-empty">No invoices have been created for this sales order.</div>
@@ -1369,6 +1490,63 @@
                                                     </tbody>
                                                 </table>
                                             </div>
+                                            <% } %>
+                                        </div>
+                                        <div class="tab-pane" id="tabInterstock" data-order-id="<%= Enc(Order["smo_id"]) %>">
+                                            <% if (TransferMessage != "") { %><div class="<%= TransferMessageCss %>"><%= Enc(TransferMessage) %></div><% } %>
+                                            <div id="transferResult"></div>
+                                            <div style="margin-bottom: 10px; overflow: hidden;">
+                                                <% if (CanCreateTransfer) { %>
+                                                <a href="sales_order_interstock_transfer.aspx?smoId=<%= Enc(Order["smo_id"]) %>" class="btn btn-success pull-right"><i class="fa fa-plus"></i> Create New Transfer</a>
+                                                <% } else { %>
+                                                <span class="btn btn-success pull-right disabled" title="<%= Enc(TransferHint) %>"><i class="fa fa-plus"></i> Create New Transfer</span>
+                                                <% } %>
+                                                <% if (Transfers.Count > 0) { %><input type="text" id="transferSearch" class="form-control input-sm" style="width: 240px; display: inline-block;" placeholder="Search transfers" /><% } %>
+                                                <% if (TransferHint != "") { %><span class="text-muted" style="line-height: 34px; margin-left: 8px;"><%= Enc(TransferHint) %></span><% } %>
+                                            </div>
+                                            <% if (Transfers.Count == 0) { %>
+                                            <div class="tab-empty">No stock transfers have been made for this sales order.</div>
+                                            <% } else { %>
+                                            <div style="overflow-x: auto;">
+                                                <table class="table table-striped jambo_table table-bordered" id="transferList">
+                                                    <thead style="background-color: #f1eeee; color: #525252">
+                                                        <tr>
+                                                            <th>Invoice</th>
+                                                            <th>Source &rarr; Target Warehouse</th>
+                                                            <th class="text-right">Items / Qty</th>
+                                                            <th class="text-right">Invoice Amount</th>
+                                                            <th>Purchase</th>
+                                                            <th>Action</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <% foreach (var t in Transfers) { %>
+                                                        <tr class="it-row" data-sm="<%= t.salesId %>">
+                                                            <td>
+                                                                <strong>#<%= t.salesId %></strong><% if (t.invoiceNo != "") { %> (<%= Enc(t.invoiceNo) %>)<% } %>
+                                                                <span class="sub-note"><%= Enc(t.date) %></span>
+                                                            </td>
+                                                            <td>
+                                                                <%= Enc(t.source) %> &rarr; <%= Enc(t.targetWarehouse) %>
+                                                                <span class="sub-note">Customer: <%= Enc(t.customer) %></span>
+                                                            </td>
+                                                            <td class="text-right"><%= t.itemCount %> item(s)<span class="sub-note">Qty <%= t.totalQty.ToString("0.####") %></span></td>
+                                                            <td class="text-right"><%= Money(t.amount) %></td>
+                                                            <td>
+                                                                <% if (t.purchaseId > 0) { %><strong>#<%= t.purchaseId %></strong><% } else { %><span class="text-muted">Not created</span><% } %>
+                                                                <span class="sub-note"><span class="status <%= TransferStatusCss(t.purchaseStatus) %>"><%= TransferStatusText(t.purchaseStatus) %></span></span>
+                                                            </td>
+                                                            <td class="it-actions">
+                                                                <button type="button" class="btn btn-primary btn-xs it-toggle"><i class="fa fa-chevron-down"></i> Details</button>
+                                                                <% if (t.purchaseStatus == "pending") { %><button type="button" class="btn btn-warning btn-xs it-retry"><i class="fa fa-refresh"></i> Retry Purchase</button><% } %>
+                                                            </td>
+                                                        </tr>
+                                                        <tr class="it-detail" style="display: none;"><td colspan="6"></td></tr>
+                                                        <% } %>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                            <p class="text-muted" style="font-size: 11px;">Only invoices created through Inter Stock Transfer are listed here. A transfer is complete when its purchase entry exists; "Purchase pending" means the invoice was saved but the purchase could not be generated, and it can be retried.</p>
                                             <% } %>
                                         </div>
                                         <div class="tab-pane" id="tabNotes" data-order-id="<%= Enc(Order["smo_id"]) %>">

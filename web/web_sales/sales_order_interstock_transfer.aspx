@@ -81,7 +81,7 @@
                                     <label style="font-weight: bold; font-size: 16px;">Inter Stock Transfer</label>
                                 </div>
                                 <div class="col-md-6 col-xs-5">
-                                    <a href="view_sales_order.aspx?smoId=<%= SmoId %>#tabInvoices">
+                                    <a href="view_sales_order.aspx?smoId=<%= SmoId %>#tabInterstock">
                                         <div class="btn btn-primary btn-xs pull-right" style="margin-top: 5px"><label style="color: #fff; margin-right: 5px; font-size: 14px;" class="fa fa-arrow-left"></label>Back to Sales Order</div>
                                     </a>
                                 </div>
@@ -203,7 +203,7 @@
                                     </table>
                                     <div style="margin-top: 15px;">
                                         <button type="button" id="btnSave" class="btn btn-success btn-block" disabled="disabled"><i class="fa fa-save"></i> Save Transfer</button>
-                                        <a href="view_sales_order.aspx?smoId=<%= SmoId %>#tabInvoices" class="btn btn-default btn-block">Cancel</a>
+                                        <a href="view_sales_order.aspx?smoId=<%= SmoId %>#tabInterstock" class="btn btn-default btn-block">Cancel</a>
                                     </div>
                                 </div>
                             </div>
@@ -436,7 +436,7 @@
                     $.each(rows, function (i, t) {
                         var tr = $('<tr></tr>');
                         tr.append($('<td></td>').text('#' + t.salesId)).append($('<td></td>').text(t.date)).append($('<td></td>').text(t.source))
-                            .append($('<td></td>').text(t.target)).append($('<td class="text-right"></td>').text(fmt(t.amount)));
+                            .append($('<td></td>').text(t.customer)).append($('<td class="text-right"></td>').text(fmt(t.amount)));
                         if (t.purchaseId > 0) {
                             tr.append($('<td></td>').append($('<span class="label label-success"></span>').text('#' + t.purchaseId))).append($('<td></td>'));
                         } else {
@@ -490,14 +490,10 @@
                         Unloading();
                         saving = false;
                         if (r.ok || r.salesDone) {
-                            // The same page token can no longer be used, so the form is closed once the invoice exists.
+                            // Back to the sales order's Interstock Transfer Invoices tab, which lists the new transfer (and its purchase, or the pending retry).
                             finished = true;
-                            $('#sourceBranch, #targetCust, #transferItems .qty-input').prop('disabled', true);
-                            showMessage(r.ok ? 'success' : 'danger', r.ok
-                                ? r.message + ' (Sales ID ' + r.salesId + ', Purchase ID ' + r.purchaseId + ')'
-                                : r.message);
-                            loadTransfers();
-                            recalc();
+                            location.href = 'view_sales_order.aspx?smoId=' + cfg.smoId + '&done=' + (r.ok ? 'transferred' : 'transferpartial')
+                                + '&invoiceId=' + r.salesId + '&purchaseId=' + r.purchaseId + '#tabInterstock';
                             return;
                         }
                         showMessage('danger', r.message || 'The transfer could not be saved.');

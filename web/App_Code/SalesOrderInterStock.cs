@@ -104,11 +104,36 @@ public class InterStockResult
     public string message;
 }
 
+// One transfer: the invoice of the source warehouse together with its purchase. purchaseStatus is "completed" (purchase created), "pending"
+// (no purchase yet, it can be retried) or "cancelled" (the purchase was cancelled afterwards).
 public class InterStockTransferRow
 {
-    public int salesId, purchaseId;
-    public string date, source, target;
-    public decimal amount;
+    public int salesId, purchaseId, itemCount;
+    public string invoiceNo, date, source, targetWarehouse, customer, purchaseStatus, vendor, purchaseWarehouse;
+    public decimal amount, totalQty, purchaseAmount;
+}
+
+public class InterStockDetailItem
+{
+    public string name, code, batchNo, uom;
+    public decimal qty, price, discountRate, taxPercent, cgst, sgst, igst, taxAmount, netAmount;
+}
+
+public class InterStockDetailTotals
+{
+    public decimal total, discount, tax, net;
+}
+
+public class InterStockTransferDetail
+{
+    public bool ok;
+    public string message;
+    public InterStockTransferRow header;
+    public string gstType;
+    public InterStockDetailTotals salesTotals = new InterStockDetailTotals();
+    public InterStockDetailTotals purchaseTotals = new InterStockDetailTotals();
+    public List<InterStockDetailItem> salesItems = new List<InterStockDetailItem>();
+    public List<InterStockDetailItem> purchaseItems = new List<InterStockDetailItem>();
 }
 
 public static partial class SalesOrderStock
@@ -732,7 +757,38 @@ public static partial class SalesOrderStock
         return result;
     }
 
-    // Transfers of the order; purchaseId = 0 marks a transfer whose purchase is still missing.
+    // The transfers of an order are the invoices that carry both sm_refid = smo_id and sm_is_inter_stock_transfer_invoice = 1 (ordinary invoices of the
+    // order have the flag 0). The purchase is picked by a scalar subquery, so every invoice appears exactly once.
+    static List<InterStockTransferRow> ReadTransferRows(mySqlConnection db, int smoId, int smId)
+    {
+        var rows = new List<InterStockTransferRow>();
+        foreach (DataRow r in db.SelectQuery("select sm.sm_id,sm.sm_invoice_no,DATE_FORMAT(sm.sm_date,'%d-%b-%Y %H:%i') as d,sm.sm_netamount,tb.branch_name as src,tc.cust_name,tt.branch_name as target_wh,"
+            + "(select count(*) from tbl_sales_items si where si.sm_id=sm.sm_id) as item_count,"
+            + "(select ifnull(sum(si.si_qty+ifnull(si.si_foc,0)),0) from tbl_sales_items si where si.sm_id=sm.sm_id) as qty,"
+            + "pm.pm_id,pm.pm_status,pm.pm_netamount,tv.vn_name,pb.branch_name as pur_wh "
+            + "from (select s.*,"
+            + "(select ifnull(min(p.pm_id),0) from tbl_purchase_master p where p.sm_id=s.sm_id or (p.pm_ref_no=s.sm_id "
+            + "and p.vn_id=(select x.vn_id from tbl_branch x where x.branch_id=s.branch_id) and p.branch_id=(select min(y.branch_id) from tbl_branch y where y.cust_id=s.cust_id))) as pm_pick,"
+            + "(select min(y.branch_id) from tbl_branch y where y.cust_id=s.cust_id) as target_branch "
+            + "from tbl_sales_master s where s.sm_refid=@o and s.sm_is_inter_stock_transfer_invoice=1" + (smId > 0 ? " and s.sm_id=@s" : "") + ") sm "
+            + "inner join tbl_customer tc on tc.cust_id=sm.cust_id left join tbl_branch tb on tb.branch_id=sm.branch_id left join tbl_branch tt on tt.branch_id=sm.target_branch "
+            + "left join tbl_purchase_master pm on pm.pm_id=sm.pm_pick left join tbl_vendor tv on tv.vn_id=pm.vn_id left join tbl_branch pb on pb.branch_id=pm.branch_id "
+            + "order by sm.sm_id desc",
+            new MySqlParameter[] { new MySqlParameter("@o", smoId), new MySqlParameter("@s", smId) }).Rows)
+        {
+            int pmId = I(r["pm_id"]);
+            rows.Add(new InterStockTransferRow
+            {
+                salesId = I(r["sm_id"]), invoiceNo = S(r["sm_invoice_no"]), date = S(r["d"]), source = S(r["src"]),                 targetWarehouse = S(r["target_wh"]),
+                customer = S(r["cust_name"]), amount = D(r["sm_netamount"]), itemCount = I(r["item_count"]), totalQty = D(r["qty"]),
+                purchaseId = pmId, purchaseStatus = pmId <= 0 ? "pending" : (I(r["pm_status"]) == (int)Constants.PurchaseStatus.Cancel ? "cancelled" : "completed"),
+                vendor = S(r["vn_name"]), purchaseWarehouse = S(r["pur_wh"]), purchaseAmount = D(r["pm_netamount"])
+            });
+        }
+        return rows;
+    }
+
+    // Transfers of the order, newest first; purchaseStatus "pending" marks a transfer whose purchase is still missing.
     public static List<InterStockTransferRow> LoadInterStockTransfers(int smoId)
     {
         int staffId;
@@ -746,15 +802,68 @@ public static partial class SalesOrderStock
             string scope = OrderScope(staffId, staffType, ps);
             if (db.SelectQuery("select smo.smo_id from tbl_sales_master_order smo where smo.smo_id=@id" + scope, ps.ToArray()).Rows.Count == 0)
                 return rows;
-            foreach (DataRow r in db.SelectQuery("select sm.sm_id,DATE_FORMAT(sm.sm_date,'%d-%b-%Y %H:%i') as d,sm.sm_netamount,tb.branch_name as src,tc.cust_name,"
-                + "(select ifnull(min(pm.pm_id),0) from tbl_purchase_master pm where pm.sm_id=sm.sm_id or (pm.pm_ref_no=sm.sm_id and pm.vn_id=tb.vn_id "
-                + "and pm.branch_id=(select tt.branch_id from tbl_branch tt where tt.cust_id=sm.cust_id limit 1))) as pm_id "
-                + "from tbl_sales_master sm inner join tbl_customer tc on tc.cust_id=sm.cust_id left join tbl_branch tb on tb.branch_id=sm.branch_id "
-                + "where sm.sm_refid=@o and sm.sm_is_inter_stock_transfer_invoice=1 order by sm.sm_id desc",
-                new MySqlParameter[] { new MySqlParameter("@o", smoId) }).Rows)
-                rows.Add(new InterStockTransferRow { salesId = I(r["sm_id"]), date = S(r["d"]), source = S(r["src"]), target = S(r["cust_name"]), amount = D(r["sm_netamount"]), purchaseId = I(r["pm_id"]) });
+            rows = ReadTransferRows(db, smoId, 0);
         }
         finally { Close(db); }
         return rows;
+    }
+
+    static string UomOfStockSql(string stockColumn)
+    {
+        return "(select u.tum_name from tbl_itembranch_stock tis inner join tbl_item_master m on m.itm_id=tis.itm_id inner join tbl_item_uom u on u.tum_id=m.itsv_uom_purchase where tis.itbs_id=" + stockColumn + " limit 1)";
+    }
+
+    // The invoice and purchase lines of one transfer (batch, quantity and GST of both sides). Opening the existing invoice and purchase screens is left to the page.
+    public static InterStockTransferDetail LoadInterStockTransferDetail(int smoId, int smId)
+    {
+        var result = new InterStockTransferDetail();
+        int staffId;
+        string staffType;
+        RequireInvoiceStaff(out staffId, out staffType);
+        var db = new mySqlConnection();
+        try
+        {
+            var ps = new List<MySqlParameter> { new MySqlParameter("@id", smoId) };
+            string scope = OrderScope(staffId, staffType, ps);
+            if (db.SelectQuery("select smo.smo_id from tbl_sales_master_order smo where smo.smo_id=@id" + scope, ps.ToArray()).Rows.Count == 0)
+                throw new StockException("Sales order not found.");
+            List<InterStockTransferRow> rows = ReadTransferRows(db, smoId, smId);
+            if (rows.Count == 0)
+                throw new StockException("The transfer does not belong to this sales order.");
+            result.header = rows[0];
+
+            DataTable sm = db.SelectQuery("select sm_total,sm_discount_amount,sm_tax_amount,sm_netamount from tbl_sales_master where sm_id=@s", new MySqlParameter[] { new MySqlParameter("@s", smId) });
+            if (sm.Rows.Count > 0)
+                result.salesTotals = new InterStockDetailTotals { total = D(sm.Rows[0]["sm_total"]), discount = D(sm.Rows[0]["sm_discount_amount"]), tax = D(sm.Rows[0]["sm_tax_amount"]), net = D(sm.Rows[0]["sm_netamount"]) };
+            foreach (DataRow r in db.SelectQuery("select si.itm_name,si.itm_code,b.itbh_no,si.si_qty+ifnull(si.si_foc,0) as qty,si.si_price,si.si_discount_rate,si.si_item_tax,si.si_item_cgst,si.si_item_sgst,si.si_item_igst,"
+                + "si.si_tax_amount,si.si_net_amount," + UomOfStockSql("si.itbs_id") + " as uom from tbl_sales_items si left join tbl_item_batch b on b.itbh_id=si.itbh_id where si.sm_id=@s order by si.row_no,si.si_id",
+                new MySqlParameter[] { new MySqlParameter("@s", smId) }).Rows)
+                result.salesItems.Add(new InterStockDetailItem
+                {
+                    name = S(r["itm_name"]), code = S(r["itm_code"]), batchNo = S(r["itbh_no"]), uom = S(r["uom"]), qty = D(r["qty"]), price = D(r["si_price"]), discountRate = D(r["si_discount_rate"]),
+                    taxPercent = D(r["si_item_tax"]), cgst = D(r["si_item_cgst"]), sgst = D(r["si_item_sgst"]), igst = D(r["si_item_igst"]), taxAmount = D(r["si_tax_amount"]), netAmount = D(r["si_net_amount"])
+                });
+            bool igst = result.salesItems.Any(x => x.igst > 0), gst = result.salesItems.Any(x => x.cgst > 0 || x.sgst > 0);
+            result.gstType = igst ? "IGST (interstate)" : (gst ? "CGST + SGST" : "No GST");
+
+            if (result.header.purchaseId > 0)
+            {
+                var pp = new MySqlParameter[] { new MySqlParameter("@p", result.header.purchaseId) };
+                DataTable pm = db.SelectQuery("select pm_total,pm_discount_amount,pm_tax_amount,pm_netamount from tbl_purchase_master where pm_id=@p", pp);
+                if (pm.Rows.Count > 0)
+                    result.purchaseTotals = new InterStockDetailTotals { total = D(pm.Rows[0]["pm_total"]), discount = D(pm.Rows[0]["pm_discount_amount"]), tax = D(pm.Rows[0]["pm_tax_amount"]), net = D(pm.Rows[0]["pm_netamount"]) };
+                foreach (DataRow r in db.SelectQuery("select pi.itm_name,pi.itm_code,b.itbh_no,pi.pi_qty,pi.pi_price,pi.pi_discount_rate,pi.pi_item_tax,pi.pi_item_cgst,pi.pi_item_sgst,pi.pi_item_igst,"
+                    + "pi.pi_tax_amount,pi.pi_net_amount," + UomOfStockSql("pi.itbs_id") + " as uom from tbl_purchase_items pi left join tbl_item_batch b on b.itbh_id=pi.itbh_id where pi.pm_id=@p order by pi.row_no,pi.pi_id", pp).Rows)
+                    result.purchaseItems.Add(new InterStockDetailItem
+                    {
+                        name = S(r["itm_name"]), code = S(r["itm_code"]), batchNo = S(r["itbh_no"]), uom = S(r["uom"]), qty = D(r["pi_qty"]), price = D(r["pi_price"]), discountRate = D(r["pi_discount_rate"]),
+                        taxPercent = D(r["pi_item_tax"]), cgst = D(r["pi_item_cgst"]), sgst = D(r["pi_item_sgst"]), igst = D(r["pi_item_igst"]), taxAmount = D(r["pi_tax_amount"]), netAmount = D(r["pi_net_amount"])
+                    });
+            }
+            result.ok = true;
+        }
+        catch (StockException ex) { result.message = ex.Message; }
+        finally { Close(db); }
+        return result;
     }
 }
