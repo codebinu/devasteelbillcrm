@@ -1092,7 +1092,7 @@
                 });
             });
 
-            // Interstock Transfer Invoices tab: search, expandable details of both documents, and purchase retry.
+            // Interstock Transfer Invoices tab: search, expandable details of both documents, and Create Purchase.
             // Every typed word must appear in the row (invoice, purchase, warehouses, customer, date, status).
             var transferTimer = null;
             function filterTransfers() {
@@ -1160,7 +1160,7 @@
                     pur.append(itItems(d.purchaseItems, d.purchaseTotals));
                     pur.append($('<a class="btn btn-primary btn-xs"></a>').attr('href', '../web_purchase/managepurchase.aspx?purchaseId=' + h.purchaseId).html('<i class="fa fa-eye"></i> View Purchase'));
                 } else {
-                    pur.append($('<p class="text-muted"></p>').text('The purchase entry has not been created yet. Use Retry Purchase to generate it.'));
+                    pur.append($('<p class="text-muted"></p>').text('The purchase entry has not been created yet. Use Create Purchase to generate it.'));
                 }
                 return box.append(sales).append(pur);
             }
@@ -1204,7 +1204,7 @@
                     success: function (response) {
                         var r = response.d;
                         if (r && r.ok) {
-                            location.href = 'view_sales_order.aspx?smoId=' + smoId + '&done=transferred&invoiceId=' + smId + '&purchaseId=' + r.purchaseId + '#tabInterstock';
+                            location.href = 'view_sales_order.aspx?smoId=' + smoId + '&done=purchasecreated&invoiceId=' + smId + '&purchaseId=' + r.purchaseId + '#tabInterstock';
                             return;
                         }
                         retrying = false;
@@ -1214,7 +1214,7 @@
                     error: function () {
                         retrying = false;
                         btn.prop('disabled', false);
-                        $('#transferResult').html($('<div class="alert alert-danger"></div>').text('The purchase could not be generated. Please check the list before trying again.'));
+                        $('#transferResult').html($('<div class="alert alert-danger"></div>').text('The purchase could not be generated. Please refresh the list before trying again.'));
                     }
                 });
             });
@@ -1566,7 +1566,7 @@
                                                             </td>
                                                             <td class="it-actions">
                                                                 <button type="button" class="btn btn-primary btn-xs it-toggle"><i class="fa fa-chevron-down"></i> Details</button>
-                                                                <% if (t.purchaseStatus == "pending") { %><button type="button" class="btn btn-warning btn-xs it-retry"><i class="fa fa-refresh"></i> Retry Purchase</button><% } %>
+                                                                <% if (t.purchaseStatus == "pending") { %><button type="button" class="btn btn-warning btn-xs it-retry"><i class="fa fa-plus"></i> Create Purchase</button><% } %>
                                                             </td>
                                                         </tr>
                                                         <tr class="it-detail" style="display: none;"><td colspan="6"></td></tr>
@@ -1575,7 +1575,7 @@
                                                     </tbody>
                                                 </table>
                                             </div>
-                                            <p class="text-muted" style="font-size: 11px;">Only invoices created through Inter Stock Transfer are listed here. A transfer is complete when its purchase entry exists; "Purchase pending" means the invoice was saved but the purchase could not be generated, and it can be retried.</p>
+                                            <p class="text-muted" style="font-size: 11px;">Only invoices created through Inter Stock Transfer are listed here. A transfer's purchase entry is created separately: "Purchase Pending" means the invoice is saved and the purchase has not been created yet (use Create Purchase).</p>
                                             <% } %>
                                         </div>
                                         <div class="tab-pane" id="tabNotes" data-order-id="<%= Enc(Order["smo_id"]) %>">

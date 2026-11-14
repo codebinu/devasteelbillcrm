@@ -479,13 +479,10 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
             int n;
             if (!int.TryParse(invoiceId, out n)) invoiceId = "";
             if (!int.TryParse(purchaseId, out n)) purchaseId = "";
-            if (Request.QueryString["done"] == "transferred")
-                TransferMessage = "Stock transfer completed: invoice #" + invoiceId + " and purchase #" + purchaseId + " were created.";
-            else if (Request.QueryString["done"] == "transferpartial")
-            {
-                TransferMessage = "Invoice #" + invoiceId + " was created, but its purchase entry could not be generated. The transfer is incomplete: use Retry Purchase below.";
-                TransferMessageCss = "alert alert-danger";
-            }
+            if (Request.QueryString["done"] == "invoicecreated")
+                TransferMessage = "Transfer invoice #" + invoiceId + " was created. Its purchase is pending: use Create Purchase below to generate it.";
+            else if (Request.QueryString["done"] == "purchasecreated")
+                TransferMessage = "Purchase #" + purchaseId + " was created for transfer invoice #" + invoiceId + ".";
         }
         catch (Exception ex)
         {
@@ -496,7 +493,7 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
 
     protected static string TransferStatusText(string status)
     {
-        return status == "completed" ? "Purchase created" : (status == "cancelled" ? "Purchase cancelled" : "Purchase pending");
+        return status == "completed" ? "Purchase Created" : (status == "cancelled" ? "Purchase Cancelled" : "Purchase Pending");
     }
 
     protected static string TransferStatusCss(string status)

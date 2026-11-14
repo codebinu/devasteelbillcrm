@@ -21,8 +21,9 @@
         .info-row .k { color: #777; float: left; width: 42%; }
         .info-row .v { float: left; width: 58%; font-weight: 600; word-break: break-word; }
         #transferItems .qty-input { width: 90px; text-align: right; }
+        #transferItems .price-input { width: 110px; text-align: right; }
         #transferItems tr.row-disabled td { color: #999; background: #fafafa; }
-        #transferItems tr.row-error .qty-input { border-color: #a94442; }
+        #transferItems tr.row-error .qty-input, #transferItems tr.row-error .price-input { border-color: #a94442; }
         #transferItems .row-note { display: block; font-size: 11px; color: #a94442; }
         #transferItems .sub-note { display: block; font-size: 11px; color: #777; }
         .totals-table td { padding: 4px 8px; }
@@ -169,7 +170,7 @@
                                             </tbody>
                                         </table>
                                     </div>
-                                    <p class="text-muted" style="font-size: 11px;">Only stock reserved for this order in the source warehouse can be transferred, in whole units of the batch's unit. The invoice reduces the source warehouse stock, the batch and the reservation; the purchase adds the same quantity to the target warehouse, reserved for the same order item.</p>
+                                    <p class="text-muted" style="font-size: 11px;">Only stock reserved for this order in the source warehouse can be transferred, in whole units of the batch's unit. The invoice reduces the source warehouse stock, the batch and the reservation; the purchase, created afterwards with Create Purchase, adds the same quantity to the target warehouse, reserved for the same order item.</p>
                                 </div>
                             </div>
                         </div>
@@ -289,8 +290,8 @@
                 if (taxMethod === 2) box.append(infoRow('GST', t.interState ? 'Interstate (IGST)' : 'Within the state (CGST + SGST)'));
             }
 
-            function calcLine(line, qty) {
-                var price = line.price, rate = line.discountRate, tax = line.taxPercent, cess = line.cessPercent;
+            function calcLine(line, qty, unitPrice) {
+                var price = unitPrice, rate = line.discountRate, tax = line.taxPercent, cess = line.cessPercent;
                 if (taxMethod === 0) { tax = 0; cess = 0; }
                 else if (taxInclusive === 1) {
                     price = cess > 0 ? (10000 * price) / (10000 + 100 * tax + tax * cess) : price / (tax / 100 + 1);
@@ -310,16 +311,21 @@
                 return { empty: false, valid: qty >= 1 && qty <= max, qty: qty };
             }
 
+            function rowPrice(row) {
+                var text = $.trim(row.find('.price-input').val()), price = parseFloat(text);
+                return { valid: text !== '' && isFinite(price) && price >= 0, price: price };
+            }
+
             function recalc() {
                 var sub = 0, disc = 0, tax = 0, total = 0, selected = 0, invalid = 0;
                 $('#transferItems tr.tr-row').each(function () {
                     var row = $(this), line = row.data('line');
                     row.removeClass('row-error');
-                    var q = rowQty(row);
+                    var q = rowQty(row), p = rowPrice(row);
                     if (q.empty) { row.find('.line-total').text('0.00'); return; }
-                    if (!q.valid) { invalid++; row.addClass('row-error'); row.find('.line-total').text('0.00'); return; }
+                    if (!q.valid || !p.valid) { invalid++; row.addClass('row-error'); row.find('.line-total').text('0.00'); return; }
                     selected++;
-                    var c = calcLine(line, q.qty);
+                    var c = calcLine(line, q.qty, p.price);
                     row.find('.line-total').text(fmt(c.total));
                     sub += c.real; disc += c.disc; tax += c.tax; total += c.total;
                 });
@@ -357,7 +363,7 @@
                         tr.append($('<td class="text-right"></td>').text(b ? trim4(b.reserved) + ' ' + line.uom : '-'));
                         tr.append($('<td class="text-right"></td>').text(b ? trim4(b.max) + ' ' + line.uom : '-'));
                         tr.append($('<td class="text-right"></td>').append($('<input type="number" class="form-control input-sm qty-input" min="1" step="1" />').attr('max', b ? b.max : 0).prop('disabled', !enabled)));
-                        tr.append($('<td class="text-right"></td>').text(fmt(line.price)));
+                        tr.append($('<td class="text-right"></td>').append($('<input type="number" class="form-control input-sm price-input" min="0" step="0.01" />').val(line.price).prop('disabled', !enabled)));
                         tr.append($('<td class="text-right"></td>').text(trim4(line.discountRate) + '%'));
                         tr.append($('<td class="text-right"></td>').text(taxMethod === 0 ? '-' : trim4(line.taxPercent) + '%' + (line.cessPercent > 0 ? ' + ' + trim4(line.cessPercent) + '% cess' : '')));
                         tr.append($('<td class="text-right line-total">0.00</td>'));
@@ -427,7 +433,7 @@
                 });
             });
 
-            $('#transferItems').on('input change', '.qty-input', recalc);
+            $('#transferItems').on('input change', '.qty-input, .price-input', recalc);
 
             function loadTransfers() {
                 call('getTransfers', { smoId: cfg.smoId }, function (rows) {
@@ -440,8 +446,8 @@
                         if (t.purchaseId > 0) {
                             tr.append($('<td></td>').append($('<span class="label label-success"></span>').text('#' + t.purchaseId))).append($('<td></td>'));
                         } else {
-                            tr.append($('<td></td>').append($('<span class="label label-danger"></span>').text('Purchase pending')));
-                            tr.append($('<td></td>').append($('<button type="button" class="btn btn-warning btn-xs btn-retry"></button>').attr('data-sm', t.salesId).text('Retry Purchase')));
+                            tr.append($('<td></td>').append($('<span class="label label-danger"></span>').text('Purchase Pending')));
+                            tr.append($('<td></td>').append($('<button type="button" class="btn btn-warning btn-xs btn-retry"></button>').attr('data-sm', t.salesId).text('Create Purchase')));
                         }
                         body.append(tr);
                     });
@@ -459,7 +465,7 @@
                 call('retryPurchase', { smoId: cfg.smoId, smId: smId }, function (r) {
                     Unloading();
                     saving = false;
-                    showMessage(r.ok ? 'success' : 'danger', r.message || (r.ok ? 'The transfer is complete.' : 'The purchase could not be generated.'));
+                    showMessage(r.ok ? 'success' : 'danger', r.message || (r.ok ? 'The purchase was created.' : 'The purchase could not be generated.'));
                     loadTransfers();
                 }, function () {
                     Unloading();
@@ -473,15 +479,15 @@
                 if (saving || finished) return;
                 var t = recalc();
                 if (!targetOk) { showMessage('warning', 'Select the source warehouse and a valid target customer.'); return; }
-                if (t.invalid > 0) { showMessage('danger', 'Enter a whole number between 1 and the transferable quantity for every item you transfer.'); return; }
+                if (t.invalid > 0) { showMessage('danger', 'Enter a whole number between 1 and the transferable quantity, and a valid unit price, for every item you transfer.'); return; }
                 if (t.selected === 0) { showMessage('warning', 'Enter a transfer quantity for at least one item.'); return; }
                 var lines = [];
                 $('#transferItems tr.tr-row').each(function () {
                     var row = $(this), q = rowQty(row);
-                    if (!q.empty) lines.push({ sioId: parseInt(row.attr('data-sio'), 10), itbhId: parseInt(row.attr('data-batch'), 10), qty: q.qty });
+                    if (!q.empty) lines.push({ sioId: parseInt(row.attr('data-sio'), 10), itbhId: parseInt(row.attr('data-batch'), 10), qty: q.qty, price: rowPrice(row).price });
                 });
                 var request = { smoId: cfg.smoId, sourceBranchId: parseInt($('#sourceBranch').val(), 10), targetCustId: parseInt($('#targetCust').val(), 10), sessionId: cfg.token, lines: lines };
-                bootbox.confirm('Create this stock transfer? The source warehouse stock, batches and reservations will be reduced and the target warehouse will receive the stock.', function (ok) {
+                bootbox.confirm('Create this transfer invoice? The source warehouse stock, batches and reservations will be reduced. The purchase for the target warehouse is created separately from the Interstock Transfer Invoices list.', function (ok) {
                     if (!ok || saving || finished) return;
                     saving = true;
                     $('#btnSave').prop('disabled', true);
@@ -489,11 +495,10 @@
                     call('saveTransfer', { request: request }, function (r) {
                         Unloading();
                         saving = false;
-                        if (r.ok || r.salesDone) {
-                            // Back to the sales order's Interstock Transfer Invoices tab, which lists the new transfer (and its purchase, or the pending retry).
+                        if (r.ok) {
+                            // Back to the sales order's Interstock Transfer Invoices tab, which lists the new invoice as Purchase Pending.
                             finished = true;
-                            location.href = 'view_sales_order.aspx?smoId=' + cfg.smoId + '&done=' + (r.ok ? 'transferred' : 'transferpartial')
-                                + '&invoiceId=' + r.salesId + '&purchaseId=' + r.purchaseId + '#tabInterstock';
+                            location.href = 'view_sales_order.aspx?smoId=' + cfg.smoId + '&done=invoicecreated&invoiceId=' + r.salesId + '#tabInterstock';
                             return;
                         }
                         showMessage('danger', r.message || 'The transfer could not be saved.');

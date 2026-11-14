@@ -14,10 +14,11 @@ using System.Web;
 //    account mapped to the target warehouse (tbl_branch.cust_id), sm_is_inter_stock_transfer_invoice = 1. The procedure takes the stock, the batch and
 //    the order line's reservation of every row (itbs_id / itbh_id / sio_id) from the source warehouse and uses the customer state against the source
 //    warehouse state for CGST/SGST or IGST.
-//  - sp_create_purchase_from_sales then creates the purchase in the target warehouse (the branch whose cust_id is the invoice customer) against the
+//  - Saving the invoice does not create the purchase. The user later runs Create Purchase on the invoice (RetryInterStockPurchase), which calls
+//    sp_create_purchase_from_sales: it creates the purchase in the target warehouse (the branch whose cust_id is the invoice customer) against the
 //    vendor account of the source warehouse (tbl_branch.vn_id). Its items carry the same sio_id, so the received batch is reserved for the same order line.
-//  - Both procedures commit on their own, so the two documents cannot share one database transaction. The invoice is saved first; a purchase that fails
-//    afterwards is reported as an incomplete transfer and can be retried (RetryInterStockPurchase). A purchase already linked to the invoice is never created twice.
+//  - Both procedures commit on their own, so the two documents cannot share one database transaction. A failed purchase leaves the invoice as
+//    "Purchase pending" and can be retried. Creation runs under the order lock and a purchase already linked to the invoice is never created twice.
 public class InterStockSource
 {
     public int branchId;
@@ -93,6 +94,7 @@ public class InterStockRequestLine
     public int sioId { get; set; }
     public int itbhId { get; set; }
     public decimal qty { get; set; }
+    public decimal? price { get; set; }
 }
 
 public class InterStockResult
@@ -462,6 +464,8 @@ public static partial class SalesOrderStock
             throw new StockException("The same batch is selected more than once.");
         if (rq.lines.Any(x => x.qty < 1 || x.qty != Math.Floor(x.qty) || x.qty > 999999999m))
             throw new StockException("The transfer quantity must be a whole number greater than zero.");
+        if (rq.lines.Any(x => x.price.HasValue && (x.price.Value < 0m || x.price.Value > 999999999m)))
+            throw new StockException("The unit price must be zero or more.");
     }
 
     // Saves the transfer invoice, then the purchase. The order lock serialises transfers of one order (also across browser tabs), and the quantities are
@@ -513,7 +517,7 @@ public static partial class SalesOrderStock
                     { "si_qty", q.qty },
                     { "si_foc", 0 },
                     { "si_org_price", line.orgPrice },
-                    { "si_price", line.price },
+                    { "si_price", q.price.HasValue ? Math.Round(q.price.Value, 2, MidpointRounding.AwayFromZero) : line.price },
                     { "si_discount_rate", line.discountRate },
                     { "si_approval_status", 0 },
                     { "si_itm_type", 0 }
@@ -549,17 +553,9 @@ public static partial class SalesOrderStock
             result.salesId = smId;
             LinkTransferInvoice(db, smId, rq.smoId);
 
-            int pmId;
-            string error;
-            if (!CreateTransferPurchase(db, con, smId, source, target, out pmId, out error))
-            {
-                result.message = "Invoice #" + smId + " was created in " + source.BranchName + ", but the purchase entry for " + target.BranchName
-                    + " could not be generated" + (string.IsNullOrEmpty(error) ? "" : ": " + error) + ". The transfer is incomplete: use Retry Purchase in the transfers list below.";
-                return result;
-            }
-            result.purchaseId = pmId;
+            // The purchase is created later by the user (Create Purchase in the Interstock Transfer Invoices list).
             result.ok = true;
-            result.message = "Stock transfer completed: invoice #" + smId + " and purchase #" + pmId + " created.";
+            result.message = "Transfer invoice #" + smId + " was created in " + source.BranchName + ". Use Create Purchase in the Interstock Transfer Invoices list to generate the purchase entry for " + target.BranchName + ".";
         }
         catch (StockException ex)
         {
@@ -685,7 +681,7 @@ public static partial class SalesOrderStock
         return true;
     }
 
-    // Completes a transfer whose invoice was saved but whose purchase failed.
+    // Creates the purchase of a saved transfer invoice (Create Purchase), or reports the one that already exists.
     public static InterStockResult RetryInterStockPurchase(int smoId, int smId)
     {
         var result = new InterStockResult { salesId = smId, salesDone = true };
@@ -724,12 +720,12 @@ public static partial class SalesOrderStock
             string error;
             if (!CreateTransferPurchase(db, con, smId, source, target, out pmId, out error))
             {
-                result.message = "The purchase entry could not be generated" + (string.IsNullOrEmpty(error) ? "" : ": " + error) + ". The transfer is still incomplete.";
+                result.message = "The purchase entry could not be generated" + (string.IsNullOrEmpty(error) ? "" : ": " + error) + ". The invoice remains Purchase Pending; you can try Create Purchase again.";
                 return result;
             }
             result.purchaseId = pmId;
             result.ok = true;
-            result.message = "Purchase #" + pmId + " is linked to invoice #" + smId + ". The transfer is complete.";
+            result.message = "Purchase #" + pmId + " is linked to invoice #" + smId + ".";
         }
         catch (StockException ex)
         {
@@ -742,7 +738,7 @@ public static partial class SalesOrderStock
         catch (Exception ex)
         {
             new LogClass("salesorderinterstockerror").write(ex);
-            result.message = "The purchase entry could not be generated. The transfer is still incomplete.";
+            result.message = "The purchase entry could not be generated. The invoice remains Purchase Pending; you can try Create Purchase again.";
         }
         finally
         {
