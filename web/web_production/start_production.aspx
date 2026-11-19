@@ -432,7 +432,7 @@
             $('#batchTotals').html('Selected: <span class="' + (over ? 'text-danger' : 'text-success') + '">' + num(total) + ' ' + esc(d.uom) + '</span> &nbsp;|&nbsp; Remaining: <span class="' + (over ? 'text-danger' : '') + '">'
                 + num(left) + ' ' + esc(d.uom) + '</span>' + (other > 0 ? '<span class="sub-note" style="line-height: 14px;">Includes ' + other + ' batch(es) from other warehouses</span>' : ''));
             $('#batchOverMessage').text(over ? 'The selected quantity exceeds the remaining requirement (' + num(d.remaining) + ' ' + d.uom + ').' : '').toggle(over);
-            $('#batchSubmit').prop('disabled', pick.busy || over || errors > 0 || total <= 0);
+            $('#batchSubmit').prop('disabled', pick.busy || errors > 0 || total <= 0);
         }
 
         function renderPicker() {

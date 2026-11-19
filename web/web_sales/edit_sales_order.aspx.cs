@@ -116,7 +116,7 @@ public partial class web_sales_edit_sales_order : System.Web.UI.Page
                 + "(select u.tum_name from tbl_item_uom u where u.tum_id=sio.tum_id limit 1) as uom "
                 + "from tbl_sales_items_order sio where sio.smo_id=@id order by sio.row_no",
                 new MySqlParameter[] { new MySqlParameter("@id", smoId) });
-            string[] extra = { "sl", "edit_qty", "edit_length", "edit_width", "edit_uom", "edit_taxable", "edit_reserved" };
+            string[] extra = { "sl", "edit_qty", "edit_length", "edit_width", "edit_qty_raw", "edit_length_raw", "edit_width_raw", "edit_uom", "edit_taxable", "edit_reserved" };
             foreach (string col in extra)
                 Items.Columns.Add(col, typeof(string));
 
@@ -131,8 +131,11 @@ public partial class web_sales_edit_sales_order : System.Web.UI.Page
                 r["edit_qty"] = b.Qty > 0 ? Num(b.Qty) : "";
                 r["edit_length"] = b.Length > 0 ? Num(b.Length) : "";
                 r["edit_width"] = b.Width > 0 ? Num(b.Width) : "";
+                r["edit_qty_raw"] = b.Qty > 0 ? Raw(b.Qty) : "";
+                r["edit_length_raw"] = b.Length > 0 ? Raw(b.Length) : "";
+                r["edit_width_raw"] = b.Width > 0 ? Raw(b.Width) : "";
                 r["edit_uom"] = b.TumCust.ToString();
-                r["edit_taxable"] = Num(hasTaxable ? Dec(r["sio_tax_excluded_total"]) : Dec(r["sio_net_amount"]) - Dec(r["sio_tax_amount"]));
+                r["edit_taxable"] = Raw(hasTaxable ? Dec(r["sio_tax_excluded_total"]) : Dec(r["sio_net_amount"]) - Dec(r["sio_tax_amount"]));
                 int count;
                 r["edit_reserved"] = reserved.TryGetValue(Convert.ToInt32(r["sio_id"]), out count) ? count.ToString() : "0";
                 ItemsQty += Dec(r["sio_finalqty"]);
@@ -211,12 +214,18 @@ public partial class web_sales_edit_sales_order : System.Web.UI.Page
 
     protected string Num(object o)
     {
+        return Dec(o).ToString("0.###");
+    }
+
+    // Full-precision value for data-* attributes and percentages, not for display of UOM quantities.
+    protected string Raw(object o)
+    {
         return Dec(o).ToString("0.####");
     }
 
     protected string NumCol(DataRow r, string col)
     {
-        return Items.Columns.Contains(col) ? Num(r[col]) : "0";
+        return Items.Columns.Contains(col) ? Raw(r[col]) : "0";
     }
 
     protected string Enc(object o)

@@ -224,7 +224,7 @@ public partial class web_sales_neworder : System.Web.UI.Page
             }
             int total_pages = Convert.ToInt32(Math.Ceiling(numrows / per_page));
 
-            innerqry = "SELECT itbs_id,tis.itm_id,itm_qty_per_carton,itbs_stock,itbs_reorder,"
+            innerqry = "SELECT itbs_id,tis.itm_id,itm_qty_per_carton,itbs_stock,itbs_reorder,im.itsv_uom_sales,"
             +" tis.itm_code,tis.itm_name,tis.itm_brand_id,tis.itm_category_id,itm_mrp,tib.brand_name,"
             +" tic.cat_name,tp_tax_percentage,tp_cess,(select tip_price from tbl_item_pricelist tip"
             +" inner join tbl_price_master tpm on tpm.tpm_id=tip.tpm_id where"

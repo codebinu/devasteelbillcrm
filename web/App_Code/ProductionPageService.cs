@@ -420,9 +420,9 @@ public static class ProductionPageService
             return new ProductionSaveResult { ok = false, message = "Raw material is reserved in " + usable.Count + " batches. Produce this order from the Production Queue." };
         ProductionEntryInput input = usable[0];
         if (Math.Abs(o.pending - expectedPending) > 0.0005m)
-            return new ProductionSaveResult { ok = false, message = "The pending quantity changed (now " + Math.Round(o.pending, 4) + " " + o.uom + "). Reload and try again." };
+            return new ProductionSaveResult { ok = false, message = "The pending quantity changed (now " + Math.Round(o.pending, 3) + " " + o.uom + "). Reload and try again." };
         if (Math.Abs(input.outputQty - o.pending) > 0.0005m)
-            return new ProductionSaveResult { ok = false, message = "The reserved raw material produces " + Math.Round(input.outputQty, 4) + " " + o.uom + ", not the pending " + Math.Round(o.pending, 4) + ". Produce this order from the Production Queue." };
+            return new ProductionSaveResult { ok = false, message = "The reserved raw material produces " + Math.Round(input.outputQty, 3) + " " + o.uom + ", not the pending " + Math.Round(o.pending, 3) + ". Produce this order from the Production Queue." };
         return Save(smoId, sioId, input.reservationId, input.outputQty);
     }
 

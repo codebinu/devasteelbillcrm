@@ -136,9 +136,9 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
                 r["sl"] = sl++;
                 // customer-entered values: pieces, length x width and the UOM those dimensions were typed in
                 if (hasPiece && r["sio_no_piece"] != DBNull.Value && Dec(r["sio_no_piece"]) > 0)
-                    r["cust_qty"] = Dec(r["sio_no_piece"]).ToString("0.##");
+                    r["cust_qty"] = Dec(r["sio_no_piece"]).ToString("0.000");
                 decimal custLen = hasCustLen ? Dec(r["sio_length_cust_fraction"]) : 0, custWid = hasCustWid ? Dec(r["sio_width_cust_fraction"]) : 0;
-                r["cust_size"] = custLen > 0 ? custLen.ToString("0.####") + (custWid > 0 ? " x " + custWid.ToString("0.####") : "") : "";
+                r["cust_size"] = custLen > 0 ? custLen.ToString("0.000") + (custWid > 0 ? " x " + custWid.ToString("0.000") : "") : "";
                 string cu;
                 if (hasCustUom && r["tum_id_cust"] != DBNull.Value && uomNames.TryGetValue(Convert.ToInt32(r["tum_id_cust"]), out cu))
                     r["cust_uom"] = cu;
@@ -245,12 +245,16 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
     }
 
     [WebMethod]
-    public static ReservedItemsResult LoadReserved(int smoId)
+    public static ReservedItemsResult LoadReserved(int smoId, List<PlanQty> plans)
     {
         OrderAccess a = OpenOrder(smoId);
         try
         {
-            return SalesOrderStock.Load(smoId, a.BranchId, a.Status, a.StaffType != "2");
+            var planBySio = new Dictionary<int, decimal>();
+            foreach (PlanQty p in plans ?? new List<PlanQty>())
+                if (p != null && p.qty > 0)
+                    planBySio[p.sioId] = p.qty;
+            return SalesOrderStock.Load(smoId, a.BranchId, a.Status, a.StaffType != "2", planBySio);
         }
         catch (Exception ex)
         {
@@ -260,32 +264,32 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
     }
 
     [WebMethod]
-    public static StockActionResult ReserveItem(int smoId, int sioId, decimal expectedQty, int compItmId)
+    public static StockActionResult ReserveItem(int smoId, int sioId, decimal expectedQty, int compItmId, decimal planQty)
     {
         OrderAccess a = OpenOrder(smoId);
         if (a.StaffType == "2")
             return Denied("You do not have permission to reserve stock for this order.");
-        return SalesOrderStock.Reserve(smoId, a.BranchId, a.Status, a.StaffId, sioId, expectedQty, compItmId);
+        return SalesOrderStock.Reserve(smoId, a.BranchId, a.Status, a.StaffId, sioId, expectedQty, compItmId, planQty);
     }
 
     [WebMethod]
-    public static StockActionResult ReserveBatches(int smoId, int sioId, int compItmId, List<BatchQty> allocations)
+    public static StockActionResult ReserveBatches(int smoId, int sioId, int compItmId, List<BatchQty> allocations, decimal planQty)
     {
         OrderAccess a = OpenOrder(smoId);
         if (a.StaffType == "2")
             return Denied("You do not have permission to reserve stock for this order.");
-        return SalesOrderStock.ReserveBatches(smoId, a.BranchId, a.Status, a.StaffId, sioId, compItmId, allocations);
+        return SalesOrderStock.ReserveBatches(smoId, a.BranchId, a.Status, a.StaffId, sioId, compItmId, allocations, planQty);
     }
 
     [WebMethod]
-    public static ReserveOptionsResult LoadReserveOptions(int smoId, int sioId, int compItmId)
+    public static ReserveOptionsResult LoadReserveOptions(int smoId, int sioId, int compItmId, decimal planQty)
     {
         OrderAccess a = OpenOrder(smoId);
         try
         {
             if (a.StaffType == "2")
                 return new ReserveOptionsResult { ok = false, message = "You do not have permission to reserve stock for this order." };
-            return SalesOrderStock.LoadOptions(smoId, a.BranchId, a.StaffId, sioId, compItmId);
+            return SalesOrderStock.LoadOptions(smoId, a.BranchId, a.StaffId, sioId, compItmId, planQty);
         }
         catch (Exception ex)
         {
@@ -322,12 +326,12 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
     }
 
     [WebMethod]
-    public static StockActionResult ProduceItem(int smoId, int sioId, decimal expectedQty)
+    public static StockActionResult ProduceItem(int smoId, int sioId, decimal expectedQty, decimal planQty, decimal expectedProduced)
     {
         OrderAccess a = OpenOrder(smoId);
         if (a.StaffType == "2")
             return Denied("You do not have permission to move items to production.");
-        return SalesOrderStock.MoveToProduction(smoId, a.BranchId, a.Status, a.StaffId, a.DocBase, sioId, expectedQty);
+        return SalesOrderStock.MoveToProduction(smoId, a.BranchId, a.Status, a.StaffId, a.DocBase, sioId, expectedQty, planQty, expectedProduced);
     }
 
     [WebMethod]
@@ -638,6 +642,11 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
     }
 
     protected string Num(object o)
+    {
+        return Dec(o).ToString("0.000");
+    }
+
+    protected string Pct(object o)
     {
         return Dec(o).ToString("0.####");
     }

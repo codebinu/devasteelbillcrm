@@ -29,6 +29,19 @@
         #tabReserved .bom-list, #productionModal .bom-list { margin: 5px 0 0 0; padding-left: 16px; font-size: 12px; }
         #productionMessage .alert { margin-bottom: 10px; }
         #tabReserved .res-actions .btn { display: block; margin-bottom: 4px; white-space: nowrap; }
+        #produceModal { text-align: center; }
+        #produceModal:before { content: ''; display: inline-block; height: 100%; vertical-align: middle; margin-right: -4px; }
+        #produceModal .modal-dialog { display: inline-block; text-align: left; vertical-align: middle; width: 90%; max-width: 820px; margin: 10px auto; }
+        #produceModal .pc-title { font-size: 16px; font-weight: 600; }
+        #produceModal .modal-body { max-height: 70vh; overflow-y: auto; }
+        #produceModal .pc-qty { font-size: 15px; margin: 4px 0 12px 0; padding: 8px 12px; background: #fdf3e0; border-left: 4px solid #f0ad4e; }
+        #produceModal .pc-table { margin-bottom: 8px; }
+        #produceModal .pc-table th { background: #f1eeee; color: #525252; font-size: 12px; }
+        #produceModal .pc-table .num { text-align: right; white-space: nowrap; }
+        #produceModal .pc-table td { vertical-align: middle; }
+        #tabReserved .plan-box { margin-right: 8px; font-size: 12px; }
+        #tabReserved .raw-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+        #tabReserved .raw-produce { flex: 0 0 auto; white-space: nowrap; }
         #tabReserved .link-action { display: block; font-size: 11px; margin-top: 2px; white-space: nowrap; }
         #tabReserved .raw-table .link-action { display: inline-block; margin-right: 8px; }
         #tabReserved .release-batch { font-size: 11px; white-space: nowrap; }
@@ -73,6 +86,12 @@
     </style>
 
     <script type="text/javascript">
+        // Used by the status buttons: confirm first, then show the shared page loader while the postback runs.
+        function confirmStatusChange(message) {
+            if (!confirm(message)) return false;
+            $(".loader-overlay").css("display", "flex");
+            return true;
+        }
         $(document).ready(function () {
             if (!$.cookie("invntrystaffBranchId")) {
                 location.href = "../dashboard.aspx";
@@ -158,15 +177,27 @@
             }
 
             function num(value) {
-                return String(Math.round((Number(value) || 0) * 10000) / 10000);
+                return (Math.round((Number(value) || 0) * 1000) / 1000).toFixed(3);
+            }
+
+            function money(value) {
+                return (Number(value) || 0).toFixed(2);
             }
 
             function showReservedMessage(ok, text) {
                 $('#reservedMessage').html('<div class="alert ' + (ok ? 'alert-success' : 'alert-danger') + '">' + esc(text) + '</div>');
             }
 
-            var uiState = { open: {} };
+            var uiState = { open: {}, plan: {}, rows: {} };
             var reservedCanAct = false;
+
+            // Production quantity the user typed per order line; it survives grid reloads and is sent with every reserve / produce request.
+            function planOf(sioId) {
+                return Number(uiState.plan[sioId]) || 0;
+            }
+            function plansPayload() {
+                return $.map(uiState.plan, function (q, id) { return { sioId: parseInt(id, 10), qty: Number(q) || 0 }; });
+            }
 
             function allocHtml(list, key, title, sioId) {
                 if (!list || !list.length) {
@@ -205,24 +236,35 @@
                 }
                 var links = '';
                 if (canPick) {
-                    links += '<a href="#" class="link-action pick-btn"' + attrs + '><i class="fa fa-th-list"></i> Choose warehouse / batches</a>';
+                    links += '<button type="button" class="btn btn-xs btn-primary pick-btn"' + attrs + ' title="Pick the warehouse and batches to reserve from"><i class="fa fa-th-list"></i> Choose warehouse / batches</button>';
                 }
                 if (canReserve && canUnreserve) {
-                    links += '<a href="#" class="link-action unreserve-btn"' + attrs + '><i class="fa fa-unlock"></i> Release all</a>';
+                    links += '<button type="button" class="btn btn-xs btn-default unreserve-btn"' + attrs + ' title="Release everything reserved for this order"><i class="fa fa-unlock"></i> Release all</button>';
                 }
                 return html + links;
             }
 
             // Raw materials for the quantity that has to be produced, shown as a small table under the item row.
             function rawMaterialRow(row, canAct) {
-                if (!row.hasBom || !(row.needsProduction > 0 || $.grep(row.bom, function (c) { return c.reserved > 0; }).length)) {
+                if (!row.hasBom) {
                     return '';
                 }
                 var uom = ' ' + esc(row.uom);
                 var count = row.bom.length + ' raw material' + (row.bom.length === 1 ? '' : 's');
-                var head = row.needsProduction > 0
-                    ? 'Raw material needed to produce the <strong>' + num(row.needsProduction) + uom + '</strong> that is short (' + count + ')'
-                    : 'Raw material still reserved for this order (' + count + ') &mdash; no production is needed any more';
+                var head = row.planQty > 0
+                    ? 'Bill of materials (' + count + ') &mdash; raw material needed to produce the <strong>' + num(row.produceQty) + uom + '</strong> you entered'
+                    : (row.needsProduction > 0
+                        ? 'Raw material needed to produce the <strong>' + num(row.needsProduction) + uom + '</strong> that is short (' + count + ')'
+                        : (row.produceQty > 0
+                            ? 'Bill of materials (' + count + ') &mdash; raw material needed if you produce the <strong>' + num(row.produceQty) + uom + '</strong> still to be supplied'
+                            : 'Bill of materials (' + count + ')'));
+                var planBox = '';
+                if (canAct) {
+                    planBox = '<span class="plan-box">Quantity to produce: <input type="number" class="plan-input" min="0" step="any" data-sio="' + row.sioId + '"'
+                        + ' data-orig="' + (row.planQty > 0 ? row.planQty : '') + '" value="' + (row.planQty > 0 ? row.planQty : '') + '" placeholder="' + num(row.produceQty) + '" style="width: 100px;"'
+                        + ' title="Enter the quantity to produce, even if finished stock is already available, then click Update. Clear the field and click Update to use the default." />' + uom
+                        + ' <button type="button" class="btn btn-sm btn-default plan-apply" data-sio="' + row.sioId + '"><i class="fa fa-refresh"></i> Update</button></span> ';
+                }
                 var body = $.map(row.bom, function (c) {
                     var u = ' ' + esc(c.uom);
                     var name = '<strong>' + esc(c.name) + '</strong>' + (c.code ? ' <span class="text-muted">(' + esc(c.code) + ')</span>' : '');
@@ -233,14 +275,23 @@
                         + allocHtml(c.allocations, 'c' + row.sioId + '-' + c.itmId, 'Reservation details', row.sioId);
                     var state = c.shortage > 0
                         ? '<span class="text-danger">Short by ' + num(c.shortage) + u + '</span>'
-                        : (c.surplus > 0 ? '<span class="text-warning">' + num(c.surplus) + u + ' reserved more than needed &mdash; unreserve the surplus</span>'
+                        : (c.surplus > 0 ? '<span class="text-warning">' + num(c.surplus) + u + ' reserved more than needed &mdash; it will all be used when you produce, release it if not required</span>'
                             : (c.required > 0 && c.reserved >= c.required ? '<span class="text-success">Fully reserved</span>' : ''));
                     var actions = actionButtons(canAct, c.canReserve, c.canUnreserve, c.canPick, row.sioId, c.itmId, c.available, c.name, c.uom);
                     return '<tr><td>' + name + note + '</td>'
                         + '<td class="num">' + num(c.required) + u + '</td><td class="num">' + num(c.reserved) + u + '</td><td class="num">' + num(c.free) + u + '</td>'
                         + '<td>' + state + '</td><td><div class="res-actions">' + actions + '</div></td></tr>';
                 }).join('');
-                return '<tr class="raw-row"><td></td><td colspan="9"><div class="raw-head">' + head + '</div>'
+                var produce = '';
+                if (canAct && row.produceQty > 0) {
+                    produce = '<button type="button" class="btn btn-sm btn-warning produce-btn" data-sio="' + row.sioId + '" data-qty="' + row.produceQty + '" data-produced="' + row.produced + '"'
+                        + ' data-name="' + esc(row.itemName) + '" data-uom="' + esc(row.uom) + '"' + (row.canProduce ? '' : ' disabled') + '>'
+                        + '<i class="fa fa-cogs"></i> Produce ' + num(row.produceQty) + uom + '</button>';
+                }
+                var note = row.produceQty > 0 && !row.canProduce && row.productionMessage
+                    ? '<div class="text-danger" style="font-size: 12px; margin-top: 4px;">' + esc(row.productionMessage) + '</div>' : '';
+                return '<tr class="raw-row"><td></td><td colspan="9">'
+                    + '<div class="raw-top"><div class="raw-head">' + head + '</div><div class="raw-produce">' + planBox + produce + '</div></div>' + note
                     + '<table class="table table-bordered raw-table"><thead><tr><th>Raw material</th><th class="num">Needed</th><th class="num">Reserved</th><th class="num">Available</th><th>Status</th><th>Actions</th></tr></thead>'
                     + '<tbody>' + body + '</tbody></table></td></tr>';
             }
@@ -279,7 +330,6 @@
                         + '<div class="stock-box" style="' + (stockOpen ? '' : 'display: none;') + '">'
                         + '<div>In stock: <strong>' + num(r.physical) + uom + '</strong></div>'
                         + '<div>Reserved by other orders: ' + num(r.reservedOthers) + uom + '</div>'
-                        + (Math.abs(r.branchStock - r.physical) > 0.0005 ? '<div>Branch total: ' + num(r.branchStock) + uom + '</div>' : '')
                         + '</div>';
                 }
                 var item = '<strong>' + esc(r.itemName) + '</strong>'
@@ -292,9 +342,6 @@
                 if (r.message) {
                     note += '<span class="sub-note text-danger">' + esc(r.message) + '</span>';
                 }
-                if (r.needsProduction > 0 && !r.canProduce && r.productionMessage) {
-                    note += '<span class="sub-note text-danger">' + esc(r.productionMessage) + '</span>';
-                }
                 var status = '<span class="label ' + st.cls + '">' + st.text + '</span>' + note;
 
                 var actions;
@@ -302,11 +349,6 @@
                     actions = '<span class="text-muted">View only</span>';
                 } else {
                     var buttons = actionButtons(true, r.canReserve, r.canUnreserve, r.canPick, r.sioId, 0, r.available, r.itemName, r.uom);
-                    if (r.needsProduction > 0) {
-                        buttons += '<button type="button" class="btn btn-xs btn-primary produce-btn" data-sio="' + r.sioId + '" data-qty="' + r.needsProduction + '"'
-                            + ' data-name="' + esc(r.itemName) + '" data-uom="' + esc(r.uom) + '"' + (r.canProduce ? '' : ' disabled') + '>'
-                            + '<i class="fa fa-cogs"></i> Produce ' + num(r.needsProduction) + ' ' + esc(r.uom) + '</button>';
-                    }
                     actions = buttons ? '<div class="res-actions">' + buttons + '</div>' : '<span class="text-muted">-</span>';
                 }
                 return '<tr>'
@@ -333,7 +375,7 @@
                 $.ajax({
                     type: 'POST',
                     url: 'view_sales_order.aspx/LoadReserved',
-                    data: JSON.stringify({ smoId: parseInt(panel.attr('data-order-id'), 10) }),
+                    data: JSON.stringify({ smoId: parseInt(panel.attr('data-order-id'), 10), plans: plansPayload() }),
                     contentType: 'application/json; charset=utf-8',
                     dataType: 'json',
                     success: function (response) {
@@ -345,6 +387,8 @@
                         }
                         panel.data('loaded', true);
                         reservedCanAct = !!d.canAct;
+                        uiState.rows = {};
+                        $.each(d.rows, function (i, r) { uiState.rows[r.sioId] = r; });
                         var html = $.map(d.rows, function (r) { return reservedRowHtml(r, d.canAct); }).join('');
                         $('#reservedBody').html(html || '<tr><td colspan="10" style="text-align: center">No items found for this sales order.</td></tr>');
                         $('#reservedLoading').hide();
@@ -363,12 +407,16 @@
                 });
             }
 
-            function runStockAction(method, data, confirmText) {
-                if (reservedBusy || !window.confirm(confirmText)) {
+            // Runs a stock action after the caller has already confirmed it.
+            function doStockAction(method, data) {
+                if (reservedBusy) {
                     return;
                 }
                 reservedBusy = true;
                 data.smoId = parseInt($('#tabReserved').attr('data-order-id'), 10);
+                if (method === 'ReserveItem' || method === 'ProduceItem') {
+                    data.planQty = planOf(data.sioId);
+                }
                 $('#tabReserved').addClass('busy').find('button').prop('disabled', true);
                 $('#reservedMessage').html('<div class="alert alert-info"><i class="fa fa-spinner fa-spin"></i> Processing, please wait...</div>');
                 $.ajax({
@@ -379,6 +427,9 @@
                     dataType: 'json',
                     success: function (response) {
                         var d = response.d || {};
+                        if (method === 'ProduceItem' && d.ok) {
+                            delete uiState.plan[data.sioId];
+                        }
                         showReservedMessage(!!d.ok, d.message || 'The request could not be completed.');
                     },
                     error: function () {
@@ -390,6 +441,53 @@
                 });
             }
 
+            function runStockAction(method, data, confirmText) {
+                if (reservedBusy || !window.confirm(confirmText)) {
+                    return;
+                }
+                doStockAction(method, data);
+            }
+
+            // Centered confirmation for Produce: what will be made, which raw material is used, and where the finished stock goes.
+            function produceConfirmHtml(r) {
+                var uom = ' ' + esc(r.uom);
+                var qty = Number(r.produceQty) || 0;
+                var forOrder = Math.max(0, Math.min(qty, Number(r.remaining) || 0));
+                var extra = Math.round((qty - forOrder) * 1000) / 1000;
+                var rows = $.map(r.bom, function (c) {
+                    var u = ' ' + esc(c.uom);
+                    var fromFree = Math.max(0, Math.round((c.required - c.reserved) * 1000) / 1000);
+                    var total = Math.round((c.reserved + fromFree) * 1000) / 1000;
+                    var note = c.reserved > c.required + 0.0005 ? '<span class="sub-note text-warning">Includes ' + num(c.reserved - c.required) + u + ' reserved extra</span>' : '';
+                    return '<tr><td><strong>' + esc(c.name) + '</strong>' + (c.code ? ' <span class="text-muted">(' + esc(c.code) + ')</span>' : '') + '</td>'
+                        + '<td class="num">' + num(c.required) + u + '</td><td class="num">' + num(c.reserved) + u + '</td>'
+                        + '<td class="num">' + (fromFree > 0 ? num(fromFree) + u : '-') + '</td>'
+                        + '<td class="num"><strong>' + num(total) + u + '</strong>' + note + '</td></tr>';
+                }).join('');
+                return '<div class="pc-title">' + esc(r.itemName) + (r.itemCode ? ' <span class="text-muted">(' + esc(r.itemCode) + ')</span>' : '') + '</div>'
+                    + '<div class="pc-qty">Quantity to produce <strong>' + num(qty) + uom + '</strong></div>'
+                    + '<h5><strong>Raw material that will be used</strong></h5>'
+                    + '<table class="table table-bordered table-condensed pc-table"><thead><tr><th>Raw material</th><th class="num">Needed</th><th class="num">Reserved for this order</th>'
+                    + '<th class="num">Taken from free stock</th><th class="num">Total used</th></tr></thead><tbody>' + rows + '</tbody></table>'
+                    + '<h5><strong>Finished stock</strong></h5>'
+                    + '<table class="table table-bordered table-condensed pc-table"><tbody>'
+                    + '<tr><td>Added to stock</td><td class="num"><strong>' + num(qty) + uom + '</strong></td></tr>'
+                    + '<tr><td>Reserved for this order</td><td class="num">' + num(forOrder) + uom + '</td></tr>'
+                    + '<tr><td>Left as free finished stock</td><td class="num">' + num(extra) + uom + '</td></tr></tbody></table>'
+                    + '<p class="text-muted" style="font-size: 12px; margin: 8px 0 0 0;">All raw material reserved for this order is used up in this production; free stock only tops it up when the reservation is short. '
+                    + 'Stock is deducted once and the reservations are released.</p>';
+            }
+
+            var produceRequest = null;
+            $('#produceModal').on('click', '#produceConfirm', function () {
+                var req = produceRequest;
+                produceRequest = null;
+                $('#produceModal').modal('hide');
+                if (req) {
+                    doStockAction('ProduceItem', req);
+                }
+            });
+            $('#produceModal').on('hidden.bs.modal', function () { produceRequest = null; });
             $('#tabReserved').on('click', '#retryReserved', function () { loadReserved(); });
             $('#tabReserved').on('keydown', '.priority-input', function (e) {
                 if (e.which === 13) {
@@ -461,10 +559,50 @@
             });
             $('#tabReserved').on('click', '.produce-btn', function () {
                 var b = $(this);
-                runStockAction('ProduceItem', { sioId: parseInt(b.attr('data-sio'), 10), expectedQty: Number(b.attr('data-qty')) },
-                    'Produce ' + num(b.attr('data-qty')) + ' ' + b.attr('data-uom') + ' of "' + b.attr('data-name') + '"?\n'
-                    + 'The raw material is taken from the batches reserved for this order first, then from the oldest stock in the order warehouse. '
-                    + 'The finished stock is reserved for this order.');
+                var sioId = parseInt(b.attr('data-sio'), 10);
+                if (planPending(sioId)) {
+                    showReservedMessage(false, 'Click Update to apply the new quantity to produce before producing.');
+                    return;
+                }
+                var r = uiState.rows[sioId];
+                if (reservedBusy || !r) {
+                    return;
+                }
+                produceRequest = { sioId: sioId, expectedQty: Number(b.attr('data-qty')), expectedProduced: Number(b.attr('data-produced')) || 0 };
+                $('#produceModalBody').html(produceConfirmHtml(r));
+                $('#produceModal').modal('show');
+            });
+            // The typed quantity only takes effect when Update is pressed (or Enter), so the BOM figures and the Produce button always agree.
+            function planPending(sioId) {
+                var input = $('#tabReserved .plan-input[data-sio="' + sioId + '"]');
+                return input.length && $.trim(input.val()) !== $.trim(input.attr('data-orig'));
+            }
+            function applyPlan(sioId) {
+                var input = $('#tabReserved .plan-input[data-sio="' + sioId + '"]');
+                var value = Number(input.val());
+                if (reservedBusy) {
+                    return;
+                }
+                if ($.trim(input.val()) !== '' && (isNaN(value) || value < 0)) {
+                    showReservedMessage(false, 'Enter a valid quantity to produce.');
+                    return;
+                }
+                if (value > 0) {
+                    uiState.plan[sioId] = Math.round(value * 1000) / 1000;
+                } else {
+                    delete uiState.plan[sioId];
+                }
+                $('#reservedMessage').empty();
+                loadReserved();
+            }
+            $('#tabReserved').on('click', '.plan-apply', function () {
+                applyPlan(parseInt($(this).attr('data-sio'), 10));
+            });
+            $('#tabReserved').on('keydown', '.plan-input', function (e) {
+                if (e.which === 13) {
+                    e.preventDefault();
+                    applyPlan(parseInt($(this).attr('data-sio'), 10));
+                }
             });
 
             // ---- Warehouse / batch picker (finished items and BOM components) ----
@@ -528,10 +666,10 @@
                         other++;
                     }
                 });
-                $('#batchTotals').html('Selected: <span class="' + (over ? 'text-danger' : 'text-success') + '">' + num(total) + ' ' + esc(d.uom) + '</span> &nbsp;|&nbsp; Remaining: <span class="' + (over ? 'text-danger' : '') + '">'
+                $('#batchTotals').html('Selected: <span class="' + (over ? 'text-warning' : 'text-success') + '">' + num(total) + ' ' + esc(d.uom) + '</span> &nbsp;|&nbsp; Remaining: <span class="' + (over ? 'text-warning' : '') + '">'
                     + num(left) + ' ' + esc(d.uom) + '</span>' + (other > 0 ? '<span class="sub-note" style="line-height: 14px;">Includes ' + other + ' batch(es) from other warehouses</span>' : ''));
-                $('#batchOverMessage').text(over ? 'The selected quantity exceeds the remaining requirement (' + num(d.remaining) + ' ' + d.uom + ').' : '').toggle(over);
-                $('#batchSubmit').prop('disabled', pick.busy || over || errors > 0 || total <= 0);
+                $('#batchOverMessage').text(over ? 'This reserves ' + num(-left) + ' ' + d.uom + ' more than the remaining requirement (' + num(d.remaining) + ' ' + d.uom + '). The extra stays reserved for this order until you release it or use it in production.' : '').toggle(over);
+                $('#batchSubmit').prop('disabled', pick.busy || errors > 0 || total <= 0);
             }
 
             function renderPicker() {
@@ -571,8 +709,9 @@
                     + '<th>#</th><th>Warehouse</th><th>Batch No</th><th>Batch Date</th><th style="text-align: right;">Physical Stock</th><th style="text-align: right;">Reserved</th>'
                     + '<th style="text-align: right;">Available</th><th style="text-align: right;">Qty to Reserve (' + esc(d.uom) + ')</th></tr></thead>'
                     + '<tbody id="batchBody">' + (rows || '<tr><td colspan="8" style="text-align: center;">No batches with stock in this warehouse.</td></tr>') + '</tbody></table></div>'
-                    + '<p class="text-danger" id="batchOverMessage" style="display: none; margin: 8px 0 0 0;"></p>'
+                    + '<p class="text-warning" id="batchOverMessage" style="display: none; margin: 8px 0 0 0;"></p>'
                     + '<p class="text-muted" style="font-size: 11px; margin: 8px 0 0 0;">Quantities are in ' + esc(d.uom) + '. Leave all quantities empty and use Auto-fill to allocate oldest batches first. '
+                    + 'You can also enter more than the remaining requirement to hold extra stock for this order. '
                     + 'Selections are kept when you switch warehouse.</p>';
                 $('#batchModalBody').html(summary + wh + table);
                 $('#batchRelease').toggle(d.reservedThis > 0);
@@ -588,7 +727,7 @@
                 $.ajax({
                     type: 'POST',
                     url: 'view_sales_order.aspx/LoadReserveOptions',
-                    data: JSON.stringify({ smoId: parseInt($('#tabReserved').attr('data-order-id'), 10), sioId: req.sioId, compItmId: req.compItmId }),
+                    data: JSON.stringify({ smoId: parseInt($('#tabReserved').attr('data-order-id'), 10), sioId: req.sioId, compItmId: req.compItmId, planQty: planOf(req.sioId) }),
                     contentType: 'application/json; charset=utf-8',
                     dataType: 'json',
                     success: function (response) {
@@ -686,7 +825,9 @@
                 data.smoId = parseInt($('#tabReserved').attr('data-order-id'), 10);
                 data.sioId = req.sioId;
                 data.compItmId = req.compItmId;
-                pickMessage(true, '');
+                if (method === 'ReserveBatches') {
+                    data.planQty = planOf(req.sioId);
+                }
                 pickBusy(true);
                 $.ajax({
                     type: 'POST',
@@ -723,7 +864,9 @@
                 if (!allocations.length) {
                     return;
                 }
-                pickFinish('ReserveBatches', { allocations: allocations }, null);
+                var excess = Math.round((pickTotal() - pick.data.remaining) * 1000) / 1000;
+                pickFinish('ReserveBatches', { allocations: allocations },
+                    excess > 0.0005 ? 'You are reserving ' + num(excess) + ' ' + pick.data.uom + ' more than the remaining requirement. Reserve the extra quantity as well?' : null);
             });
             $('#batchModal').on('click', '#batchRelease', function () {
                 pickFinish('UnreserveItem', {}, 'Release this order\'s existing reservations for "' + pick.data.itemName + '" (all warehouses and batches)?');
@@ -872,7 +1015,7 @@
                         + $.map(d.items, function (it) {
                             return '<tr><td>' + it.Serial + '</td><td>' + (it.InputOutput === 1 ? 'Input (consumed)' : it.InputOutput === 2 ? 'Output (produced)' : esc(it.InputOutput))
                                 + '</td><td>' + esc(it.ItemName) + (it.ItemCode ? ' (' + esc(it.ItemCode) + ')' : '') + '</td><td>' + esc(it.BatchNo) + ' (#' + it.BatchId + ')'
-                                + '</td><td style="text-align: right;">' + num(it.Quantity) + '</td><td style="text-align: right;">' + num(it.Cost) + '</td></tr>';
+                                + '</td><td style="text-align: right;">' + num(it.Quantity) + '</td><td style="text-align: right;">' + money(it.Cost) + '</td></tr>';
                         }).join('') + '</tbody></table></div>';
                 }
 
@@ -1121,7 +1264,8 @@
             if ($('#transferList').length) filterTransfers();
 
             function itNum(v) { var n = parseFloat(v); return (isFinite(n) ? n : 0).toFixed(2); }
-            function itQty(v) { var n = parseFloat(v); return String(isFinite(n) ? Math.round(n * 10000) / 10000 : 0); }
+            function itQty(v) { var n = parseFloat(v); return (isFinite(n) ? Math.round(n * 1000) / 1000 : 0).toFixed(3); }
+            function itPct(v) { var n = parseFloat(v); return String(isFinite(n) ? Math.round(n * 10000) / 10000 : 0); }
             function itPair(k, v) {
                 return $('<div class="it-pair"></div>').append($('<span class="k"></span>').text(k)).append($('<span class="v"></span>').text(v));
             }
@@ -1135,10 +1279,10 @@
                     body.append($('<tr></tr>').append(name).append($('<td></td>').text(x.batchNo || '-'))
                         .append($('<td class="text-right"></td>').text(itQty(x.qty) + (x.uom ? ' ' + x.uom : '')))
                         .append($('<td class="text-right"></td>').text(itNum(x.price)))
-                        .append($('<td class="text-right"></td>').text(itQty(x.taxPercent) + '%'))
-                        .append($('<td class="text-right"></td>').text(x.cgst > 0 ? itQty(x.cgst) + '%' : '-'))
-                        .append($('<td class="text-right"></td>').text(x.sgst > 0 ? itQty(x.sgst) + '%' : '-'))
-                        .append($('<td class="text-right"></td>').text(x.igst > 0 ? itQty(x.igst) + '%' : '-'))
+                        .append($('<td class="text-right"></td>').text(                        itPct(x.taxPercent) + '%'))
+                                                .append($('<td class="text-right"></td>').text(x.cgst > 0 ? itPct(x.cgst) + '%' : '-'))
+                                                .append($('<td class="text-right"></td>').text(x.sgst > 0 ? itPct(x.sgst) + '%' : '-'))
+                                                .append($('<td class="text-right"></td>').text(x.igst > 0 ? itPct(x.igst) + '%' : '-'))
                         .append($('<td class="text-right"></td>').text(itNum(x.netAmount))));
                 });
                 table.append(body);
@@ -1367,8 +1511,8 @@
                                                                     <td style="text-align: right;"><%# Num(Eval("sio_finalqty")) %></td>
                                                                     <td><%# Enc(Eval("uom")) %></td>
                                                                     <td style="text-align: right;"><%# Money(Eval("sio_price")) %></td>
-                                                                    <td style="text-align: right;"><%# Money(Eval("sio_discount_amount")) %> (<%# Num(Eval("sio_discount_rate")) %>%)</td>
-                                                                    <td style="text-align: right;"><%# Money(Eval("sio_tax_amount")) %> (<%# Num(Eval("sio_item_tax")) %>%)</td>
+                                                                    <td style="text-align: right;"><%# Money(Eval("sio_discount_amount")) %> (<%# Pct(Eval("sio_discount_rate")) %>%)</td>
+                                                                    <td style="text-align: right;"><%# Money(Eval("sio_tax_amount")) %> (<%# Pct(Eval("sio_item_tax")) %>%)</td>
                                                                     <td style="text-align: right;"><b><%# Money(Eval("sio_net_amount")) %></b></td>
                                                                 </tr>
                                                             </ItemTemplate>
@@ -1629,12 +1773,12 @@
                                         </table>
                                     </div>
                                     <div>
-                                        <asp:LinkButton ID="btnApprove" runat="server" CssClass="btn btn-success" OnClick="btnApprove_Click" OnClientClick="return confirm('Approve this sales order? It will become eligible for stock reservation.');"><i class="fa fa-check"></i> Approve</asp:LinkButton>
-                                        <asp:LinkButton ID="btnResume" runat="server" CssClass="btn btn-success" OnClick="btnResume_Click" OnClientClick="return confirm('Resume and approve this sales order? Stock will not be reserved automatically.');"><i class="fa fa-play"></i> Resume / Approve</asp:LinkButton>
-                                        <asp:LinkButton ID="btnHold" runat="server" CssClass="btn btn-info" OnClick="btnHold_Click" OnClientClick="return confirm('Put this sales order on hold (Pending)? No further stock can be reserved until it is resumed. Existing reservations are kept.');"><i class="fa fa-pause"></i> Put on Hold</asp:LinkButton>
-                                        <asp:LinkButton ID="btnCancelCustomer" runat="server" CssClass="btn btn-warning" OnClick="btnCancelCustomer_Click" OnClientClick="return confirm('Cancel this sales order as cancelled by the customer? All of its stock reservations will be released.');"><i class="fa fa-times"></i> Cancel (Customer)</asp:LinkButton>
-                                        <asp:LinkButton ID="btnCancelCompany" runat="server" CssClass="btn btn-danger" OnClick="btnCancelCompany_Click" OnClientClick="return confirm('Cancel this sales order as cancelled by the company? All of its stock reservations will be released.');"><i class="fa fa-ban"></i> Cancel (Company)</asp:LinkButton>
-                                        <asp:LinkButton ID="btnReopen" runat="server" CssClass="btn btn-primary" OnClick="btnReopen_Click" OnClientClick="return confirm('Reopen this sales order as New?');"><i class="fa fa-undo"></i> Reopen</asp:LinkButton>
+                                        <asp:LinkButton ID="btnApprove" runat="server" CssClass="btn btn-success" OnClick="btnApprove_Click" OnClientClick="return confirmStatusChange('Approve this sales order? It will become eligible for stock reservation.');"><i class="fa fa-check"></i> Approve</asp:LinkButton>
+                                        <asp:LinkButton ID="btnResume" runat="server" CssClass="btn btn-success" OnClick="btnResume_Click" OnClientClick="return confirmStatusChange('Resume and approve this sales order? Stock will not be reserved automatically.');"><i class="fa fa-play"></i> Resume / Approve</asp:LinkButton>
+                                        <asp:LinkButton ID="btnHold" runat="server" CssClass="btn btn-info" OnClick="btnHold_Click" OnClientClick="return confirmStatusChange('Put this sales order on hold (Pending)? No further stock can be reserved until it is resumed. Existing reservations are kept.');"><i class="fa fa-pause"></i> Put on Hold</asp:LinkButton>
+                                        <asp:LinkButton ID="btnCancelCustomer" runat="server" CssClass="btn btn-warning" OnClick="btnCancelCustomer_Click" OnClientClick="return confirmStatusChange('Cancel this sales order as cancelled by the customer? All of its stock reservations will be released.');"><i class="fa fa-times"></i> Cancel (Customer)</asp:LinkButton>
+                                        <asp:LinkButton ID="btnCancelCompany" runat="server" CssClass="btn btn-danger" OnClick="btnCancelCompany_Click" OnClientClick="return confirmStatusChange('Cancel this sales order as cancelled by the company? All of its stock reservations will be released.');"><i class="fa fa-ban"></i> Cancel (Company)</asp:LinkButton>
+                                        <asp:LinkButton ID="btnReopen" runat="server" CssClass="btn btn-primary" OnClick="btnReopen_Click" OnClientClick="return confirmStatusChange('Reopen this sales order as New?');"><i class="fa fa-undo"></i> Reopen</asp:LinkButton>
                                         <% if (ActionHint != "") { %><span class="text-muted"><%= Enc(ActionHint) %></span><% } %>
                                     </div>
                                 </div>
@@ -1653,6 +1797,21 @@
                                     <span id="productionEntrySpinner" style="display: none; margin-right: 10px;"><i class="fa fa-spinner fa-spin"></i> Producing...</span>
                                     <button type="button" class="btn btn-default" data-dismiss="modal" id="productionEntryCancel">Cancel</button>
                                     <button type="button" class="btn btn-primary" id="productionEntrySave" disabled="disabled"><i class="fa fa-cogs"></i> Produce</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="produceModal" tabindex="-1" role="dialog" aria-labelledby="produceModalTitle">
+                        <div class="modal-dialog modal-lg" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                                    <h4 class="modal-title" id="produceModalTitle"><i class="fa fa-cogs"></i> Confirm Production</h4>
+                                </div>
+                                <div class="modal-body" id="produceModalBody"></div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                                    <button type="button" class="btn btn-warning" id="produceConfirm"><i class="fa fa-cogs"></i> Produce</button>
                                 </div>
                             </div>
                         </div>

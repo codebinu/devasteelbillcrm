@@ -46,6 +46,13 @@ public class BatchQty
     public decimal qty;
 }
 
+// Production quantity the user chose for an order line (sales UOM).
+public class PlanQty
+{
+    public int sioId;
+    public decimal qty;
+}
+
 public class StockBatchOption
 {
     public int batchId;
@@ -105,6 +112,9 @@ public class ReservedItemRow
     public decimal remaining;
     public decimal available;
     public decimal needsProduction;
+    public decimal produceQty;
+    public decimal produced;
+    public decimal planQty;
     public bool hasBom;
     public List<ReservedBomComponent> bom = new List<ReservedBomComponent>();
     public bool canReserve;
@@ -205,6 +215,8 @@ public static partial class SalesOrderStock
         // Ordered is the full order line quantity; Required is what is still to be delivered (ordered less invoiced), both in the sales UOM.
         // Produced is everything already produced for the line.
         public decimal F, Ordered, Required, Produced, Physical, Other, This, Free, Remaining, Reservable, Needs;
+        // Quantity a production run would make: the finished-stock shortfall, or the whole remaining quantity when finished stock already covers it.
+        public decimal ProduceQty;
         public bool HasBom;
         public List<Comp> Comps = new List<Comp>();
         public string UomName;
@@ -241,7 +253,7 @@ public static partial class SalesOrderStock
         }
     }
 
-    public static ReservedItemsResult Load(int smoId, int branchId, int status, bool canAct)
+    public static ReservedItemsResult Load(int smoId, int branchId, int status, bool canAct, Dictionary<int, decimal> plans)
     {
         var result = new ReservedItemsResult();
         var db = new mySqlConnection();
@@ -252,7 +264,12 @@ public static partial class SalesOrderStock
             bool canRelease = canAct && IsReleaseStatus(status);
             int sl = 1;
             foreach (Line l in s.Lines)
-                result.rows.Add(ToRow(s, l, sl++, open, canRelease, status));
+            {
+                decimal plan;
+                if (plans == null || !plans.TryGetValue(l.SioId, out plan))
+                    plan = 0m;
+                result.rows.Add(ToRow(s, l, sl++, open, canRelease, status, plan));
+            }
             result.canAct = canAct;
             result.ok = true;
         }
@@ -263,9 +280,24 @@ public static partial class SalesOrderStock
         return result;
     }
 
-    // Default allocation: oldest batches first from the order's own warehouse. compItmId = 0 targets the order line itself,
-    // otherwise one of its BOM components (raw material held for production).
     public static StockActionResult Reserve(int smoId, int branchId, int status, int staffId, int sioId, decimal expectedQty, int compItmId)
+    {
+        return Reserve(smoId, branchId, status, staffId, sioId, expectedQty, compItmId, 0m);
+    }
+
+    public static StockActionResult ReserveBatches(int smoId, int branchId, int status, int staffId, int sioId, int compItmId, List<BatchQty> allocations)
+    {
+        return ReserveBatches(smoId, branchId, status, staffId, sioId, compItmId, allocations, 0m);
+    }
+
+    public static ReserveOptionsResult LoadOptions(int smoId, int branchId, int staffId, int sioId, int compItmId)
+    {
+        return LoadOptions(smoId, branchId, staffId, sioId, compItmId, 0m);
+    }
+
+    // Default allocation: oldest batches first from the order's own warehouse. compItmId = 0 targets the order line itself,
+    // otherwise one of its BOM components (raw material held for production). planQty is the production quantity the user chose (0 = default).
+    public static StockActionResult Reserve(int smoId, int branchId, int status, int staffId, int sioId, decimal expectedQty, int compItmId, decimal planQty)
     {
         return Run(delegate(mySqlConnection db, DateTime now)
         {
@@ -273,7 +305,7 @@ public static partial class SalesOrderStock
             LockLine(db, smoId, sioId);
             Snapshot s = LoadSnapshot(db, smoId, branchId, sioId, true);
             Line l = RequireLine(s);
-            Calc c = Compute(s, l);
+            Calc c = Compute(s, l, planQty);
             if (c.Error != null)
                 throw new StockException(c.Error);
             Target t = ResolveTarget(c, compItmId);
@@ -308,7 +340,7 @@ public static partial class SalesOrderStock
 
     // Manual allocation: the user picks batches (in any warehouse they can access) and quantities, expressed in the item's sales UOM.
     // Everything is re-validated against locked batch rows inside the transaction; any failure rolls back all rows.
-    public static StockActionResult ReserveBatches(int smoId, int branchId, int status, int staffId, int sioId, int compItmId, List<BatchQty> allocations)
+    public static StockActionResult ReserveBatches(int smoId, int branchId, int status, int staffId, int sioId, int compItmId, List<BatchQty> allocations, decimal planQty)
     {
         return Run(delegate(mySqlConnection db, DateTime now)
         {
@@ -329,16 +361,13 @@ public static partial class SalesOrderStock
             LockLine(db, smoId, sioId);
             Snapshot s = LoadSnapshot(db, smoId, branchId, sioId, true);
             Line l = RequireLine(s);
-            Calc c = Compute(s, l);
+            Calc c = Compute(s, l, planQty);
             if (c.Error != null)
                 throw new StockException(c.Error);
             Target t = ResolveTarget(c, compItmId);
 
             decimal total = wanted.Values.Sum();
-            if (total > t.Remaining + Tolerance)
-                throw new StockException("The selected quantity (" + Fmt(total) + " " + t.UomName + ") exceeds the remaining requirement ("
-                    + Fmt(Math.Max(0m, t.Remaining)) + " " + t.UomName + ") for " + t.Name + ".");
-
+            // Reserving more than the remaining requirement is allowed as long as every selected batch has enough free stock (validated below).
             var ps = new List<MySqlParameter>();
             string inList = InList("b", wanted.Keys, ps);
             DataTable locked = db.SelectQueryForTransaction("select b.itbh_id,b.itbs_id,b.itbh_no,b.itbh_currentqty,b.branch_id,ifnull(b.itbh_status,1) as st "
@@ -389,7 +418,7 @@ public static partial class SalesOrderStock
         });
     }
 
-    public static ReserveOptionsResult LoadOptions(int smoId, int branchId, int staffId, int sioId, int compItmId)
+    public static ReserveOptionsResult LoadOptions(int smoId, int branchId, int staffId, int sioId, int compItmId, decimal planQty)
     {
         var result = new ReserveOptionsResult();
         var db = new mySqlConnection();
@@ -402,7 +431,7 @@ public static partial class SalesOrderStock
                 result.message = "The sales order item was not found.";
                 return result;
             }
-            Calc c = Compute(s, l);
+            Calc c = Compute(s, l, planQty);
             Target t;
             try
             {
@@ -570,14 +599,14 @@ public static partial class SalesOrderStock
             throw new StockException("The BOM component was not found for this item.");
         if (cp.Issue != null)
             throw new StockException(cp.Name + ": " + cp.Issue + ".");
-        if (c.Needs <= 0)
+        if (c.ProduceQty <= 0)
             throw new StockException("No production is required for this item, so raw material cannot be reserved.");
-        if (c.FinishedFirst != null)
-            throw new StockException(c.FinishedFirst);
         return new Target { ItmId = cp.ItmId, ItbsId = cp.ItbsId, Name = cp.Name, UomName = cp.UomName, F = cp.F, Remaining = Math.Max(0m, cp.Required - cp.Reserved), Free = cp.Free, IsComponent = true };
     }
 
-    public static StockActionResult MoveToProduction(int smoId, int branchId, int status, int staffId, string docBase, int sioId, decimal expectedQty)
+    // planQty is the production quantity the user chose (0 = default); expectedProduced is the produced quantity shown on the page,
+    // so a repeated or stale request cannot produce (and deduct raw material) a second time.
+    public static StockActionResult MoveToProduction(int smoId, int branchId, int status, int staffId, string docBase, int sioId, decimal expectedQty, decimal planQty, decimal expectedProduced)
     {
         return Run(delegate(mySqlConnection db, DateTime now)
         {
@@ -585,18 +614,22 @@ public static partial class SalesOrderStock
             LockLine(db, smoId, sioId);
             Snapshot s = LoadSnapshot(db, smoId, branchId, sioId, true);
             Line l = RequireLine(s);
-            Calc c = Compute(s, l);
+            Calc c = Compute(s, l, planQty);
             if (c.Error != null)
                 throw new StockException(c.Error);
-            if (c.ProduceIssue != null)
-                throw new StockException(c.ProduceIssue);
-            if (Math.Abs(c.Needs - Ceil3(expectedQty)) > Tolerance)
+            if (Math.Abs(R4(c.Produced) - expectedProduced) > 0.0005m)
+                throw new StockException("Production for this item changed since the page was loaded. The grid has been refreshed; please review and try again.");
+            string produceIssue = ReservedProduceIssue(c);
+            if (produceIssue != null)
+                throw new StockException(produceIssue);
+            if (Math.Abs(c.ProduceQty - Ceil3(expectedQty)) > Tolerance)
                 throw new StockException("Stock changed since the page was loaded. The grid has been refreshed; please review and try again.");
 
-            decimal outQty = Round6(c.Needs / c.F);
-            decimal reserveQty = Floor3(outQty);
-            if (reserveQty <= 0)
+            decimal outQty = Round6(c.ProduceQty / c.F);
+            if (Floor3(outQty) <= 0)
                 throw new StockException("The quantity to produce is too small.");
+            // Only what the order still needs is held for it; any extra production stays as free finished stock.
+            decimal reserveQty = Floor3(Math.Min(outQty, c.Remaining / c.F));
 
             string masterId = db.SelectScalarForTransaction("select itbm_id from tbl_item_batch_master_items where itm_id=@i order by itbmi_id desc limit 1",
                 new MySqlParameter[] { new MySqlParameter("@i", l.ItmId) });
@@ -619,19 +652,23 @@ public static partial class SalesOrderStock
                 decimal consumed = 0m;
                 var used = new List<KeyValuePair<Batch, decimal>>();
 
-                // Batches already reserved for this order line are consumed first (in any warehouse), then free stock from the order's warehouse, oldest first.
+                // The whole quantity reserved for this order line is consumed (in any warehouse, higher priority first); free stock from the order's warehouse,
+                // oldest first, only tops it up when the reservation does not cover the BOM requirement.
                 var candidates = new List<KeyValuePair<Batch, decimal>>();
-                foreach (OwnRes o in s.OwnOnItem(cp.ItmId, sioId).OrderByDescending(x => x.Priority).ThenBy(x => x.B.Created == null ? 1 : 0).ThenBy(x => x.B.Created, StringComparer.Ordinal).ThenBy(x => x.B.Id))
-                    candidates.Add(new KeyValuePair<Batch, decimal>(o.B, Math.Min(o.Qty, o.B.Qty)));
+                var ownRows = s.OwnOnItem(cp.ItmId, sioId).OrderByDescending(x => x.Priority).ThenBy(x => x.B.Created == null ? 1 : 0).ThenBy(x => x.B.Created, StringComparer.Ordinal).ThenBy(x => x.B.Id).ToList();
+                foreach (var ownBatch in ownRows.GroupBy(o => o.B.Id))
+                    candidates.Add(new KeyValuePair<Batch, decimal>(ownBatch.First().B, Math.Min(ownBatch.Sum(o => o.Qty), ownBatch.First().B.Qty)));
+                int ownCount = candidates.Count;
                 foreach (Batch b in Fifo(cp.Batches))
                     candidates.Add(new KeyValuePair<Batch, decimal>(b, b.Free));
 
-                foreach (KeyValuePair<Batch, decimal> cand in candidates)
+                for (int ci = 0; ci < candidates.Count; ci++)
                 {
-                    Batch b = cand.Key;
-                    if (need - consumed <= 0)
+                    Batch b = candidates[ci].Key;
+                    bool reserved = ci < ownCount;
+                    if (!reserved && need - consumed <= 0)
                         break;
-                    decimal take = Math.Min(cand.Value, need - consumed);
+                    decimal take = reserved ? candidates[ci].Value : Math.Min(candidates[ci].Value, need - consumed);
                     if (take <= 0)
                         continue;
                     if (Exec(db, "update tbl_item_batch set itbh_currentqty=itbh_currentqty-@q where itbh_id=@b and itbh_currentqty>=@q",
@@ -659,10 +696,12 @@ public static partial class SalesOrderStock
             AdjustBranchStock(db, l.ItbsId, outQty);
             InsertLedger(db, now, staffId, l.ItbsId, itpmId, branchId, newBatchId, 0m, outQty, unitCost,
                 "Produced for sales order #" + smoId + " (production #" + docNo + ")");
-            InsertReservation(db, newBatchId, reserveQty, sioId, now, staffId);
+            if (reserveQty > 0)
+                InsertReservation(db, newBatchId, reserveQty, sioId, now, staffId);
             SalesOrderStatus.MarkProcessedInTransaction(db, smoId, staffId);
 
-            return "Produced " + Fmt(c.Needs) + " " + c.UomName + " of " + l.Name + " (production #" + docNo + ") and reserved it for this order.";
+            return "Produced " + Fmt(c.ProduceQty) + " " + c.UomName + " of " + l.Name + " (production #" + docNo + ")"
+                + (reserveQty > 0 ? " and reserved " + Fmt(reserveQty * c.F) + " " + c.UomName + " for this order." : "; it was added to finished stock.");
                     });
     }
 
@@ -792,7 +831,7 @@ public static partial class SalesOrderStock
     static decimal Round6(decimal d) { return Math.Round(d, 6, MidpointRounding.AwayFromZero); }
     static decimal Ceil6(decimal d) { return Math.Ceiling(d * 1000000m) / 1000000m; }
     static decimal R4(decimal d) { return Math.Round(d, 4, MidpointRounding.AwayFromZero); }
-    static string Fmt(decimal d) { return R4(d).ToString("0.####"); }
+    static string Fmt(decimal d) { return Math.Round(d, 3, MidpointRounding.AwayFromZero).ToString("0.###"); }
 
     static IEnumerable<Batch> Fifo(IEnumerable<Batch> batches)
     {
@@ -990,6 +1029,12 @@ public static partial class SalesOrderStock
 
     static Calc Compute(Snapshot s, Line l)
     {
+        return Compute(s, l, 0m);
+    }
+
+    // planQty > 0 is the production quantity the user chose (sales UOM); it replaces the default (the finished-stock shortfall, or the remaining quantity).
+    static Calc Compute(Snapshot s, Line l, decimal planQty)
+    {
         var c = new Calc { L = l };
         if (!l.StockRowOk)
         {
@@ -1030,6 +1075,7 @@ public static partial class SalesOrderStock
             c.Remaining = 0m;
         c.Reservable = Floor3(Math.Min(c.Remaining, c.Free));
         c.Needs = Ceil3(Math.Max(0m, c.Remaining - c.Free));
+        c.ProduceQty = planQty > 0 ? Ceil3(planQty) : (c.Needs > 0 ? c.Needs : Ceil3(c.Remaining));
 
         List<BomRow> rows;
         s.Bom.TryGetValue(l.ItmId, out rows);
@@ -1074,6 +1120,24 @@ public static partial class SalesOrderStock
         return c;
     }
 
+    // Why production cannot start from the Reserved Items tab (null when it can). Unlike ProduceIssue, finished stock never blocks it.
+    static string ReservedProduceIssue(Calc c)
+    {
+        if (!c.HasBom)
+            return "No BOM is defined for this item.";
+        if (c.ProduceQty <= 0)
+            return "Enter the quantity to produce.";
+        var issues = new List<string>();
+        foreach (Comp cp in c.Comps)
+        {
+            if (cp.Issue != null)
+                issues.Add(cp.Name + ": " + cp.Issue);
+            else if (!cp.Enough)
+                issues.Add(cp.Name + " short by " + Fmt(cp.Required - cp.Free - cp.Reserved) + " " + cp.UomName);
+        }
+        return issues.Count > 0 ? "Insufficient raw material - " + string.Join("; ", issues) + "." : null;
+    }
+
     static void BuildComponents(Snapshot s, Calc c, List<BomRow> rows)
     {
         var byItem = new Dictionary<int, Comp>();
@@ -1115,7 +1179,7 @@ public static partial class SalesOrderStock
             cp.Batches = s.BatchesOf(cp.ItbsId);
             cp.Free = cp.Batches.Sum(x => x.Free) * cp.F;
             cp.Reserved = s.OwnQty(cp.ItmId, c.L.SioId) * cp.F;
-            cp.Required = cp.PerUnit * c.Needs;
+            cp.Required = cp.PerUnit * c.ProduceQty;
             cp.Enough = Ceil6(cp.Required) <= cp.Free + cp.Reserved;
         }
     }
@@ -1128,7 +1192,12 @@ public static partial class SalesOrderStock
 
     static ReservedItemRow ToRow(Snapshot s, Line l, int sl, bool open, bool canRelease, int status)
     {
-        Calc c = Compute(s, l);
+        return ToRow(s, l, sl, open, canRelease, status, 0m);
+    }
+
+    static ReservedItemRow ToRow(Snapshot s, Line l, int sl, bool open, bool canRelease, int status, decimal planQty)
+    {
+        Calc c = Compute(s, l, planQty);
         var row = new ReservedItemRow
         {
             sioId = l.SioId,
@@ -1158,12 +1227,15 @@ public static partial class SalesOrderStock
         row.remaining = R4(c.Remaining);
         row.available = R4(c.Reservable);
         row.needsProduction = R4(c.Needs);
+        row.produceQty = R4(c.ProduceQty);
+        row.produced = R4(c.Produced);
+        row.planQty = R4(planQty);
         row.hasBom = c.HasBom;
         row.allocations = Allocations(s, l.ItmId, l.SioId, c.F, c.UomName);
         foreach (Comp cp in c.Comps)
         {
             decimal compRemaining = Math.Max(0m, cp.Required - cp.Reserved);
-            bool usable = cp.Issue == null && c.Needs > 0 && c.FinishedFirst == null;
+            bool usable = cp.Issue == null && c.ProduceQty > 0;
             decimal compReservable = Floor3(Math.Min(compRemaining, cp.Free));
             var comp = new ReservedBomComponent
             {
@@ -1173,7 +1245,7 @@ public static partial class SalesOrderStock
                 shortage = cp.Issue == null ? R4(Math.Max(0m, cp.Required - cp.Reserved - cp.Free)) : 0m,
                 surplus = cp.Issue == null && cp.Reserved - cp.Required > Tolerance ? R4(cp.Reserved - cp.Required) : 0m,
                 canReserve = open && usable && compReservable > 0,
-                canPick = open && usable && Floor3(compRemaining) > 0,
+                canPick = open && usable,
                 canUnreserve = canRelease && cp.Issue == null && cp.Reserved > 0
             };
             if (cp.Issue == null)
@@ -1183,9 +1255,11 @@ public static partial class SalesOrderStock
         row.bomNote = c.Needs > 0 ? c.FinishedFirst : null;
 
         row.canReserve = open && c.Reservable > 0;
-        row.canPick = open && Floor3(c.Remaining) > 0;
+        // Extra stock beyond the requirement can still be reserved by hand, so picking stays available once the requirement is covered.
+        row.canPick = open && c.Required > Tolerance;
         row.canUnreserve = canRelease && c.This > 0;
-        row.canProduce = open && c.ProduceIssue == null;
+        string produceIssue = ReservedProduceIssue(c);
+        row.canProduce = open && produceIssue == null;
         if (!open && (c.Reservable > 0 || c.Needs > 0))
             row.message = status == SalesOrderStatus.Pending ? "Order is on hold (Pending). Resume it to reserve stock."
                 : status == SalesOrderStatus.New ? "Approve the order to reserve stock."
@@ -1193,8 +1267,8 @@ public static partial class SalesOrderStock
                 : "Stock actions are not available for an order in this status.";
         else if (c.Remaining > 0 && c.Free <= 0)
             row.message = "No unreserved stock available in the order's warehouse.";
-        if (c.Needs > 0 && c.ProduceIssue != null)
-            row.productionMessage = c.ProduceIssue;
+        if (c.ProduceQty > 0 && produceIssue != null)
+            row.productionMessage = produceIssue;
         return row;
     }
 

@@ -89,6 +89,9 @@
         }
         function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
         function rnd(v) { var f = Math.pow(10, accuracyNum); return Math.round((v + Number.EPSILON) * f) / f; }
+        // Display rules: UOM quantities/sizes show at most 3 decimals, amounts exactly 2.
+        function qty3(v) { return String(Math.round((num(v) + Number.EPSILON) * 1000) / 1000); }
+        function amt2(v) { return num(v).toFixed(2); }
         function esc(s) { return $("<div>").text(s == null ? "" : s).html(); }
         function showMsg(type, text) {
             $("#soMsg").attr("class", "alert alert-" + type).text(text).show();
@@ -247,7 +250,7 @@
                     h += '<tr data-idx="' + i + '"><td>' + hl(c.cust_id, f.id) + '</td><td>' + hl(c.name, f.name)
                         + (pending ? ' <span class="label label-warning">To be confirmed</span>' : '') + '</td>'
                         + '<td>' + esc(c.address) + '</td><td>' + esc(c["class"]) + '</td><td>' + hl(c.cust_phone, f.phone) + '</td>'
-                        + '<td class="text-right" style="color:' + (bal > 0 ? 'red' : 'green') + '">' + esc(bal) + '</td></tr>';
+                        + '<td class="text-right" style="color:' + (bal > 0 ? 'red' : 'green') + '">' + amt2(bal) + '</td></tr>';
                 });
                 $tb.html(h);
                 $("#custPaging").html(paginate(r.count, perpage, page, "searchCustomerPage"));
@@ -289,10 +292,10 @@
                     }
                     add("Phone", it.cust_phone);
                     add("Class", it.cls);
-                    add("Credit Amt", it.creditAmt);
+                    add("Credit Amt", custHas(it.creditAmt) ? amt2(it.creditAmt) : it.creditAmt);
                     add("Period", custHas(it.creditPeriod) ? it.creditPeriod + " Days" : "");
                     var bal = custHas(it.balance) ? it.balance : 0;
-                    add("A/C Balance", bal, parseFloat(bal) > 0 ? "red" : "green");
+                    add("A/C Balance", amt2(bal), parseFloat(bal) > 0 ? "red" : "green");
                     var $a = $("#divCustAddress").empty();
                     if (custHas(it.cust_address)) $a.append($("<small></small>").text("Address")).append($("<b></b>").text($.trim(it.cust_address))).show();
                     else $a.hide();
@@ -391,10 +394,11 @@
                     var price = it.classPrice != null ? it.classPrice : (it.itm_mrp != null ? it.itm_mrp : 0);
                     var inOrder = $.grep(soItems, function (l) { return l.itbs_id === it.itbs_id; }).length;
                     var carton = it.itm_qty_per_carton > 1 ? '<br /><small class="text-info">1 Carton = ' + esc(it.itm_qty_per_carton) + ' Pieces</small>' : '';
+                    var su = it.itsv_uom_sales && UomConversion.findUom(it.itsv_uom_sales), stockUom = su && su.tum_name ? " " + esc(su.tum_name) : "";
                     h += '<tr data-idx="' + i + '"><td>' + hl(it.itm_code, f.code) + '</td><td>' + hl(it.itm_name, f.name)
                         + (inOrder ? ' <span class="label label-info">In order</span>' : '') + carton + '</td>'
-                        + '<td class="text-right">' + esc(it.itbs_stock) + '</td>'
-                        + '<td class="text-right">' + num(price).toFixed(accuracyNum) + '</td></tr>';
+                        + '<td class="text-right">' + qty3(it.itbs_stock) + stockUom + '</td>'
+                        + '<td class="text-right">' + amt2(price) + '</td></tr>';
                 });
                 $tb.html(h);
                 $("#itemPaging").html(paginate(r.count, perpage, page, "searchItemPage"));
@@ -430,10 +434,10 @@
             $("#itemSpec_Hsn").text(it.hsn || "-");
             var du = it.defUomId && UomConversion.findUom(it.defUomId);
             $("#itemSpec_DefUom").text(du && du.tum_name ? du.tum_name : "-");
-            $("#itemSpec_Stock").text(it.stock);
+            $("#itemSpec_Stock").text(qty3(it.stock) + (du && du.tum_name ? " " + du.tum_name : ""));
             $("#itemSpec_TaxPerc").text(taxMethod == 0 ? 0 : it.tax);
             $("#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width,#itemSpec_Discount").val("");
-            $("#itemSpec_Price").val(it.price);
+            $("#itemSpec_Price").val(amt2(it.price));
             $("#btnSpecAdd").html('<i class="fa fa-plus"></i> Add Item');
             fillUom(true);
             $("#itemSpec_Qty").focus();
@@ -483,10 +487,10 @@
             $("#itemSpec_Length").prop("disabled", !req.length);
             $("#itemSpec_Width").prop("disabled", !req.width);
             var f = calcFinal({ uomId: uomId, defUomId: specItem.defUomId, quantity: $("#itemSpec_Qty").val(), length: $("#itemSpec_Length").val(), width: $("#itemSpec_Width").val() });
-            $("#itemSpec_FinalQty").val(f.qty > 0 ? f.qty.toFixed(2) : "");
+            $("#itemSpec_FinalQty").val(f.qty > 0 ? qty3(f.qty) : "");
             $("#itemSpec_FinalQtyErr").text(f.error);
             var a = lineAmounts(f.qty, num($("#itemSpec_Price").val()), num($("#itemSpec_Discount").val()), num(specItem.tax), num(specItem.cess));
-            $("#itemSpec_Net").val(f.qty > 0 ? a.net.toFixed(accuracyNum) : "");
+            $("#itemSpec_Net").val(f.qty > 0 ? amt2(a.net) : "");
         }
         function addOrUpdateItem() {
             var $e = $("#itemSpec_LineErr");
@@ -504,7 +508,7 @@
             for (var i = 0; i < soItems.length; i++) {
                 if (soItems[i].itbs_id === specItem.itbs_id && i !== editIndex) { $e.text("This item is already in the order. Edit the existing row instead."); return; }
             }
-            if (!allowZeroStockOrder && f.qty > num(specItem.stock)) { $e.text("Quantity exceeds available stock (" + specItem.stock + ")."); return; }
+            if (!allowZeroStockOrder && f.qty > num(specItem.stock)) { $e.text("Quantity exceeds available stock (" + qty3(specItem.stock) + ")."); return; }
             var uom = UomConversion.findUom(uomId);
             var line = {
                 itbs_id: specItem.itbs_id, itm_id: specItem.itm_id, code: specItem.itm_code, name: specItem.label,
@@ -523,15 +527,15 @@
             specItem = { id: l.itbs_id, label: l.name, itbs_id: l.itbs_id, itm_id: l.itm_id, itm_code: l.code, stock: l.stock, tax: l.tax, cess: l.cess, defUomId: l.defUomId, price: l.orgPrice, hsn: l.hsn };
             editIndex = i;
             $("#itemSpec_Panel").show();
-            $("#itemSpec_Name").text(l.name); $("#itemSpec_Code").text(l.code); $("#itemSpec_Stock").text(l.stock);
+            var du = l.defUomId && UomConversion.findUom(l.defUomId);
+            $("#itemSpec_Name").text(l.name); $("#itemSpec_Code").text(l.code); $("#itemSpec_Stock").text(qty3(l.stock) + (du && du.tum_name ? " " + du.tum_name : ""));
             $("#itemSpec_TaxPerc").text(taxMethod == 0 ? 0 : l.tax);
             $("#itemSpec_Hsn").text(l.hsn || "-");
-            var du = l.defUomId && UomConversion.findUom(l.defUomId);
             $("#itemSpec_DefUom").text(du && du.tum_name ? du.tum_name : "-");
             fillUom();
             $("#itemSpec_Uom").val(l.tum_id);
             $("#itemSpec_Qty").val(l.no_piece || ""); $("#itemSpec_Length").val(l.length || ""); $("#itemSpec_Width").val(l.width || "");
-            $("#itemSpec_Price").val(l.price); $("#itemSpec_Discount").val(l.discount || "");
+            $("#itemSpec_Price").val(amt2(l.price)); $("#itemSpec_Discount").val(l.discount || "");
             $("#btnSpecAdd").html('<i class="fa fa-check"></i> Update Item');
             specRecalc();
             $("html,body").animate({ scrollTop: $("#itemSpec_Panel").offset().top - 80 }, 200);
@@ -550,21 +554,21 @@
             $.each(soItems, function (i, l) {
                 var a = lineAmounts(l.finalQty, l.price, l.discount, num(l.tax), num(l.cess));
                 t.total += a.total; t.disc += a.disc; t.tax += a.tax; t.net += a.net;
-                var dims = (l.length ? l.length : "") + (l.width ? " x " + l.width : "");
+                var dims = (l.length ? qty3(l.length) : "") + (l.width ? " x " + qty3(l.width) : "");
                 var fu = l.defUomId && UomConversion.findUom(l.defUomId), finalUom = fu && fu.tum_name ? " " + esc(fu.tum_name) : "";
                 $b.append('<tr><td>' + (i + 1) + '</td><td>' + esc(l.code) + '</td><td>' + esc(l.name) + '</td><td>' + esc(l.uomName) + '</td>'
-                    + '<td class="text-right">' + l.no_piece + '</td><td>' + esc(dims) + '</td>'
-                    + '<td class="text-right">' + l.finalQty.toFixed(2) + finalUom + '</td><td class="text-right">' + l.price.toFixed(accuracyNum) + '</td>'
+                    +                     '<td class="text-right">' + qty3(l.no_piece) + '</td><td>' + esc(dims) + '</td>'
+                                        + '<td class="text-right">' + qty3(l.finalQty) + finalUom + '</td><td class="text-right">' + amt2(l.price) + '</td>'
                     + '<td class="text-right">' + l.discount + '%</td>'
-                                        + '<td class="text-right">' + (taxMethod == 0 ? 0 : num(l.tax)) + '%</td><td class="text-right">' + a.tax.toFixed(accuracyNum) + '</td>'
-                                        + '<td class="text-right">' + a.net.toFixed(accuracyNum) + '</td>'
+                                        + '<td class="text-right">' + (taxMethod == 0 ? 0 : num(l.tax)) + '%</td><td class="text-right">' +                                         amt2(a.tax) + '</td>'
+                                                                                + '<td class="text-right">' + amt2(a.net) + '</td>'
                     + '<td><button type="button" class="btn btn-xs btn-info" onclick="editItem(' + i + ')"><i class="fa fa-pencil"></i></button> '
                     + '<button type="button" class="btn btn-xs btn-danger" onclick="removeItem(' + i + ')"><i class="fa fa-trash"></i></button></td></tr>');
             });
-            $("#lblTotal").text(t.total.toFixed(accuracyNum));
-            $("#lblDiscount").text(t.disc.toFixed(accuracyNum));
-            $("#lblTax").text(t.tax.toFixed(accuracyNum));
-            $("#lblNet").text(t.net.toFixed(accuracyNum));
+            $("#lblTotal").text(amt2(t.total));
+            $("#lblDiscount").text(amt2(t.disc));
+            $("#lblTax").text(amt2(t.tax));
+            $("#lblNet").text(amt2(t.net));
             $("#lblCount").text(soItems.length);
         }
 
@@ -607,7 +611,7 @@
             ajaxCall("SaveSalesOrder", buildRequest(), function (d) {
                 var r = JSON.parse(d);
                 if (r.status) {
-                    showMsg("success", "Sales order #" + r.smo_id + " saved. Net amount: " + num(r.net_amount).toFixed(accuracyNum));
+                    showMsg("success", "Sales order #" + r.smo_id + " saved. Net amount: " + amt2(r.net_amount));
                     soItems = []; clearSpec(); clearCustomer(); $("#txtSpecialNote").val("");
                     sessionId = newSessionId();
                     renderItems();

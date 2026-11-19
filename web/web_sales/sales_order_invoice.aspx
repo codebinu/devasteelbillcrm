@@ -173,8 +173,8 @@
                                                     <td class="text-right"><%= l.IsProduct ? Num(l.Reserved) : "-" %></td>
                                                     <td class="text-right"><input type="number" class="form-control input-sm qty-input" min="0.001" max="<%= Inv(l.MaxQty) %>" step="0.001" disabled="disabled" /></td>
                                                     <td class="text-right"><%= Money(l.Price) %></td>
-                                                    <td class="text-right"><%= Num(l.DiscountRate) %>%</td>
-                                                    <td class="text-right"><%= Data.Header.TaxMethod == 0 ? "-" : Num(l.TaxPercent) + "%" + (l.CessPercent > 0 ? " + " + Num(l.CessPercent) + "% cess" : "") %></td>
+                                                    <td class="text-right"><%= Pct(l.DiscountRate) %>%</td>
+                                                    <td class="text-right"><%= Data.Header.TaxMethod == 0 ? "-" : Pct(l.TaxPercent) + "%" + (l.CessPercent > 0 ? " + " + Pct(l.CessPercent) + "% cess" : "") %></td>
                                                     <td class="text-right line-total">0.00</td>
                                                 </tr>
                                                 <% } %>
@@ -277,7 +277,7 @@
             var cfg = { smoId: <%= SmoId %>, token: '<%= SessionToken %>', method: <%= Data.Header.TaxMethod %>, inclusive: <%= Data.Header.TaxInclusive %>, acc: <%= Accuracy %> };
             var saving = false;
 
-            function fmt(n) { return (isFinite(n) ? n : 0).toFixed(cfg.acc); }
+            function fmt(n) { return (isFinite(n) ? n : 0).toFixed(2); }
             function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
 
             function showMessage(type, text) {
@@ -336,7 +336,7 @@
                 var row = $(this).closest('tr'), input = row.find('.qty-input');
                 if ($(this).is(':checked')) {
                     input.prop('disabled', false);
-                    if ($.trim(input.val()) === '') input.val(row.attr('data-max'));
+                    if ($.trim(input.val()) === '') input.val(String(Math.floor(num(row.attr('data-max')) * 1000 + 1e-6) / 1000));
                 } else {
                     input.prop('disabled', true).val('');
                 }

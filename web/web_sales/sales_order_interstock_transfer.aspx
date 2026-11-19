@@ -238,9 +238,10 @@
             var items = null, taxMethod = 0, taxInclusive = 0;
             var targetOk = false, saving = false, finished = false, sourceSeq = 0, targetSeq = 0;
 
-            function fmt(n) { return (isFinite(n) ? n : 0).toFixed(cfg.acc); }
+            function fmt(n) { return (isFinite(n) ? n : 0).toFixed(2); }
             function num(v) { var n = parseFloat(v); return isFinite(n) ? n : 0; }
             function trim4(n) { return String(Math.round(n * 10000) / 10000); }
+            function qty3(n) { return String(Math.round(n * 1000) / 1000); }
 
             function showMessage(type, text) {
                 $('#transferMessage').html($('<div class="alert"></div>').addClass('alert-' + type).text(text));
@@ -360,8 +361,8 @@
                         }
                         tr.append($('<td></td>').text(first ? n : '')).append(nameCell);
                         tr.append($('<td></td>').text(b ? b.batchNo : '-'));
-                        tr.append($('<td class="text-right"></td>').text(b ? trim4(b.reserved) + ' ' + line.uom : '-'));
-                        tr.append($('<td class="text-right"></td>').text(b ? trim4(b.max) + ' ' + line.uom : '-'));
+                        tr.append($('<td class="text-right"></td>').                        text(b ? qty3(b.reserved) + ' ' + line.uom : '-'));
+                                                tr.append($('<td class="text-right"></td>').text(b ? qty3(b.max) + ' ' + line.uom : '-'));
                         tr.append($('<td class="text-right"></td>').append($('<input type="number" class="form-control input-sm qty-input" min="1" step="1" />').attr('max', b ? b.max : 0).prop('disabled', !enabled)));
                         tr.append($('<td class="text-right"></td>').append($('<input type="number" class="form-control input-sm price-input" min="0" step="0.01" />').val(line.price).prop('disabled', !enabled)));
                         tr.append($('<td class="text-right"></td>').text(trim4(line.discountRate) + '%'));

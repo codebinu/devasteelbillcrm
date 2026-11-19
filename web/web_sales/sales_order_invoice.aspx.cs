@@ -61,6 +61,11 @@ public partial class web_sales_sales_order_invoice : System.Web.UI.Page
 
     protected string Num(decimal d)
     {
+        return d.ToString("0.###", CultureInfo.InvariantCulture);
+    }
+
+    protected string Pct(decimal d)
+    {
         return d.ToString("0.####", CultureInfo.InvariantCulture);
     }
 

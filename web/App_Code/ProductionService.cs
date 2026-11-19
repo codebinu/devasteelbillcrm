@@ -6,17 +6,18 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 
-// Invokes sp_save_production_entry and nothing else writes production records.
+// Invokes sp_save_production_entry1.0 and nothing else writes production records.
 // Database access is kept out of the UI; callers pass a ProductionEntryRequest and receive a ProductionEntryResult.
 public static class ProductionService
 {
-    const string ProcedureName = "sp_save_production_entry";
+    // The backticks are required: Connector/NET otherwise splits the name at the "." in "1.0" as schema.procedure.
+    const string ProcedureName = "`sp_save_production_entry1.0`";
     const decimal MaxOutputQty = 9999.999999m;
 
     // One in-flight production call per sales order inside this process; the procedure also locks the order row.
     static readonly ConcurrentDictionary<int, bool> InFlight = new ConcurrentDictionary<int, bool>();
 
-    // Rows of the order line's reservations that sp_save_production_entry may consume, flagged when the reserved
+    // Rows of the order line's reservations that sp_save_production_entry1.0 may consume, flagged when the reserved
     // batch belongs to a BOM component of the line item (tbl_item_master_bom, itmbi_type = 1).
     public static ProductionPayloadContext LoadPayloadContext(int smoId, int sioId)
     {
@@ -132,15 +133,64 @@ public static class ProductionService
         return "The selected reservation does not belong to this order item.";
     }
 
+    // The procedure takes one JSON document: a master object plus an items array (one or more inputs, exactly one output).
+    // This screen consumes a single reservation, so the whole reserved quantity is sent as the one input, as before.
+    static string BuildPayload(ProductionEntryRequest r)
+    {
+        var db = new mySqlConnection();
+        DataTable line = db.SelectQuery("select itbs_id,itm_id,tum_id,sio_length,sio_width from tbl_sales_items_order where sio_id=@s and smo_id=@o",
+            new MySqlParameter[] { new MySqlParameter("@s", r.SioId), new MySqlParameter("@o", r.SmoId) });
+        if (line == null || line.Rows.Count == 0)
+            throw new InvalidOperationException("The order item does not belong to this sales order.");
+        DataTable rsv = db.SelectQuery("select itbh_id,itbsr_qty from tbl_item_batchstock_reserve where itbsr_id=@r and sio_id=@s",
+            new MySqlParameter[] { new MySqlParameter("@r", r.ReservationId), new MySqlParameter("@s", r.SioId) });
+        if (rsv == null || rsv.Rows.Count == 0)
+            throw new InvalidOperationException("The selected reservation does not belong to this order item.");
+
+        DataRow l = line.Rows[0];
+        string now = Now(db).ToString("yyyy-MM-dd HH:mm:ss");
+        var master = new JObject(
+            new JProperty("itpm_docdate", now),
+            new JProperty("itpm_createdby", r.UserId),
+            new JProperty("itpm_createddate", now));
+        var input = new JObject(
+            new JProperty("itpi_inputoutput", ProductionItemRecord.Input),
+            new JProperty("itbsr_id", r.ReservationId),
+            new JProperty("itbh_id", Int(rsv.Rows[0]["itbh_id"])),
+            new JProperty("itpi_quantity", Dec(rsv.Rows[0]["itbsr_qty"])));
+        var output = new JObject(
+            new JProperty("itpi_inputoutput", ProductionItemRecord.Output),
+            new JProperty("itbs_id", Int(l["itbs_id"])),
+            new JProperty("itm_id", Int(l["itm_id"])),
+            new JProperty("tum_id", l["tum_id"] == DBNull.Value ? JValue.CreateNull() : new JValue(Int(l["tum_id"]))),
+            new JProperty("itbh_length", l["sio_length"] == DBNull.Value ? JValue.CreateNull() : new JValue(Dec(l["sio_length"]))),
+            new JProperty("itbh_width", l["sio_width"] == DBNull.Value ? JValue.CreateNull() : new JValue(Dec(l["sio_width"]))),
+            new JProperty("itpi_quantity", r.OutputQty));
+        var payload = new JObject(
+            new JProperty("master", master),
+            new JProperty("items", new JArray(input, output)));
+        return payload.ToString(Newtonsoft.Json.Formatting.None);
+    }
+
+    static DateTime Now(mySqlConnection db)
+    {
+        string tz = db.SelectScalar("SELECT ss_default_time_zone FROM tbl_system_settings");
+        if (!string.IsNullOrEmpty(tz))
+        {
+            try { return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(tz)); }
+            catch (TimeZoneNotFoundException) { }
+        }
+        return DateTime.UtcNow;
+    }
+
     static ProductionEntryResult Execute(ProductionEntryRequest r)
     {
+        string payload = BuildPayload(r);
         using (var con = new MySqlConnection(System.Configuration.ConfigurationManager.AppSettings["db_connect_mysql"]))
         using (var cmd = new MySqlCommand(ProcedureName, con))
         {
             cmd.CommandType = CommandType.StoredProcedure;
-            cmd.Parameters.Add(new MySqlParameter("p_itbsr_id", MySqlDbType.Int32) { Value = r.ReservationId });
-            cmd.Parameters.Add(new MySqlParameter("p_output_qty", MySqlDbType.Decimal) { Value = r.OutputQty });
-            cmd.Parameters.Add(new MySqlParameter("p_user_id", MySqlDbType.Int32) { Value = r.UserId });
+            cmd.Parameters.Add(new MySqlParameter("p_production_json", MySqlDbType.JSON) { Value = payload });
             cmd.Parameters.Add(new MySqlParameter("p_itpm_id", MySqlDbType.Int32) { Direction = ParameterDirection.Output });
             cmd.Parameters.Add(new MySqlParameter("p_result", MySqlDbType.LongText) { Direction = ParameterDirection.Output });
             // The procedure commits internally, so it is deliberately not wrapped in a caller transaction.
@@ -149,12 +199,12 @@ public static class ProductionService
             object res = cmd.Parameters["p_result"].Value;
             object id = cmd.Parameters["p_itpm_id"].Value;
             return Parse(res == null || res == DBNull.Value ? null : Convert.ToString(res),
-                id == null || id == DBNull.Value ? 0 : Convert.ToInt32(id));
+                id == null || id == DBNull.Value ? 0 : Convert.ToInt32(id), r.ReservationId);
         }
     }
 
     // p_result is the only authoritative outcome: the procedure's exit handler swallows errors and reports them there.
-    static ProductionEntryResult Parse(string json, int itpmId)
+    static ProductionEntryResult Parse(string json, int itpmId, int reservationId)
     {
         if (string.IsNullOrEmpty(json))
             return Fail(0, "The production entry could not be saved.");
@@ -167,7 +217,7 @@ public static class ProductionService
             Message = Convert.ToString((object)o["message"]),
             ItpmId = Tok(o, "itpm_id") > 0 ? Tok(o, "itpm_id") : itpmId,
             SmoId = Tok(o, "smo_id"),
-            ReservationId = Tok(o, "itbsr_id"),
+            ReservationId = reservationId,
             OutputBatchId = Tok(o, "output_itbh_id"),
             OutputReservationId = Tok(o, "output_itbsr_id"),
             DocNo = Convert.ToString((object)o["doc_no"]),
@@ -178,13 +228,13 @@ public static class ProductionService
         if (!result.Success)
         {
             // Custom 3000x errors are written for users; anything else is a database error that must not be shown.
-            if (result.ErrorCode < 30001 || result.ErrorCode > 30009)
+            if (result.ErrorCode < 30001 || result.ErrorCode > 30016)
             {
                 result.Detail = result.Message;
                 Log(new Exception(json));
                 // 1267 is the collation conflict that currently makes the procedure fail (see production_workflow_reference.md).
                 result.Message = result.ErrorCode == 1267
-                    ? "The production procedure failed because of a database collation error (sp_save_production_entry). No changes were made. Please contact the administrator."
+                    ? "The production procedure failed because of a database collation error (sp_save_production_entry1.0). No changes were made. Please contact the administrator."
                     : "The production entry could not be saved. No changes were made.";
             }
             result.ItpmId = 0;

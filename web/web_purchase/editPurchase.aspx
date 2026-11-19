@@ -46,7 +46,7 @@
         var specEditUid = null;
         var specRowSeq = 0;
         var specItem = null;
-        var specFields = "#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width,#itemSpec_TotalKg,#itemSpec_FinalQty,#itemSpec_Price,#itemSpec_Discount,#itemSpec_DiscountAmt,#itemSpec_CostWith,#itemSpec_CostWithout,#itemSpec_VendorBatch,#itemSpec_NetCost";
+        var specFields = "#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width,#itemSpec_TotalKg,#itemSpec_FinalQty,#itemSpec_Price,#itemSpec_Discount,#itemSpec_DiscountAmt,#itemSpec_CostWith,#itemSpec_CostWithout,#itemSpec_VendorBatch,#itemSpec_SystemBatchNo,#itemSpec_NetCost";
 
         function setSpecAction(action) {
             $("#btnSpecSave").text(action).attr("data-action", action);
@@ -116,6 +116,8 @@
             var suffix = name ? " (" + name + ")" : "";
             $("label[for='itemSpec_Length']").text("Length/Unit" + suffix);
             $("label[for='itemSpec_Width']").text("Width/Unit" + suffix);
+            var r = (uomId && uomId != "-1") ? UomConversion.getRequirements(uomId) : { length: false };
+            $("label[for='itemSpec_TotalKg']").text("Total KG" + (r.length ? " *" : ""));
         }
 
         function fillItemSpecUom(uom_type) {
@@ -167,7 +169,7 @@
                 $f.val("");
                 $e.text(r.error || "");
             } else {
-                $f.val(r.value > 0 ? r.value.toFixed(2) : "");
+                $f.val(r.value > 0 ? r.value.toFixed(3) : "");
                 $e.text(r.warning || "");
             }
         }
@@ -415,6 +417,7 @@
                             CostWith: item.itbh_costwithinvoice || "",
                             CostWithout: item.itbh_costwithoutinvoice || "",
                             VendorBatch: item.itbh_custbatchid || "",
+                            SystemBatchNo: item.itbh_no || "",
                             NetCost: item.itbh_cost || (qty > 0 ? (net / qty).toFixed(2) : "")
                         };
                         specRowSeq++;
@@ -601,7 +604,7 @@
             $("#itemSpec_TaxPerc").text(isNaN(rate) ? "" : rate);
             $("#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width,#itemSpec_TotalKg,#itemSpec_FinalQty,#itemSpec_Discount,#itemSpec_CostWith,#itemSpec_CostWithout,#itemSpec_VendorBatch,#itemSpec_NetCost").val("");
             var pp = parseFloat(item.itbs_purchase_price);
-            $("#itemSpec_Price").val(isNaN(pp) ? "" : pp);
+            $("#itemSpec_Price").val(isNaN(pp) ? "" : specRoundTo(pp, 2));
             specRecalcFinal();
             itemSpecCalc();
         }
@@ -660,7 +663,7 @@
                 defUomId: specItem.defUomId,
                 defUomName: specItem.defUomName
             };
-            $.each(["Qty", "Length", "Width", "TotalKg", "FinalQty", "Price", "Discount", "DiscountAmt", "CostWith", "CostWithout", "VendorBatch", "NetCost"], function (i, k) {
+            $.each(["Qty", "Length", "Width", "TotalKg", "FinalQty", "Price", "Discount", "DiscountAmt", "CostWith", "CostWithout",             "VendorBatch", "SystemBatchNo", "NetCost"], function (i, k) {
                 d[k] = $("#itemSpec_" + k).val();
             });
             return d;
@@ -682,14 +685,30 @@
             $("#itemSpec_TaxPerc").text(d.taxPerc);
             fillItemSpecUom();
             $("#itemSpec_Uom").val(d.uom);
-            $.each(["Qty", "Length", "Width", "TotalKg", "FinalQty", "Price", "Discount", "DiscountAmt", "CostWith", "CostWithout", "VendorBatch", "NetCost"], function (i, k) {
+            $.each(["Qty", "Length", "Width", "TotalKg", "FinalQty", "Price", "Discount", "DiscountAmt", "CostWith", "CostWithout",             "VendorBatch", "SystemBatchNo", "NetCost"], function (i, k) {
                 $("#itemSpec_" + k).val(d[k]);
             });
             specRecalcFinal();
             itemSpecCalc();
         }
 
+        // UOM values (quantity, length, width, kg) keep 3 decimals; amounts keep 2.
+        var specUomFields = ["Qty", "Length", "Width", "TotalKg", "FinalQty"];
+        var specAmountFields = ["Price", "Discount", "DiscountAmt", "CostWith", "CostWithout", "NetCost"];
+        function specRoundTo(v, dp) {
+            var x = parseFloat(v);
+            if (isNaN(x)) return v;
+            var f = Math.pow(10, dp);
+            return Math.round((x + Number.EPSILON) * f) / f;
+        }
+        function specNormalize(d) {
+            $.each(specUomFields, function (i, k) { d[k] = specRoundTo(d[k], 3); });
+            $.each(specAmountFields, function (i, k) { d[k] = specRoundTo(d[k], 2); });
+            return d;
+        }
+
         function specBuildRow(d, uid) {
+            specNormalize(d);
             var qty = parseFloat(d.FinalQty) || parseFloat(d.Qty) || 0;
             var price = parseFloat(d.Price) || 0;
             var disc = parseFloat(d.Discount) || 0;
@@ -708,16 +727,18 @@
             var h = "<tr class='classtest' data-uid='" + uid + "'>";
             h += "<td>" + d.code + "</td>";
             h += "<td>" + d.name + "</td>";
-            h += "<td data-value='" + qty + "' data-taxrate='" + rate + "' data-cessrate='" + cess + "'>" + qty + "</td>";
-            h += "<td data-value='" + price + "'>" + price + "</td>";
+            h += "<td>" + (parseFloat(d.Qty) ? parseFloat(d.Qty).toFixed(3) : "") + "</td>";
+            h += "<td>" + ((d.uom && String(d.uom) !== "-1") ? getUomNameById(d.uom) : "") + "</td>";
+            h += "<td data-value='" + qty + "' data-taxrate='" + rate + "' data-cessrate='" + cess + "'>" + qty.toFixed(3) + "</td>";
+            h += "<td>" + (d.defUomName || getUomNameById(d.defUomId) || "") + "</td>";
+            h += "<td data-value='" + price + "'>" + price.toFixed(2) + "</td>";
             h += "<td>" + amount.toFixed(2) + "</td>";
-            h += "<td data-value='" + disc + "'>" + disc + "</td>";
+            h += "<td data-value='" + disc + "'>" + disc.toFixed(2) + "</td>";
             h += "<td>" + discAmt.toFixed(2) + "</td>";
             h += "<td>" + taxable.toFixed(2) + "</td>";
             h += "<td data-value='" + rate + "'>" + rate + "</td>";
             h += "<td data-value='" + parseFloat(tax).toFixed(2) + "'>" + parseFloat(tax).toFixed(2) + "</td>";
             h += "<td>" + net.toFixed(2) + "</td>";
-            h += "<td>" + (d.defUomName || getUomNameById(d.defUomId) || "") + "</td>";
             h += "<td style='white-space:nowrap;'><a class='btn btn-info btn-xs' title='Edit' onclick='EditRaw(this);'><li class='fa fa-pencil'></li></a> <a class='btn btn-danger btn-xs'><li class='fa fa-close' onclick='DeleteRaw(this);'></li></a></td>";
             h += "</tr>";
             return h;
@@ -729,6 +750,29 @@
                 return;
             }
             var d = specCollect();
+            if (d.uom && d.uom != "-1") {
+                var req = UomConversion.getRequirements(d.uom);
+                var uomName = $.trim($("#itemSpec_Uom option:selected").text());
+                if (req.length && !(parseFloat(d.Length) > 0)) {
+                    alert("Length is required for " + uomName);
+                    $("#itemSpec_Length").focus();
+                    return;
+                }
+                if (req.width && !(parseFloat(d.Width) > 0)) {
+                    alert("Width is required for " + uomName);
+                    $("#itemSpec_Width").focus();
+                    return;
+                }
+                if (req.length && !(parseFloat(d.TotalKg) > 0)) {
+                    alert("Total KG is required for " + uomName);
+                    $("#itemSpec_TotalKg").focus();
+                    return;
+                }
+                if (req.length && !(parseFloat(d.FinalQty) > 0)) {
+                    alert($.trim($("#itemSpec_FinalQtyErr").text()) || "Final quantity could not be calculated. Check the quantity, length and width");
+                    return;
+                }
+            }
             if (!(parseFloat(d.FinalQty) > 0 || parseFloat(d.Qty) > 0)) {
                 alert("Enter a quantity");
                 $("#itemSpec_Qty").focus();
@@ -767,9 +811,9 @@
             specResetForm();
             specEditUid = $tr.attr("data-uid");
             $tr.addClass("spec-editing").css("background-color", "#fff3cd");
-            d.Price = $tr.find('td:eq(3)').attr('data-value') || d.Price;
-            d.Discount = $tr.find('td:eq(5)').attr('data-value') || d.Discount;
-            d.taxPerc = $tr.find('td:eq(8)').attr('data-value') || d.taxPerc;
+            d.Price = $tr.find('td:eq(6)').attr('data-value') || d.Price;
+            d.Discount = $tr.find('td:eq(8)').attr('data-value') || d.Discount;
+            d.taxPerc = $tr.find('td:eq(11)').attr('data-value') || d.taxPerc;
             specLoad(d);
             setSpecAction("Update");
         }
@@ -781,10 +825,11 @@
             }
             specResetForm();
         });
-        $(document).on("input", ".itemspec-decimal", function () {
+        $(document).on("input", ".itemspec-decimal, .itemspec-amount", function () {
+            var dp = $(this).hasClass("itemspec-amount") ? 2 : 3;
             var v = this.value.replace(/[^0-9.]/g, "");
             var p = v.indexOf(".");
-            if (p >= 0) v = v.substring(0, p + 1) + v.substring(p + 1).replace(/\./g, "").substring(0, 3);
+            if (p >= 0) v = v.substring(0, p + 1) + v.substring(p + 1).replace(/\./g, "").substring(0, dp);
             this.value = v;
         });
         $(document).on("input", ".itemspec-calc", itemSpecCalc);
@@ -1072,11 +1117,11 @@
             var totalCost = 0, totalDiscAmt = 0, totalTaxable = 0, totalTax = 0, totalNet = 0;
             $rows.each(function () {
                 var $tr = $(this);
-                totalCost += parseFloat($tr.find('td:eq(4)').text()) || 0;
-                totalDiscAmt += parseFloat($tr.find('td:eq(6)').text()) || 0;
-                totalTaxable += parseFloat($tr.find('td:eq(7)').text()) || 0;
-                totalTax += parseFloat($tr.find('td:eq(9)').attr('data-value') || $tr.find('td:eq(9)').text()) || 0;
-                totalNet += parseFloat($tr.find('td:eq(10)').text()) || 0;
+                totalCost += parseFloat($tr.find('td:eq(7)').text()) || 0;
+                totalDiscAmt += parseFloat($tr.find('td:eq(9)').text()) || 0;
+                totalTaxable += parseFloat($tr.find('td:eq(10)').text()) || 0;
+                totalTax += parseFloat($tr.find('td:eq(12)').attr('data-value') || $tr.find('td:eq(12)').text()) || 0;
+                totalNet += parseFloat($tr.find('td:eq(13)').text()) || 0;
             });
 
             var totalDiscRate = totalCost > 0 ? ((totalCost - totalTaxable) * 100 / totalCost) : 0;
@@ -1455,7 +1500,7 @@
                 var cell = function (idx) {
                     return $tr.find("td:eq(" + idx + ")").attr("data-value") || $.trim($tr.find("td:eq(" + idx + ")").text());
                 };
-                var qty = num(cell(2));
+                var qty = num(cell(4));
                 var cost = num(d.NetCost);
                 var uom = num(d.uom);
                 var defaultUom = num(d.defUomId);
@@ -1471,11 +1516,11 @@
                     itm_id: num(d.itm_id),
                     itm_code: txt($tr.find("td:eq(0)").text()),
                     itm_name: txt($tr.find("td:eq(1)").text()),
-                    pi_org_price: num(cell(3)),
-                    pi_price: num(cell(3)),
+                    pi_org_price: num(cell(6)),
+                    pi_price: num(cell(6)),
                     pi_qty: qty,
-                    pi_discount_rate: num(cell(5)),
-                    pi_item_tax: num(cell(8)),
+                    pi_discount_rate: num(cell(8)),
+                    pi_item_tax: num(cell(11)),
                     pi_item_cess: num(d.cess),
                     pi_carton_count: null,
                     pi_item_per_carton: null,
@@ -2007,6 +2052,12 @@
                                         <!-- /.col -->
                                     </div>
                                     <!-- /.row -->
+                                    <div class="clearfix"></div>
+                                    <div style="border-top: 1px solid #e6e9ed; padding-top: 6px; margin-top: 4px;">
+                                        <b>Tax Details:</b>
+                                        &nbsp;&nbsp;TAX METHOD: <label style="font-size:14px;color:#2967b5;margin:0;" id="lbltaxMethod"></label>
+                                        &nbsp;&nbsp;|&nbsp;&nbsp;INCLUSIVE/EXCLUSIVE: <label style="font-size:14px;color:#2967b5;margin:0;" id="lblTaxType"></label>
+                                    </div>
                                 </div>
                                 <div class="clear"></div>
 
@@ -2056,46 +2107,6 @@
                                  </div>
                           </div>
                        <div class="clearfix"></div>
-                      <div class="row">
-                             <div class="col-md-12 col-sm-12 col-xs-12">
-                    <div class="x_panel">
-                                <div class="x_title" style="margin-bottom: 0px;">
-                                    <label>Tax Details</label>
-
-                                    <ul class="nav navbar-right panel_toolbox pull-right">
-                                        <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
-                                        </li>
-
-
-                                    </ul>
-
-                                </div>
-                                <div class="x_content">
-                                    <!-- info row -->
-                                    <div class="row invoice-info">
-                                        <div class="col-sm-6 invoice-col">
-                                            TAX METHOD: <label style="font-size:14px;color:#2967b5;" id="lbltaxMethod"></label>
-                                           
-
-                                        </div>
-                                   
-                                           <div class="col-sm-6 invoice-col">
-                                            INCLUSIVE/EXCLUSIVE: <label style="font-size:14px;color:#2967b5;" id="lblTaxType"></label>
-                                           
-
-                                        </div>
-
-
-                                        <!-- /.col -->
-                                    </div>
-                                    <!-- /.row -->
-                                </div>
-                                <div class="clear"></div>
-
-
-                            </div>
-                                 </div>
-                          </div>
                     <div class="clearfix"></div>
                     <div class="row">
                         <div class="col-md-12 col-sm-12 col-xs-12">
@@ -2345,8 +2356,8 @@
                                                     <div class="col-md-2 col-sm-4 col-xs-12 form-group"><label for="itemSpec_FinalQty">Final Quantity<span id="itemSpec_FinalQtyUom"></span></label><input type="text" class="form-control" id="itemSpec_FinalQty" readonly="readonly" /><small id="itemSpec_FinalQtyErr" class="text-danger"></small></div>
                                                 </div>
                                                 <div class="row">
-                                                    <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_Price">Purchase Price</label><input type="text" class="form-control itemspec-decimal itemspec-calc" id="itemSpec_Price" /></div>
-                                                    <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_Discount">Discount (%)</label><input type="number" class="form-control itemspec-decimal itemspec-calc" id="itemSpec_Discount" /></div>
+                                                    <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_Price">Purchase Price</label><input type="text" class="form-control itemspec-amount itemspec-calc" id="itemSpec_Price" /></div>
+                                                    <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_Discount">Discount (%)</label><input type="number" class="form-control itemspec-amount itemspec-calc" id="itemSpec_Discount" /></div>
                                                     <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_DiscountAmt">Discount Amount</label><input type="text" class="form-control" id="itemSpec_DiscountAmt" readonly="readonly" /></div>
                                                     <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_Taxable">Taxable Value</label><input type="text" class="form-control" id="itemSpec_Taxable" readonly="readonly" /></div>
                                                     <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label>Tax Amount</label><input type="text" class="form-control" id="itemSpec_TaxAmount" readonly="readonly" /></div>
@@ -2354,10 +2365,11 @@
                                                 </div>
                                                 <div class="row">
                                                     <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_VendorBatch">Supplier Batch No.</label><input type="text" class="form-control" id="itemSpec_VendorBatch" maxlength="50" /></div>
-                                                    <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_CostWith">Cost With Invoice / Unit</label><input type="text" class="form-control itemspec-decimal itemspec-calc" id="itemSpec_CostWith" /></div>
-                                                    <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_CostWithout">Cost Without Invoice</label><input type="text" class="form-control itemspec-decimal itemspec-calc" id="itemSpec_CostWithout" /></div>
+                                                    <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_SystemBatchNo">System Batch No.</label><input type="text" class="form-control" id="itemSpec_SystemBatchNo" readonly="readonly" /></div>
+                                                    <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_CostWith">Cost With Invoice / Unit</label><input type="text" class="form-control itemspec-amount itemspec-calc" id="itemSpec_CostWith" /></div>
+                                                    <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_CostWithout">Cost Without Invoice</label><input type="text" class="form-control itemspec-amount itemspec-calc" id="itemSpec_CostWithout" /></div>
                                                     <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_NetCost">Net Purchase Cost</label><input type="text" class="form-control" id="itemSpec_NetCost" readonly="readonly" /></div>
-                                                    <div id="specButtons" class="col-md-4 col-xs-12 form-group" style="white-space: nowrap;">
+                                                    <div id="specButtons" class="col-md-2 col-xs-12 form-group" style="white-space: nowrap;">
                                                         <br />
                                                         <button type="button" id="btnSpecSave" class="btn btn-success" style="display: inline-block;" data-action="Add">Add</button>
                                                         <button type="button" id="btnSpecCancel" class="btn btn-default" style="display: inline-block;">Cancel</button>
@@ -2375,7 +2387,10 @@
                                                 <tr>
                                                     <td>Item Code</td>
                                                     <td style="width: 300px;">Name</td>
-                                                     <td>QTY</td>
+                                                     <td>Input QTY</td>
+                                                    <td>Input UOM</td>
+                                                    <td>Purchase QTY</td>
+                                                    <td>Purchase UOM</td>
                                                     <td>Price</td>
                                                    
                                                     <td>Amount</td>
@@ -2385,7 +2400,6 @@
                                                     <td>Tax Perc</td>
                                                     <td>Tax Amount</td>
                                                     <td>Net Amount</td>
-                                                    <td>UOM</td>
                                                    
                                                     <td></td>
 
@@ -2401,6 +2415,9 @@
                                                     <td style="border-right: none;"></td>
                                                     <td style="border-right: none;"></td>
                                                     <td style="border-right: none;"></td>
+                                                    <td style="border-right: none;"></td>
+                                                    <td style="border-right: none;"></td>
+                                                    <td style="border-right: none;"></td>
                                                     <td style="text-align: right;"><b>Total</b></td>
                                                     <td id="txtTotalCost"></td>
                                                     <td id="txtTotalDiscountRate"></td>
@@ -2409,7 +2426,6 @@
                                                     <td></td>
                                                     <td id="txtTotalTaxamt"></td>
                                                     <td id="txtTotalNetAmount"></td>
-                                                    <td></td>
                                                     <td></td>
                                                 </tr>
                                              <tr>
@@ -2420,10 +2436,12 @@
                                                     <td colspan="3" style="cursor:pointer"><label style="color:#505258;cursor:">Round off Value: </label><label id="lblRoundOff" style="color:#900c0c"></label></td>
 
                                                     <td></td>
+                                                    <td></td>
+                                                    <td></td>
+                                                    <td></td>
                                                   <td>
                                                         <label id="txtTotalGrossamount"></label>
                                                     </td>
-                                                    <td></td>
                                                     <td></td>
                                                    
                                           

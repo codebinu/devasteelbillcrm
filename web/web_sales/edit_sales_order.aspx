@@ -205,22 +205,22 @@
                                             <tbody>
                                                 <% foreach (System.Data.DataRow r in Items.Rows) { %>
                                                 <tr data-sio-id="<%= Enc(r["sio_id"]) %>" data-target="<%= Enc(r["tum_id"]) %>" data-reserved="<%= Enc(r["edit_reserved"]) %>"
-                                                    data-tax="<%= Num(r["sio_item_tax"]) %>" data-cess="<%= NumCol(r, "sio_item_cess") %>"
-                                                    data-final="<%= Num(r["sio_finalqty"]) %>" data-total="<%= Num(r["sio_total"]) %>" data-disc="<%= Num(r["sio_discount_amount"]) %>"
-                                                    data-taxamt="<%= Num(r["sio_tax_amount"]) %>" data-net="<%= Num(r["sio_net_amount"]) %>" data-taxable="<%= Enc(r["edit_taxable"]) %>">
+                                                    data-tax="<%= Raw(r["sio_item_tax"]) %>" data-cess="<%= NumCol(r, "sio_item_cess") %>"
+                                                    data-final="<%= Raw(r["sio_finalqty"]) %>" data-total="<%= Raw(r["sio_total"]) %>" data-disc="<%= Raw(r["sio_discount_amount"]) %>"
+                                                    data-taxamt="<%= Raw(r["sio_tax_amount"]) %>" data-net="<%= Raw(r["sio_net_amount"]) %>" data-taxable="<%= Enc(r["edit_taxable"]) %>">
                                                     <td><%= Enc(r["sl"]) %></td>
                                                     <td><%= Enc(r["itm_code"]) %></td>
                                                     <td><%= Enc(r["itm_name"]) %><% if (r["edit_reserved"].ToString() != "0") { %> <span class="label label-info" title="Stock is reserved for this item">Reserved</span><% } %></td>
-                                                    <td class="num"><input type="text" class="form-control f-qty" value="<%= Enc(r["edit_qty"]) %>"<%= ReadOnly %> /></td>
-                                                    <td class="num"><input type="text" class="form-control f-len" value="<%= Enc(r["edit_length"]) %>"<%= ReadOnly %> /></td>
-                                                    <td class="num"><input type="text" class="form-control f-wid" value="<%= Enc(r["edit_width"]) %>"<%= ReadOnly %> /></td>
+                                                    <td class="num"><input type="text" class="form-control f-qty" value="<%= Enc(r["edit_qty"]) %>" data-orig="<%= Enc(r["edit_qty_raw"]) %>"<%= ReadOnly %> /></td>
+                                                    <td class="num"><input type="text" class="form-control f-len" value="<%= Enc(r["edit_length"]) %>" data-orig="<%= Enc(r["edit_length_raw"]) %>"<%= ReadOnly %> /></td>
+                                                    <td class="num"><input type="text" class="form-control f-wid" value="<%= Enc(r["edit_width"]) %>" data-orig="<%= Enc(r["edit_width_raw"]) %>"<%= ReadOnly %> /></td>
                                                     <td><select class="form-control f-uom"<%= Disabled %>><%= UomOptions(r["tum_id"], r["edit_uom"]) %></select></td>
                                                     <td class="num"><span class="c-final"><%= Num(r["sio_finalqty"]) %></span><span class="row-err"></span><span class="row-note"></span></td>
                                                     <td><%= Enc(r["uom"]) %></td>
-                                                    <td class="num"><input type="text" class="form-control f-price" value="<%= Num(r["sio_price"]) %>"<%= ReadOnly %> /></td>
-                                                    <td class="num"><input type="text" class="form-control f-rate" value="<%= Num(r["sio_discount_rate"]) %>"<%= ReadOnly %> /></td>
+                                                    <td class="num"><input type="text" class="form-control f-price" value="<%= Money(r["sio_price"]) %>" data-orig="<%= Raw(r["sio_price"]) %>"<%= ReadOnly %> /></td>
+                                                    <td class="num"><input type="text" class="form-control f-rate" value="<%= Raw(r["sio_discount_rate"]) %>"<%= ReadOnly %> /></td>
                                                     <td style="text-align: right;" class="c-disc"><%= Money(r["sio_discount_amount"]) %></td>
-                                                    <td style="text-align: right;"><%= Num(r["sio_item_tax"]) %></td>
+                                                    <td style="text-align: right;"><%= Raw(r["sio_item_tax"]) %></td>
                                                     <td style="text-align: right;" class="c-tax"><%= Money(r["sio_tax_amount"]) %></td>
                                                     <td style="text-align: right;"><b class="c-net"><%= Money(r["sio_net_amount"]) %></b></td>
                                                 </tr>
@@ -310,6 +310,11 @@
             var initialHeader = headerState();
 
             function num(v) { var n = parseFloat(v); return isNaN(n) ? 0 : n; }
+            // An untouched input shows a rounded value; keep sending the stored full-precision value so the line is not seen as changed.
+            function fieldVal($el) {
+                var orig = $el.attr('data-orig');
+                return orig !== undefined && orig !== '' && $el.val() === $el[0].defaultValue ? num(orig) : num($el.val());
+            }
             function rnd(v) { var f = Math.pow(10, cfg.accuracy); return Math.round((v + Number.EPSILON) * f) / f; }
             function showMsg(type, text) {
                 $('#editMessage').html($('<div class="alert"></div>').addClass('alert-' + type).css('margin-bottom', '10px').text(text));
@@ -338,11 +343,11 @@
                 $wid.prop('disabled', !req.width);
                 var s = {
                     uom: parseInt(uomId, 10) || 0,
-                    qty: num($tr.find('.f-qty').val()),
-                    len: req.length ? num($len.val()) : 0,
-                    wid: req.width ? num($wid.val()) : 0,
+                    qty: fieldVal($tr.find('.f-qty')),
+                    len: req.length ? fieldVal($len) : 0,
+                    wid: req.width ? fieldVal($wid) : 0,
                     priceText: $.trim($tr.find('.f-price').val()),
-                    price: num($tr.find('.f-price').val()),
+                    price: fieldVal($tr.find('.f-price')),
                     rate: num($tr.find('.f-rate').val())
                 };
                 s.sig = [s.uom, s.qty, s.len, s.wid, s.price, s.rate].join('|');
@@ -382,7 +387,7 @@
                         }
                     }
                 }
-                $tr.find('.c-final').text(r.ok ? String(Math.round(r.final * 10000) / 10000) : '-');
+                $tr.find('.c-final').text(r.ok ? String(Math.round(r.final * 1000) / 1000) : '-');
                 $tr.find('.c-disc').text(r.disc.toFixed(2));
                 $tr.find('.c-tax').text(r.tax.toFixed(2));
                 $tr.find('.c-net').text(r.net.toFixed(2));
@@ -398,7 +403,7 @@
                     t.qty += r.final; t.total += r.total; t.disc += r.disc; t.taxable += r.taxable; t.tax += r.tax; t.net += r.net;
                 });
                 if (any && !bad) {
-                    $('#tQty').text(String(Math.round(t.qty * 10000) / 10000));
+                    $('#tQty').text(String(Math.round(t.qty * 1000) / 1000));
                     $('#tTotal').text(t.total.toFixed(2)); $('#tDisc').text(t.disc.toFixed(2)); $('#tTaxable').text(t.taxable.toFixed(2));
                     $('#tTax').text(t.tax.toFixed(2)); $('#tRound').text('0.00'); $('#tNet').text(t.net.toFixed(2));
                 } else if (!any) {

@@ -33,7 +33,7 @@ function loadMenu() {
 
 	htm += '<li><a><i class="fa fa-clipboard"></i><label style="font-size:12px;"> Quotations</label> <span class="fa fa-chevron-down"></span></a>';
 	htm += '<ul class="nav child_menu">';
-	htm += '<li><a href="../web_sales/new_sales_order.aspx"><label style="font-size:12px;">Sales Order Creation</label></a></li>';
+	htm += '<li><a href="../web_sales/new_sales_order.aspx"><label style="font-size:12px;">New Sales Order</label></a></li>';
 	htm += '<li><a href="../web_sales/sales_order_list.aspx"><label style="font-size:12px;">Sales Orders</label></a></li>';
 	// htm += '<li><a href="../web_sales/editorder.aspx">Edit Order</a></li>';
 	// htm += '<li><a href="../web_sales/orderconfirmation.aspx">Confirm Order</a></li>';
@@ -48,7 +48,7 @@ function loadMenu() {
     htm += '</ul>';
     htm += '</li>';
 
-	htm += '<li><a><i class="fa fa-shopping-cart"></i><label style="font-size:12px;"> Sales</label> <span class="fa fa-chevron-down"></span></a>';
+	htm += '<li><a><i class="fa fa-shopping-cart"></i><label style="font-size:12px;">Sales & Invoices</label> <span class="fa fa-chevron-down"></span></a>';
 	htm+='<ul class="nav child_menu">';
 	htm += '<li><a href="../web_sales/neworder.aspx"><label style="font-size:12px;">New Order</label></a></li>';
 	htm += '<li><a href="../web_sales/orders.aspx"><label style="font-size:12px;">Orders & Invoices</label></a></li>';

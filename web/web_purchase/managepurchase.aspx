@@ -164,6 +164,11 @@
                     $("#lblRoundoff").text(entry_details.roundoff);
                     // showing order_items
                     $("#tbodyItems").html("");
+                    // UOM quantities show 3 decimals, amounts 2.
+                    var fmtDp = function (v, dp) {
+                        var n = parseFloat(v);
+                        return isNaN(n) ? (v == null ? '' : v) : n.toFixed(dp);
+                    };
                     $.each(entryObj.items, function (i, item) {
                         var htmItemRow = '';
                         htmItemRow += '<tr>';
@@ -171,17 +176,19 @@
                         htmItemRow += '<td>' + item.itbh_no + '</td>';
                         htmItemRow += '<td>' + item.itbh_custbatchid + '</td>';
                         htmItemRow += '<td>' + item.itm_name + '</td>';
-                        htmItemRow += '<td>' + item.pi_qty + '</td>';
+                        htmItemRow += '<td>' + fmtDp(item.input_qty, 3) + '</td>';
+                        htmItemRow += '<td>' + (item.input_uom || '') + '</td>';
+                        htmItemRow += '<td>' + fmtDp(item.pi_qty, 3) + '</td>';
                         htmItemRow += '<td>' + item.tum_name + '</td>';
-                        htmItemRow += '<td>' + item.pi_price + '</td>';
+                        htmItemRow += '<td>' + fmtDp(item.pi_price, 2) + '</td>';
                        
-                        htmItemRow += '<td>' + item.pi_total + '</td>';
-                        htmItemRow += '<td>' + item.pi_discount_rate + '</td>';
+                        htmItemRow += '<td>' + fmtDp(item.pi_total, 2) + '</td>';
+                        htmItemRow += '<td>' + fmtDp(item.pi_discount_rate, 2) + '</td>';
 
-                        htmItemRow += '<td>' + item.pi_discount_amount + '</td>';
-                        htmItemRow += '<td>' + item.pi_item_tax + '</td>';
-                        htmItemRow += '<td>' + item.pi_tax_amount + '</td>';
-                        htmItemRow += '<td>' + item.pi_net_amount + '</td>';                        
+                        htmItemRow += '<td>' + fmtDp(item.pi_discount_amount, 2) + '</td>';
+                        htmItemRow += '<td>' + fmtDp(item.pi_item_tax, 2) + '</td>';
+                        htmItemRow += '<td>' + fmtDp(item.pi_tax_amount, 2) + '</td>';
+                        htmItemRow += '<td>' + fmtDp(item.pi_net_amount, 2) + '</td>';                        
                         htmItemRow += '</tr>';
                         $("#tbodyItems").append(htmItemRow);
                     });
@@ -815,8 +822,10 @@
                                                     <td>System Batch No</td>
                                                     <td>Supplier Batch No</td>
                                                     <td style="width: 300px;">Name</td>
-                                                    <td>QTY</td>
-                                                    <td>UOM</td>
+                                                    <td>Input QTY</td>
+                                                    <td>Input UOM</td>
+                                                    <td>Purchase QTY</td>
+                                                    <td>Purchase UOM</td>
                                                     <td>Price</td>                                                    
                                                     <td>Amt</td>
                                                     <td>Dis %</td>
@@ -840,7 +849,7 @@
 
 
                                                 <tr>
-                                                    <td colspan="5" style="text-align: right;"><b>Round Off Value: <label id="lblRoundoff" style="color:#900c0c"></label></b></td>
+                                                    <td colspan="7" style="text-align: right;"><b>Round Off Value: <label id="lblRoundoff" style="color:#900c0c"></label></b></td>
                                                     <td colspan="7" style="text-align: right;"><b>Total</b></td>
 
                                                     <td>
@@ -848,7 +857,7 @@
 
                                                 </tr>
                                                 <tr>
-                                                    <td colspan="11" style="text-align: right;"><b>Previous Payment</b></td>
+                                                    <td colspan="13" style="text-align: right;"><b>Previous Payment</b></td>
 
                                                     <td style="font-weight: bold;">
                                                         <label id="txtPreviousPaid"></label>
@@ -859,7 +868,7 @@
 
                                                 </tr>
                                                 <tr>
-                                                    <td colspan="11" style="text-align: right;"><b>Current Payment</b></td>
+                                                    <td colspan="13" style="text-align: right;"><b>Current Payment</b></td>
                                                     <td style="color: red; font-weight: bold;">
                                                         <input style="width: 97%; background: none; border: none;" id="txtTotalCurrentAmount" value="0" disabled="" type="text" /></td>
                                                     <td style="color: red; font-weight: bold;">

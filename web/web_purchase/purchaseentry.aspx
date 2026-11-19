@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="purchaseentry.aspx.cs" Inherits="web_purchase_purchaseentry" %>
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="purchaseentry.aspx.cs" Inherits="web_purchase_purchaseentry" %>
 
 <!DOCTYPE html>
 
@@ -35,7 +35,7 @@
     <script type="text/javascript">
         var vendorid = 0;
         var itm_id = 0;
-        var tax_type = 0;
+        var tax_type = 2;
         var isInclusive = 0;
         var uomData = [];
         function setSpecAction(action) {
@@ -91,6 +91,8 @@ function loadUomTypes() {
             var suffix = name ? " (" + name + ")" : "";
             $("label[for='itemSpec_Length']").text("Length/Unit" + suffix);
             $("label[for='itemSpec_Width']").text("Width/Unit" + suffix);
+            var r = (uomId && uomId != "-1") ? UomConversion.getRequirements(uomId) : { length: false };
+            $("label[for='itemSpec_TotalKg']").text("Total KG" + (r.length ? " *" : ""));
         }
 
         function specApplyFieldRules() {
@@ -121,7 +123,7 @@ function loadUomTypes() {
                 $f.val("");
                 $e.text(r.error || "");
             } else {
-                $f.val(r.value > 0 ? r.value.toFixed(2) : "");
+                $f.val(r.value > 0 ? r.value.toFixed(3) : "");
                 $e.text(r.warning || "");
             }
         }
@@ -230,7 +232,7 @@ function fillItemSpecUom(uom_type) {
                     }
                     else {
 
-                        $("#warehousediv").html(msg.d);
+                        $("#warehousediv").html(msg.d).attr("title", $.trim($("#warehousediv option:selected").text()));
                         loadTaxes(-1);
                         // searchGroupClass(1);
                         return;
@@ -244,7 +246,7 @@ function fillItemSpecUom(uom_type) {
         }
 
         function getBranchTaxDetails() {
-            tax_type = $("#warehousediv option:selected").attr("taxType");
+            tax_type = 2; // Tax method is always GST
     
             isInclusive = $("#warehousediv option:selected").attr("inclusiveStatus");
             $("#selTaxType").val(tax_type);
@@ -255,7 +257,7 @@ function fillItemSpecUom(uom_type) {
         function checkBranch() {
             if ($("#warehousediv").val() == 0) {
                 alert("Please choose a warehouse");
-                $("#selTaxType").val(-1);
+                $("#selTaxType").val(2);
                 $("#selInclusive").val(-1);
                 
                 return false;
@@ -270,7 +272,7 @@ function fillItemSpecUom(uom_type) {
         }
 
         function loadTaxes(currentVal) {
-            var taxType = $("#warehousediv option:selected").attr("taxType");
+            var taxType = 2; // Tax method is always GST
             loading();
             $.ajax({
                 type: "POST",
@@ -634,7 +636,30 @@ function fillItemSpecUom(uom_type) {
 			itemSpecCalc();
 		}
 
+		function specUomName(id) {
+			var name = "";
+			if (id === undefined || id === null || id === "" || String(id) === "-1") return name;
+			$.each(uomData, function (i, u) { if (String(u.tum_id) === String(id)) { name = u.tum_name; return false; } });
+			return name;
+		}
+
+		// UOM values (quantity, length, width, kg) keep 3 decimals; amounts keep 2.
+		var specUomFields = ["Qty", "Length", "Width", "TotalKg", "FinalQty"];
+		var specAmountFields = ["Price", "Discount", "DiscountAmt", "CostWith", "CostWithout", "NetCost"];
+		function specRoundTo(v, dp) {
+			var x = parseFloat(v);
+			if (isNaN(x)) return v;
+			var f = Math.pow(10, dp);
+			return Math.round((x + Number.EPSILON) * f) / f;
+		}
+		function specNormalize(d) {
+			$.each(specUomFields, function (i, k) { d[k] = specRoundTo(d[k], 3); });
+			$.each(specAmountFields, function (i, k) { d[k] = specRoundTo(d[k], 2); });
+			return d;
+		}
+
 		function specBuildRow(d, uid) {
+			specNormalize(d);
 			var qty = parseFloat(d.FinalQty) || parseFloat(d.Qty) || 0;
 			var price = parseFloat(d.Price) || 0;
 			var disc = parseFloat(d.Discount) || 0;
@@ -653,16 +678,18 @@ function fillItemSpecUom(uom_type) {
             var h = "<tr class='classtest' data-uid='" + uid + "'>";
             h += "<td>" + d.code + "</td>";
             h += "<td>" + d.name + "</td>";
-            h += "<td data-value='" + qty + "' data-taxrate='" + rate + "' data-cessrate='" + cess + "'>" + qty + "</td>";
-            h += "<td data-value='" + price + "'>" + price + "</td>";
+            h += "<td>" + (parseFloat(d.Qty) ? parseFloat(d.Qty).toFixed(3) : "") + "</td>";
+            h += "<td>" + specUomName(d.uom) + "</td>";
+            h += "<td data-value='" + qty + "' data-taxrate='" + rate + "' data-cessrate='" + cess + "'>" + qty.toFixed(3) + "</td>";
+            h += "<td>" + (d.defUomName || "") + "</td>";
+            h += "<td data-value='" + price + "'>" + price.toFixed(2) + "</td>";
             h += "<td>" + amount.toFixed(2) + "</td>";
-            h += "<td data-value='" + disc + "'>" + disc + "</td>";
+            h += "<td data-value='" + disc + "'>" + disc.toFixed(2) + "</td>";
             h += "<td>" + discAmt.toFixed(2) + "</td>";
             h += "<td>" + taxable.toFixed(2) + "</td>";
             h += "<td data-value='" + rate + "'>" + rate + "</td>";
             h += "<td data-value='" + parseFloat(tax).toFixed(2) + "'>" + parseFloat(tax).toFixed(2) + "</td>";
 			h += "<td>" + net.toFixed(2) + "</td>";
-			h += "<td>" + (d.defUomName || "") + "</td>";
 			h += "<td style='display:none;'>" + d.id + "</td>";
 			//h += "<td></td>";
 			//h += "<td></td>";
@@ -677,6 +704,29 @@ function fillItemSpecUom(uom_type) {
 				return;
 			}
 			var d = specCollect();
+			if (d.uom && d.uom != "-1") {
+				var req = UomConversion.getRequirements(d.uom);
+				var uomName = specUomName(d.uom);
+				if (req.length && !(parseFloat(d.Length) > 0)) {
+					alert("Length is required for " + uomName);
+					$("#itemSpec_Length").focus();
+					return;
+				}
+				if (req.width && !(parseFloat(d.Width) > 0)) {
+					alert("Width is required for " + uomName);
+					$("#itemSpec_Width").focus();
+					return;
+				}
+				if (req.length && !(parseFloat(d.TotalKg) > 0)) {
+					alert("Total KG is required for " + uomName);
+					$("#itemSpec_TotalKg").focus();
+					return;
+				}
+				if (req.length && !(parseFloat(d.FinalQty) > 0)) {
+					alert($.trim($("#itemSpec_FinalQtyErr").text()) || "Final quantity could not be calculated. Check the quantity, length and width");
+					return;
+				}
+			}
 			if (!(parseFloat(d.FinalQty) > 0 || parseFloat(d.Qty) > 0)) {
 				alert("Enter a quantity");
 				$("#itemSpec_Qty").focus();
@@ -715,10 +765,10 @@ function fillItemSpecUom(uom_type) {
 			specResetForm();
 			specEditUid = $tr.attr("data-uid");
 			$tr.addClass("spec-editing").css("background-color", "#fff3cd");
-            var rowQty = $tr.find('td:eq(2)').attr('data-value') || $.trim($tr.find('td:eq(2)').text());
-            var rowPrice = $tr.find('td:eq(3)').attr('data-value') || $.trim($tr.find('td:eq(3)').text());
-            var rowDisc = $tr.find('td:eq(5)').attr('data-value') || $.trim($tr.find('td:eq(5)').text());
-            var rowTaxPerc = $tr.find('td:eq(8)').attr('data-value') || $.trim($tr.find('td:eq(8)').text());
+            var rowQty = $tr.find('td:eq(4)').attr('data-value') || $.trim($tr.find('td:eq(4)').text());
+            var rowPrice = $tr.find('td:eq(6)').attr('data-value') || $.trim($tr.find('td:eq(6)').text());
+            var rowDisc = $tr.find('td:eq(8)').attr('data-value') || $.trim($tr.find('td:eq(8)').text());
+            var rowTaxPerc = $tr.find('td:eq(11)').attr('data-value') || $.trim($tr.find('td:eq(11)').text());
             var gridQty = parseFloat(rowQty);
             if (gridQty != (parseFloat(d.FinalQty) || parseFloat(d.Qty) || 0)) { d.Qty = rowQty; d.Length = ''; d.Width = ''; d.uom = '-1'; }
             d.Price = rowPrice; d.Discount = rowDisc; d.taxPerc = rowTaxPerc;
@@ -750,7 +800,7 @@ function fillItemSpecUom(uom_type) {
             $("#itemSpec_SysBatch").text("");
             $("#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width,#itemSpec_TotalKg,#itemSpec_FinalQty,#itemSpec_Discount,#itemSpec_CostWith,#itemSpec_CostWithout,#itemSpec_VendorBatch,#itemSpec_NetCost").val("");
             var pp = parseFloat(item.itbs_purchase_price);
-            $("#itemSpec_Price").val(isNaN(pp) ? "" : pp);
+            $("#itemSpec_Price").val(isNaN(pp) ? "" : specRoundTo(pp, 2));
             specRecalcFinal();
             itemSpecCalc();
         }
@@ -780,15 +830,17 @@ function fillItemSpecUom(uom_type) {
             var costQty = itemSpecNum("#itemSpec_Qty") || qty;
             $("#itemSpec_NetCost").val(costQty > 0 ? ((net + itemSpecNum("#itemSpec_CostWithout")) / costQty).toFixed(2) : "");
         }
-        $(document).on("input", ".itemspec-decimal", function () {
+        $(document).on("input", ".itemspec-decimal, .itemspec-amount", function () {
+            var dp = $(this).hasClass("itemspec-amount") ? 2 : 3;
             var v = this.value.replace(/[^0-9.]/g, "");
             var p = v.indexOf(".");
-            if (p >= 0) v = v.substring(0, p + 1) + v.substring(p + 1).replace(/\./g, "").substring(0, 3);
+            if (p >= 0) v = v.substring(0, p + 1) + v.substring(p + 1).replace(/\./g, "").substring(0, dp);
             this.value = v;
         });
         $(document).on("input", ".itemspec-calc", itemSpecCalc);
         $(document).on("input", "#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width", function () { specRecalcFinal(); itemSpecCalc(); });
         $(document).on("change", "#itemSpec_Uom", function () { specRecalcFinal(); itemSpecCalc(); });
+        $(document).on("change", "#warehousediv", function () { $(this).attr("title", $.trim($(this).find("option:selected").text())); });
 
         function AddNewRaw(html) {
             $('#TrSum').before(html);
@@ -1127,58 +1179,19 @@ function fillItemSpecUom(uom_type) {
             var grand_tax_exclude_amt = 0.00;
             var start_row = rowCount - 3; //For Identify Start RowId
 
+            var cellOf = function (r, c) { return $('#tblPurchaseItems tr:eq(' + r + ') td:eq(' + c + ')'); };
+            var cellVal = function (r, c) { var $c = cellOf(r, c); return $.trim($c.attr('data-value') || $c.text()); };
+            var cellNum = function (r, c) { var v = cellVal(r, c); return v == "" ? 0.00 : parseFloat(v); };
             for (var i = 1; i <= start_row; i++) {
 
-                unit_price = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(3)').attr('data-value') || $('#tblPurchaseItems tr:eq(' + i + ') td:eq(3)').text());
-                item_qty = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(2)').attr('data-value') || $('#tblPurchaseItems tr:eq(' + i + ') td:eq(2)').text());
-                purchase_amount = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(4)').text());
-                discnt_percent = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(5)').attr('data-value') || $('#tblPurchaseItems tr:eq(' + i + ') td:eq(5)').text());
-                discnt_amount = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(6)').text());
-                tax_exclude_amt = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(7)').text());
-                tax_amount = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(9)').attr('data-value') || $('#tblPurchaseItems tr:eq(' + i + ') td:eq(9)').text());
-                net_amount = $.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(10)').text());
-
-            
-                item_qty = parseInt($.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(2)').attr('data-value') || $('#tblPurchaseItems tr:eq(' + i + ') td:eq(2)').text()));
-                
-                if (purchase_amount == "") {
-                    purchase_amount = 0.00;
-                }
-                else {
-                    purchase_amount = parseFloat($.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(4)').text()));
-                }
-                if (discnt_percent == "") {
-                    discnt_percent = 0.00;
-                }
-                else {
-                    discnt_percent = parseFloat($.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(5)').attr('data-value') || $('#tblPurchaseItems tr:eq(' + i + ') td:eq(5)').text()));
-                }
-                if (discnt_amount == "") {
-                    discnt_amount = 0.00;
-                }
-                else {
-                    discnt_amount = parseFloat($.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(6)').text()));
-
-                }
-                if (tax_exclude_amt == "") {
-                    tax_exclude_amt = 0.00;
-                }
-                else {
-                    tax_exclude_amt = parseFloat($.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(7)').text()));
-
-                }
-                if (net_amount == "") {
-                    net_amount = 0.00;
-                }
-                else {
-                    net_amount = parseFloat($.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(10)').text()));
-                }
-                if (tax_amount == "") {
-                    tax_amount = 0.00;
-                }
-                else {
-                    tax_amount = parseFloat($.trim($('#tblPurchaseItems tr:eq(' + i + ') td:eq(9)').attr('data-value') || $('#tblPurchaseItems tr:eq(' + i + ') td:eq(9)').text()));
-                }
+                unit_price = cellVal(i, 6);
+                item_qty = parseInt(cellVal(i, 4));
+                purchase_amount = cellNum(i, 7);
+                discnt_percent = cellNum(i, 8);
+                discnt_amount = cellNum(i, 9);
+                tax_exclude_amt = cellNum(i, 10);
+                tax_amount = cellNum(i, 12);
+                net_amount = cellNum(i, 13);
 
                 purchase_amount = unit_price * item_qty;
                 total_service_cost += +purchase_amount;
@@ -1207,13 +1220,13 @@ function fillItemSpecUom(uom_type) {
             var total_rowid = rowCount - 2;                                                                 //For Identify Total Rowid
             var grand_total_rowid = rowCount - 1;                                                           //For Identify Grand Total Rowid
 
-            $('#tblPurchaseItems tr:eq(' + total_rowid + ') td:eq(4)').text(grand_total.toFixed(2));
+            $('#tblPurchaseItems tr:eq(' + total_rowid + ') td:eq(7)').text(grand_total.toFixed(2));
 
-            $('#tblPurchaseItems tr:eq(' + total_rowid + ') td:eq(5)').text(grand_distcnt_perc.toFixed(2));    //Total Discount Percentage
-            $('#tblPurchaseItems tr:eq(' + total_rowid + ') td:eq(6)').text(grand_distcnt_amount.toFixed(2));
-            $('#tblPurchaseItems tr:eq(' + total_rowid + ') td:eq(7)').text(grand_tax_exclude_amt.toFixed(2));//Total Discount Amount
-            $('#tblPurchaseItems tr:eq(' + total_rowid + ') td:eq(9)').text(grand_tax_amt.toFixed(2));//total tax amt
-            $('#tblPurchaseItems tr:eq(' + total_rowid + ') td:eq(10)').text(grand_netamount.toFixed(2));       //Total Net Amount
+            $('#tblPurchaseItems tr:eq(' + total_rowid + ') td:eq(8)').text(grand_distcnt_perc.toFixed(2));    //Total Discount Percentage
+            $('#tblPurchaseItems tr:eq(' + total_rowid + ') td:eq(9)').text(grand_distcnt_amount.toFixed(2));
+            $('#tblPurchaseItems tr:eq(' + total_rowid + ') td:eq(10)').text(grand_tax_exclude_amt.toFixed(2));//Total Discount Amount
+            $('#tblPurchaseItems tr:eq(' + total_rowid + ') td:eq(12)').text(grand_tax_amt.toFixed(2));//total tax amt
+            $('#tblPurchaseItems tr:eq(' + total_rowid + ') td:eq(13)').text(grand_netamount.toFixed(2));       //Total Net Amount
 
             $("#txtTotalGrossamount").text(grand_netamount.toFixed(2)); //Grand Total Amount
             $("#txtPosPaidAmount").val(0.00);                       //Paid Amount
@@ -1700,7 +1713,7 @@ function fillItemSpecUom(uom_type) {
                 var cell = function (idx) {
                     return $tr.find("td:eq(" + idx + ")").attr("data-value") || $.trim($tr.find("td:eq(" + idx + ")").text());
                 };
-                var qty = num(cell(2));
+                var qty = num(cell(4));
                 var cost = num(d.NetCost);
                 var uom = num(d.uom);
               var defaultUom = num(d.defUomId);
@@ -1715,11 +1728,11 @@ function fillItemSpecUom(uom_type) {
                     itm_id: num(d.itm_id),
                     itm_code: txt($tr.find("td:eq(0)").text()),
                     itm_name: txt($tr.find("td:eq(1)").text()),
-                    pi_org_price: num(cell(3)),
-                    pi_price: num(cell(3)),
+                    pi_org_price: num(cell(6)),
+                    pi_price: num(cell(6)),
                     pi_qty: qty,
-                    pi_discount_rate: num(cell(5)),
-                    pi_item_tax: num(cell(8)),
+                    pi_discount_rate: num(cell(8)),
+                    pi_item_tax: num(cell(11)),
                     pi_item_cess: num(d.cess),
                     pi_carton_count: null,
                     pi_item_per_carton: null,
@@ -2052,12 +2065,12 @@ function fillItemSpecUom(uom_type) {
             <div class="right_col" role="main">
                 <div class="clearfix"></div>
                 <div class="row">
-                    <div class="col-md-6 col-sm-12 col-xs-12">
+                    <div class="col-md-12 col-sm-12 col-xs-12">
                         <div class="x_panel">
-                            <div class="col-md-4 col-sm-6 col-xs-12">
+                            <div class="col-md-6 col-sm-12 col-xs-12 form-group">
                                 <label>Warehouse</label>
                                 <div id="showbranchdiv">
-                                    <select id="warehousediv" class="form-control" onchange="loadTaxes(-1);">
+                                    <select id="warehousediv" class="form-control" style="width: 100%; text-overflow: ellipsis;" onchange="loadTaxes(-1);">
                                         <option value="0" selected="selected" taxtype="-1">--Warehouse--</option>
                                         <option value="1" taxtype="0">Five star</option>
                                         <option value="2" taxtype="0">YANA SOLA</option>
@@ -2066,7 +2079,7 @@ function fillItemSpecUom(uom_type) {
                                 </div>
                             </div>
 
-                            <div class="col-md-4 col-sm-6 col-xs-6 form-group has-feedback">
+                            <div class="col-md-3 col-sm-6 col-xs-6 form-group has-feedback">
                                 <label>Date of Purchase</label>
                                 <input class="form-control has-feedback-left ui-autocomplete-input" placeholder="" id="txtpurchaseDate" style="padding-right: 10px;" />
                                 <span class="fa fa-calendar form-control-feedback left" aria-hidden="true"></span>
@@ -2074,12 +2087,35 @@ function fillItemSpecUom(uom_type) {
                                 <%--   <span id="txtpurchaseDate" style="font-size: 16px; font-weight: bold">07-Aug-2017</span>--%>
                             </div>
 
-                            <div class="col-md-4 col-sm-6 col-xs-12 form-group has-feedback">
+                            <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
                                 <label>Invoice Number</label>
                                 <input class="form-control ui-autocomplete-input" placeholder="Invoice Number" id="txtinvoiceId" style="padding-right: 20px;" />
                             </div>
+
+                            <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
+                                <label>Tax Method</label>
+                                <select class="form-control" style="text-indent: 25px;" id="selTaxType" onchange="javascript:checkBranch();">
+                                    <%--<option value="-1">Select</option>
+                                    <option value="0">NO TAX</option>
+                                    <option value="1">VAT</option>--%>
+                                    <option value="2" selected="selected">GST</option>
+                                </select>
+                                <span class="fa fa-file-text-o form-control-feedback left" aria-hidden="true"></span>
+                            </div>
+
+                            <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
+                                <label>Inclusive/Exclusive</label>
+                                <select class="form-control" style="text-indent: 25px;" id="selInclusive" onchange="javascript:checkBranch();">
+                                    <option value="-1">Select</option>
+                                    <option value="0">Exclusive</option>
+                                    <option value="1">Inclusive</option>
+                                </select>
+                                <span class="fa fa-file-text-o form-control-feedback left" aria-hidden="true"></span>
+                            </div>
                         </div>
                     </div>
+                </div>
+                <div class="row">
                     <div class="col-md-6 col-sm-12 col-xs-12">
                         <div class="x_panel">
                             <div class="col-md-11 col-sm-6 col-xs-12 form-group has-feedback" style="padding-right: 0px;" id="divVendorField">
@@ -2200,6 +2236,21 @@ function fillItemSpecUom(uom_type) {
                             <%-- end show popup for vendor --%>
                         </div>
                     </div>
+                    <div class="col-md-6 col-sm-12 col-xs-12">
+                        <div class="x_panel">
+                            <label>Search Item</label>
+                            <div class="col-md-11 col-sm-6 col-xs-8" style="padding-left: 0px;">
+                                <input class="form-control has-feedback-left" placeholder="Search Item" id="itemNames" autocomplete="off" type="search" />
+                                <span class="fa fa-search form-control-feedback left" aria-hidden="true"></span>
+                            </div>
+                            <div class="col-md-1 col-sm-12 col-xs-4" style="padding-right: 0px;" onclick="javascript:resetItemlist();">
+                                <div class="pull-right" style="font-size: 25px; margin-right: 10px" title="Search Items" data-toggle="modal">
+                                    <label class="fa fa-shopping-cart" style="color: #ff6a00; cursor: pointer;"></label>
+                                    <label class="fa fa-search" style="font-size: 16px; cursor: pointer; position: relative; margin-left: -12px;"></label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
 
@@ -2239,53 +2290,6 @@ function fillItemSpecUom(uom_type) {
 
                 <div class="clearfix"></div>
 
-                <div class="row">
-                    <div class="col-md-6 col-sm-12 col-xs-12">
-                        <div class="x_panel">
-                      <div class="col-md-6 col-sm-6 col-xs-12 form-group has-feedback">
-                                                <label>Tax Method</label>
-                                                <select class="form-control" style="text-indent: 25px;" id="selTaxType" onchange="javascript:checkBranch();">
-                                                    <option value="-1">Select</option>
-                                                    <option value="0">NO TAX</option>
-                                                    <option value="1">VAT</option>
-                                                    <option value="2">GST</option>
-                                                </select>
-                                                <span class="fa fa-file-text-o form-control-feedback left" aria-hidden="true"></span>
-                                            </div>
-
-                       <div class="col-md-6 col-sm-6 col-xs-12 form-group has-feedback">
-                                                <label>Inclusive/Exclusive</label>
-                                                <select class="form-control" style="text-indent: 25px;" id="selInclusive" onchange="javascript:checkBranch();">
-                                                    <option value="-1">Select</option>
-                                                    <option value="0">Exclusive</option>
-                                                    <option value="1">Inclusive</option>
-                                                </select>
-                                                <span class="fa fa-file-text-o form-control-feedback left" aria-hidden="true"></span>
-                                            </div>
-
-                 
-                        </div>
-                    </div>
-
-                    <div class="col-md-6 col-sm-12 col-xs-12">
-    <div class="x_panel">
-  <label>Search Item</label>
-                                                <div class="col-md-11 col-sm-6 col-xs-8" style="display: ;">
-    <input class="form-control has-feedback-left" placeholder="Search Item" id="itemNames" autocomplete="off" type="search" />
-    <span class="fa fa-search form-control-feedback left" aria-hidden="true"></span>
-</div>
-<div class="col-md-1 col-sm-12 col-xs-4" style="padding-right: 0px;" onclick="javascript:resetItemlist();">
-    <div class="pull-right" style="font-size: 25px; margin-right: 10px" title="Search Items" data-toggle="modal">
-        <label class="fa fa-shopping-cart" style="color: #ff6a00; cursor: pointer;"></label>
-        <label class="fa fa-search" style="font-size: 16px; cursor: pointer; position: relative; margin-left: -12px;"></label>
-    </div>
-
-</div>
-                 
-    </div>
-</div>
-                    
-                </div>
                 <div class="clearfix"></div>
 
                                                                                             <div id="itemSpecDiv">
@@ -2318,8 +2322,8 @@ function fillItemSpecUom(uom_type) {
             </div>
             <div class="row">
                 
-                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_Price">Purchase Price</label><input type="text" class="form-control itemspec-decimal itemspec-calc" id="itemSpec_Price" /></div>
-                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_Discount">Discount (%)</label><input type="number" class="form-control itemspec-decimal itemspec-calc" id="itemSpec_Discount" /></div>
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_Price">Purchase Price</label><input type="text" class="form-control itemspec-amount itemspec-calc" id="itemSpec_Price" /></div>
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_Discount">Discount (%)</label><input type="number" class="form-control itemspec-amount itemspec-calc" id="itemSpec_Discount" /></div>
                 <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_DiscountAmt">Discount Amount</label><input type="text" class="form-control" id="itemSpec_DiscountAmt" readonly="readonly" /></div>
                 <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_Taxable">Taxable Value</label><input type="text" class="form-control" id="itemSpec_Taxable" readonly="readonly" /></div>
                 <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label>Tax Amount</label><input type="text" class="form-control" id="itemSpec_TaxAmount" readonly="readonly" /></div>
@@ -2330,8 +2334,8 @@ function fillItemSpecUom(uom_type) {
                 <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_VendorBatch">Supplier Batch No.</label><input type="text" class="form-control" id="itemSpec_VendorBatch" maxlength="50" /></div>
                 <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label>System Batch No.</label><input type="text" class="form-control" id="itemSpec_SyatemBatchNo" readonly="readonly" /></div>
            
-                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_CostWith">Cost With Invoice / Unit</label><input type="text" class="form-control itemspec-decimal itemspec-calc" id="itemSpec_CostWith" /></div>
-                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_CostWithout">Cost Without Invoice</label><input type="text" class="form-control itemspec-decimal itemspec-calc" id="itemSpec_CostWithout" /></div>
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_CostWith">Cost With Invoice / Unit</label><input type="text" class="form-control itemspec-amount itemspec-calc" id="itemSpec_CostWith" /></div>
+                <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_CostWithout">Cost Without Invoice</label><input type="text" class="form-control itemspec-amount itemspec-calc" id="itemSpec_CostWithout" /></div>
                 <div class="col-md-2 col-sm-6 col-xs-12 form-group"><label for="itemSpec_NetCost">Net Purchase Cost</label><input type="text" class="form-control" id="itemSpec_NetCost" readonly="readonly" /></div>
                 <div id="specButtons" class="col-md-2 col-xs-12 form-group" style="white-space:nowrap;">
                     <br />
@@ -2572,7 +2576,10 @@ function fillItemSpecUom(uom_type) {
                                                 <tr>
                                                     <td>Item Code</td>
                                                     <td style="width: 300px;">Name</td>
-                                                    <td>Qty</td>
+                                                    <td>Input Qty</td>
+                                                    <td>Input UOM</td>
+                                                    <td>Purchase Qty</td>
+                                                    <td>Purchase UOM</td>
                                                     <td>Unit Price</td>
                                                     
                                                     <td>Amount</td>
@@ -2582,10 +2589,12 @@ function fillItemSpecUom(uom_type) {
                                                     <td>Tax %</td>
                                                     <td>Tax Amount</td>
                                                     <td>Net Amount</td>
-                                                    <td>UOM</td>
                                                     <td></td>
                                                 </tr>
                                                 <tr id="TrSum">
+                                                    <td style="border-right: none;"></td>
+                                                    <td style="border-right: none;"></td>
+                                                    <td style="border-right: none;"></td>
                                                     <td style="border-right: none;"></td>
                                                     <td style="border-right: none;"></td>
                                                     <td style="border-right: none;"></td>
@@ -2598,19 +2607,20 @@ function fillItemSpecUom(uom_type) {
                                                     <td id="txtTotalTaxamt"></td>
                                                     <td id="txtTotalNetAmount"></td>
                                                     <td></td>
-                                                    <td></td>
                                                 </tr>
                                                 <tr>
                                                     <td colspan="6"></td>
                                                     <td></td>
                                                     <td></td>
+                                                    <td></td>
+                                                    <td></td>
 
+                                                    <td></td>
                                                     <td></td>
                                                     <td></td>
                                                     <td>
                                                         <label id="txtTotalGrossamount"></label>
                                                     </td>                                                    
-                                                    <td></td>
                                                     <td></td>
 
                                                 </tr>
@@ -2734,7 +2744,7 @@ function fillItemSpecUom(uom_type) {
                             <div class="clearfix"></div>
                         </div>
 
-                        <div class="col-md-3 col-sm-6 col-xs-12" style="padding-left: 0px; padding-right: 0px">
+                        <div class="col-md-6 col-sm-6 col-xs-12" style="padding-left: 0px; padding-right: 0px">
 
                             <div class="col-md-8 col-sm-6 col-xs-12"><b>Special Notes</b> </div>
                             <div class="clearfix"></div>
@@ -2744,12 +2754,13 @@ function fillItemSpecUom(uom_type) {
                             </div>
                             <div class="clearfix"></div>
 
-                            <div class="col-md-3 col-sm-3 col-xs-3" style="margin-top: 10px;" id="divsaveorder" onclick="javascript:savePurchaseEntry();">
-                                <button class="btn btn-primary mybtnstyl" type="button">Save</button>
-                            </div>
-
-                            <div class="col-md-3 col-sm-3 col-xs-6" style="margin-top: 10px; margin-left: 0px; display: none" id="divprintorder" onclick="javascript:saveAndPrintPurchase(true);">
-                                <button class="btn btn-primary mybtnstyl" type="button">Save &amp; Print</button>
+                            <div class="col-md-12 col-sm-12 col-xs-12" style="text-align: right; margin-top: 10px;">
+                                <span id="divsaveorder" style="display: inline-block;" onclick="javascript:savePurchaseEntry();">
+                                    <button class="btn btn-primary" type="button" style="min-width: 200px; font-size: 16px; font-weight: bold;">Save Purchase</button>
+                                </span>
+                                <span id="divprintorder" style="display: none; margin-left: 10px;" onclick="javascript:saveAndPrintPurchase(true);">
+                                    <button class="btn btn-primary" type="button">Save &amp; Print</button>
+                                </span>
                             </div>
                             <div class="clearfix"></div>
 

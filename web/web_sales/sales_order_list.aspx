@@ -151,7 +151,7 @@
                         htm += '<td style="text-align:center"><label class="fa fa-calendar myicons"></label><span class="myorderSData">' + esc(row.orderDate) + '</span></td>';
                         htm += '<td style="text-align:center"><span class="status ' + st[1] + '">' + st[0] + '</span></td>';
                         htm += '<td style="text-align:center"><b>' + money(row.net_amount) + '</b></td>';
-                        htm += '<td style="text-align:center"><a href="view_sales_order.aspx?smoId=' + encodeURIComponent(row.smo_id) + '" target="_blank" class="btn btn-primary btn-xs" title="View"><li class="fa fa-eye" style="font-size:large;"></li></a></td>';
+                        htm += '<td style="text-align:center"><a href="view_sales_order.aspx?smoId=' + encodeURIComponent(row.smo_id) + '" class="btn btn-primary btn-xs" title="View"><li class="fa fa-eye" style="font-size:large;"></li></a></td>';
                         htm += '</tr>';
                     });
                     $('#tblOrders > tbody').html(htm);
@@ -209,7 +209,7 @@
                                     <label style="font-weight: bold; font-size: 16px;">Sales Orders</label>
                                 </div>
                                 <div class="col-md-6 col-xs-5">
-                                    <a href="new_sales_order.aspx" target="_blank">
+                                    <a href="new_sales_order.aspx">
                                         <div class="btn btn-primary btn-xs pull-right" style="margin-top: 5px"><label style="color: #fff; margin-right: 5px; font-size: 14px;" class="fa fa-plus-square"></label>New Sales Order</div>
                                     </a>
                                 </div>

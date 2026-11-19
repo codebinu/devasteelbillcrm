@@ -31,7 +31,7 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
         string selectvar2 = "";
         string qry = "";
         selectvar2 = selectvar2 + " row_no, ibs.itm_code,";
-        selectvar2 = selectvar2 + " ibs.itm_name,pi.itbs_id as itbs_id,ibs.itm_id, pi_qty, pi_price,pi_total, pi_discount_rate, pi_discount_amount, pi_net_amount,pi_tax_amount,pi_id,pi_tax_excluded_total,pi_item_tax,pi_item_cess, tp.tp_tax_title, IFNULL(im.itsv_uom_purchase,0) as itsv_uom_purchase,ib.itbh_no_piece,ib.itbh_length,ib.itbh_width,ib.itbh_kg,ib.tum_id ";
+        selectvar2 = selectvar2 + " ibs.itm_name,pi.itbs_id as itbs_id,ibs.itm_id, pi_qty, pi_price,pi_total, pi_discount_rate, pi_discount_amount, pi_net_amount,pi_tax_amount,pi_id,pi_tax_excluded_total,pi_item_tax,pi_item_cess, tp.tp_tax_title, IFNULL(im.itsv_uom_purchase,0) as itsv_uom_purchase,ib.itbh_no_piece,ib.itbh_length,ib.itbh_width,ib.itbh_kg,ib.tum_id,ib.itbh_no,ib.itbh_custbatchid,ib.itbh_cost,ib.itbh_costwithinvoice,ib.itbh_costwithoutinvoice ";
         qry = "select " + selectvar2 + " from tbl_purchase_items pi inner join tbl_itembranch_stock ibs on ibs.itbs_id=pi.itbs_id left join tbl_item_master im on im.itm_id=ibs.itm_id INNER JOIN tbl_item_batch ib ON ib.itbh_id=pi.itbh_id left join tbl_tax_profile tp on tp.tp_tax_code=ibs.tp_tax_code where pm_id='" + purchaseId + "' order by row_no";
         dtItems = db.SelectQuery(qry);
         sb.Append("\"items\":");
@@ -102,14 +102,14 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
             string itemsJson = JsonConvert.SerializeObject(request.purchase_items, settings);
 
             using (MySqlConnection con = new MySqlConnection(System.Configuration.ConfigurationManager.AppSettings["db_connect_mysql"]))
-            using (MySqlCommand cmd = new MySqlCommand("sp_save_purchase_entry", con))
+            using (MySqlCommand cmd = new MySqlCommand("`sp_save_purchase_entry1.0`", con))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 con.Open();
                 List<string> spParams = new List<string>();
                 using (MySqlCommand pcmd = new MySqlCommand("select parameter_name from information_schema.parameters where specific_schema=database() and specific_name=@spname and parameter_name is not null order by ordinal_position", con))
                 {
-                    pcmd.Parameters.AddWithValue("@spname", "sp_save_purchase_entry");
+                    pcmd.Parameters.AddWithValue("@spname", "sp_save_purchase_entry1.0");
                     using (MySqlDataReader rd = pcmd.ExecuteReader())
                     {
                         while (rd.Read())
@@ -118,7 +118,7 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
                 }
 
                 if (spParams.Count != 5)
-                    throw new InvalidOperationException("sp_save_purchase_entry expected 5 parameters but found " + spParams.Count);
+                    throw new InvalidOperationException("sp_save_purchase_entry1.0 expected 5 parameters but found " + spParams.Count);
 
                 cmd.Parameters.Add(new MySqlParameter(spParams[0], MySqlDbType.JSON) { Value = filtersJson });
                 cmd.Parameters.Add(new MySqlParameter(spParams[1], MySqlDbType.JSON) { Value = itemsJson });
