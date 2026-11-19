@@ -103,7 +103,7 @@ public partial class web_purchase_listPurchaseEntries : System.Web.UI.Page
 
             // innerqry = "SELECT *, ROW_NUMBER() OVER (order by BillDate Desc) as row FROM billheader " + searchResult;
             innerqry = "select pm_id,pm_netamount as net_amount,pm_invoice_no,pm_status"
-                + ",DATE_FORMAT(pm_date,'%d-%b-%Y') AS purchaseDate,sum(cr)-sum(dr) as pm_total_balance"
+                + ",IF(TIME(pm_date)='00:00:00',DATE_FORMAT(pm_date,'%d-%b-%Y'),DATE_FORMAT(pm_date,'%d-%b-%Y %h:%i %p')) AS purchaseDate,sum(cr)-sum(dr) as pm_total_balance"
                 + ",vn_name as vendor_name, concat(tu.first_name,' ',tu.last_name) as user_name"
                 + " from tbl_purchase_master tp "
                 + " inner join tbl_vendor tv on tv.vn_id=tp.vn_id inner join tbl_user_details tu on tu.user_id=tp.pm_userid inner join tbl_transactions tr on (tr.action_ref_id=tp.pm_id and tr.action_type=" + (int)Constants.ActionType.PURCHASE + ") " + query_condition + "";

@@ -1,4 +1,4 @@
-<%@ Page Language="C#" AutoEventWireup="true" CodeFile="purchaseentry.aspx.cs" Inherits="web_purchase_purchaseentry" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="purchaseentry.aspx.cs" Inherits="web_purchase_purchaseentry" %>
 
 <!DOCTYPE html>
 
@@ -502,7 +502,6 @@ function fillItemSpecUom(uom_type) {
         //function for select vendor
         function selectVendor() {
             $("#divVendorField").hide();
-            $("#divVendorIcon").hide();
             $("#btnAddvendor").hide();
             loading();
 
@@ -841,6 +840,28 @@ function fillItemSpecUom(uom_type) {
         $(document).on("input", "#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width", function () { specRecalcFinal(); itemSpecCalc(); });
         $(document).on("change", "#itemSpec_Uom", function () { specRecalcFinal(); itemSpecCalc(); });
         $(document).on("change", "#warehousediv", function () { $(this).attr("title", $.trim($(this).find("option:selected").text())); });
+        // Default purchase date follows the selected warehouse's branch time zone (not the browser clock); a date the user picked is left alone.
+        var autoPurchaseDate = null;
+        $(document).on("change", "#warehousediv", function () {
+            var branchId = $(this).val();
+            if (!branchId || branchId == "0") return;
+            $.ajax({
+                type: "POST",
+                url: "purchaseentry.aspx/getBranchDate",
+                data: JSON.stringify({ branchId: branchId }),
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (msg) {
+                    var d = msg.d;
+                    if (!d) return;
+                    var cur = $("#txtpurchaseDate").val();
+                    if (cur === autoPurchaseDate || cur === cur_dat) {
+                        $("#txtpurchaseDate").val(d);
+                        autoPurchaseDate = d;
+                    }
+                }
+            });
+        });
 
         function AddNewRaw(html) {
             $('#TrSum').before(html);
@@ -1899,7 +1920,6 @@ function fillItemSpecUom(uom_type) {
             $("#btnAddvendor").show();
             $("#txtvendorId").text("");
             $("#divVendorField").show();
-            $("#divVendorIcon").show();
         }
 
         function showAddItemPopUp(itemId, Name) {
@@ -2118,15 +2138,13 @@ function fillItemSpecUom(uom_type) {
                 <div class="row">
                     <div class="col-md-6 col-sm-12 col-xs-12">
                         <div class="x_panel">
-                            <div class="col-md-11 col-sm-6 col-xs-12 form-group has-feedback" style="padding-right: 0px;" id="divVendorField">
-                                <label>Supplier</label>
-                                <input class="form-control has-feedback-left" placeholder="Search Supplier" id="vendorNames" style="padding-right: 10px;" />
-                                <span class="fa fa-search form-control-feedback left" aria-hidden="true"></span>
-                            </div>
-                            <div class="col-md-1" style="padding-right: 0px; padding-top: 25px;" title="search supplier" onclick="searchVendors(1)" id="divVendorIcon">
-                                <div class="pull-right" style="font-size: 25px; margin-right: 10px;">
-                                    <label class="fa fa-user" style="color: #ff6a00; cursor: pointer;"></label>
-                                    <label class="fa fa-search" style="font-size: 16px; cursor: pointer; position: relative; margin-left: -12px;"></label>
+                            <div id="divVendorField">
+                                <label style="margin-bottom: 5px;">Supplier</label>
+                                <div class="input-group" style="display: flex; align-items: stretch; width: 100%;">
+                                    <input type="text" class="form-control" style="flex: 1 1 auto; min-width: 0;" placeholder="Search Supplier" id="vendorNames" autocomplete="off" />
+                                    <span class="input-group-btn" style="display: flex; width: auto;">
+                                        <button type="button" class="btn" title="Search Suppliers" onclick="searchVendors(1)" style="background: #fff; border: 1px solid #ccc; color: #0e9cff; padding: 0 16px; margin-left: -1px; border-radius: 0 3px 3px 0;"><i class="fa fa-search" style="font-size: 15px;"></i></button>
+                                    </span>
                                 </div>
                             </div>
                             <div id="divVendorDetails" style="display: none; border-left: 1px solid #bebebe; border-right: 1px solid #bebebe;">
@@ -2238,16 +2256,12 @@ function fillItemSpecUom(uom_type) {
                     </div>
                     <div class="col-md-6 col-sm-12 col-xs-12">
                         <div class="x_panel">
-                            <label>Search Item</label>
-                            <div class="col-md-11 col-sm-6 col-xs-8" style="padding-left: 0px;">
-                                <input class="form-control has-feedback-left" placeholder="Search Item" id="itemNames" autocomplete="off" type="search" />
-                                <span class="fa fa-search form-control-feedback left" aria-hidden="true"></span>
-                            </div>
-                            <div class="col-md-1 col-sm-12 col-xs-4" style="padding-right: 0px;" onclick="javascript:resetItemlist();">
-                                <div class="pull-right" style="font-size: 25px; margin-right: 10px" title="Search Items" data-toggle="modal">
-                                    <label class="fa fa-shopping-cart" style="color: #ff6a00; cursor: pointer;"></label>
-                                    <label class="fa fa-search" style="font-size: 16px; cursor: pointer; position: relative; margin-left: -12px;"></label>
-                                </div>
+                            <label style="margin-bottom: 5px;">Search Item</label>
+                            <div class="input-group" style="display: flex; align-items: stretch; width: 100%;">
+                                <input type="text" class="form-control" style="flex: 1 1 auto; min-width: 0;" placeholder="Search Item" id="itemNames" autocomplete="off" />
+                                <span class="input-group-btn" style="display: flex; width: auto;">
+                                    <button type="button" class="btn" title="Search Items" onclick="javascript:resetItemlist();" style="background: #fff; border: 1px solid #ccc; color: #0e9cff; padding: 0 16px; margin-left: -1px; border-radius: 0 3px 3px 0;"><i class="fa fa-search" style="font-size: 15px;"></i></button>
+                                </span>
                             </div>
                         </div>
                     </div>

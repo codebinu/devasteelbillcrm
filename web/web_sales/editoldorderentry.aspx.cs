@@ -73,7 +73,7 @@ public partial class web_sales_editoldorderentry : System.Web.UI.Page
 			try
 			{
 
-				string edit_time = Get_Current_Date_Time(editedorder["time_zone"]);
+				string edit_time = BranchClock.NowForSale(db, editedorder["sm_id"]).ToString("yyyy-MM-dd HH:mm:ss");
 
 				db.BeginTransaction();
 
@@ -104,8 +104,7 @@ public partial class web_sales_editoldorderentry : System.Web.UI.Page
 				string update_sl_items_qry = "UPDATE tbl_sales_items SET itm_name='" + oldinvoiceid + "',si_org_price='" + editedorder["sm_netamount"] + "',si_price='" + editedorder["sm_netamount"] + "',si_total='" + editedorder["sm_netamount"] + "',si_net_amount='" + editedorder["sm_netamount"] + "' WHERE sm_id='" + editedorder["sm_id"] + "'";
 				db.ExecuteQueryForTransaction(update_sl_items_qry);
 
-				string edited_date = Get_Current_Date_Time(editedorder["time_zone"]);
-				//start updation in transactions
+				string edited_date = BranchClock.NowForSaleInTransaction(db, editedorder["sm_id"]).ToString("yyyy-MM-dd HH:mm:ss");
 				if (sm_netamount > old_netamount)
 				{
 					//inserting order debit entry

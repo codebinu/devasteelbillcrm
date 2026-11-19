@@ -215,8 +215,8 @@ public static partial class SalesOrderStock
                     itemName = l.Name,
                     itemCode = l.Code,
                     uom = convertible ? uom : "(UOM unverified)",
-                    orderQty = convertible ? R4(c.Ordered) : 0m,
-                    produced = R4(produced),
+                    orderQty = convertible ? R6(c.Ordered) : 0m,
+                    produced = R6(produced),
                     reserved = R4(reserved),
                     linePending = convertible ? R4(c.Needs) : 0m,
                     batchNo = j.BatchNo,
@@ -276,9 +276,9 @@ public static partial class SalesOrderStock
                     result.lines.Add(lr);
                     continue;
                 }
-                lr.orderQty = R4(c.Ordered);
-                lr.produced = R4(produced);
-                lr.pending = R4(c.Needs);
+                lr.orderQty = R6(c.Ordered);
+                lr.produced = R6(produced);
+                lr.pending = R6(c.Needs);
                 lr.required = R4(Math.Min(produced, c.Ordered) + c.Needs);
                 lr.reserved = R4(c.This);
                 if (produced > c.Ordered + Tolerance) { lr.status = "Over-produced"; lr.statusClass = "label-danger"; }
@@ -357,8 +357,8 @@ public static partial class SalesOrderStock
             d.itemCode = l.Code;
             d.uom = c.UomName;
             d.branch = j.BranchName;
-            d.orderQty = R4(c.Ordered);
-            d.produced = R4(j.OutQty * f.Value);
+            d.orderQty = R6(c.Ordered);
+            d.produced = R6(j.OutQty * f.Value);
             d.reserved = R4(res.Where(r => r.SioId == j.SioId).Sum(r => r.Qty) * f.Value);
             d.unreserved = R4(Math.Max(0m, j.BatchQty - res.Sum(r => r.Qty)) * f.Value);
             d.batchNo = j.BatchNo;
@@ -625,7 +625,7 @@ public static partial class SalesOrderStock
     // records are deleted. Refused once any finished stock has been invoiced or used, or reserved by another order.
     public static StockActionResult UndoProduction(int smoId, int branchId, int staffId, int itpmId)
     {
-        return Run(delegate(mySqlConnection db, DateTime now)
+        return Run(smoId, delegate(mySqlConnection db, DateTime now)
         {
             RequireOpenLocked(db, smoId);
             JobRaw j = ReadJobs(db, smoId, branchId, itpmId).FirstOrDefault();
@@ -700,7 +700,7 @@ public static partial class SalesOrderStock
         bool started = false;
         try
         {
-            DateTime now = Now(db);
+            DateTime now = BranchClock.NowForSalesOrder(db, smoId);
             db.BeginTransaction();
             started = true;
             var jp = new MySqlParameter[] { new MySqlParameter("@j", itpmId) };

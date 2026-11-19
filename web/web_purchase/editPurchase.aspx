@@ -346,6 +346,7 @@
                     $("#txtVendorName").text(entry_details.vn_name);
                     $("#txtVendorId").text(entry_details.vn_id);
                     $("#txtEntryDate").val(entry_details.date);
+                    $("#lblEntryDateTime").text(entry_details.date_time ? "(" + entry_details.date_time + ")" : "");
                     roundOffValue=entry_details.roundOff;
                     $("#lblRoundOff").text(roundOffValue);
                     branchId=entry_details.branch_id;
@@ -1897,6 +1898,12 @@
         .modal {
             overflow: auto !important;
         }
+        .bd-caption { font-size: 11px; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: #73879c; margin-bottom: 4px; }
+        .bd-value { min-height: 34px; line-height: 34px; padding: 0 10px; background: #f7f9fb; border: 1px solid #e6e9ed; border-radius: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .bd-tax { clear: both; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; border-top: 1px solid #e6e9ed; padding-top: 10px; margin-top: 4px; }
+        .bd-tax-title { font-weight: 600; color: #2a3f54; }
+        .bd-chip { background: #eaf3fc; color: #5a6b7b; border-radius: 12px; padding: 3px 12px; font-size: 12px; }
+        .bd-chip b { color: #2967b5; margin-left: 4px; font-size: 13px; }
     </style>
 </head>
 
@@ -2017,46 +2024,40 @@
             </div>
         </div>--%>
                                  
-                                          <div style="text-align:center">
-                                        <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
-                                    <input type="text" class="form-control has-feedback-left ui-autocomplete-input" id="txtEntryRefNo"  autocomplete="off" style="font-weight:bold;font-size:18px">
-                                    <span class="form-control-feedback left" aria-hidden="true" style="background-color: #e9ecef;color:#495057;text-align: center;line-height: 1.5;"></span>
-                                </div>
-                                              </div>
+                                        <div class="col-md-3 col-sm-6 col-xs-12 form-group">
+                                            <div class="bd-caption">Invoice No</div>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i class="fa fa-file-text-o"></i></span>
+                                                <input type="text" class="form-control" id="txtEntryRefNo" autocomplete="off" placeholder="Invoice No" style="font-weight: bold; font-size: 16px;">
+                                            </div>
+                                        </div>
 
                                        <%--     <input type="text" class="col-md-12 col-sm-12 col-xs-12 form-control form-control-sm" id="" style="font-size: 15px"/>--%>
                                        
 
-                                       <div style="text-align:center;line-height: 2.5;" >
-                                        <div class="col-sm-2 invoice-col" >
-
-                                          
-                                                
-                                            <input type="text" class="form-control has-feedback-left" style="background-color:#fff" id="txtEntryDate" placeholder="From Date" readonly=""/>
-                                        <span class="fa fa-calendar form-control-feedback left" aria-hidden="true"></span>
+                                        <div class="col-md-2 col-sm-6 col-xs-12 form-group">
+                                            <div class="bd-caption">Date <span id="lblEntryDateTime" style="text-transform: none; font-weight: 400;"></span></div>
+                                            <div class="input-group">
+                                                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                                <input type="text" class="form-control" style="background-color: #fff" id="txtEntryDate" placeholder="Date" readonly="" />
+                                            </div>
                                         </div>
-                                        <!-- /.col -->
 
-                                        <div class="col-sm-2 invoice-col">
-                                            <label id="txtVendorName">Istanbul Supermarket Ajman</label>
-                                            <label id="txtVendorId" style="display:none;"></label>
+                                        <div class="col-md-4 col-sm-6 col-xs-12 form-group">
+                                            <div class="bd-caption">Supplier</div>
+                                            <div class="bd-value"><i class="fa fa-user" style="color: #ff6a00; margin-right: 6px;"></i><span id="txtVendorName" style="font-weight: 600;"></span></div>
+                                            <label id="txtVendorId" style="display: none;"></label>
                                         </div>
-                                        <!-- /.col -->
-                                       
-                                         <div class="col-sm-2 invoice-col">
-                                            <label id="Label1">Balance:</label>
-                                            <label id="txtBalance" style=";">0</label>
-                                        </div>
-                                           </div>
 
-                                        <!-- /.col -->
+                                        <div class="col-md-3 col-sm-6 col-xs-12 form-group">
+                                            <div class="bd-caption">Supplier Balance</div>
+                                            <div class="bd-value" style="font-size: 18px; font-weight: 700;"><span id="txtBalance">0</span></div>
+                                        </div>
                                     </div>
-                                    <!-- /.row -->
-                                    <div class="clearfix"></div>
-                                    <div style="border-top: 1px solid #e6e9ed; padding-top: 6px; margin-top: 4px;">
-                                        <b>Tax Details:</b>
-                                        &nbsp;&nbsp;TAX METHOD: <label style="font-size:14px;color:#2967b5;margin:0;" id="lbltaxMethod"></label>
-                                        &nbsp;&nbsp;|&nbsp;&nbsp;INCLUSIVE/EXCLUSIVE: <label style="font-size:14px;color:#2967b5;margin:0;" id="lblTaxType"></label>
+                                    <div class="bd-tax">
+                                        <span class="bd-tax-title"><i class="fa fa-percent"></i> Tax Details</span>
+                                        <span class="bd-chip">Tax Method <b id="lbltaxMethod"></b></span>
+                                        <span class="bd-chip">Inclusive / Exclusive <b id="lblTaxType"></b></span>
                                     </div>
                                 </div>
                                 <div class="clear"></div>

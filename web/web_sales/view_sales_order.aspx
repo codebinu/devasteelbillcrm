@@ -180,6 +180,7 @@
                 return (Math.round((Number(value) || 0) * 1000) / 1000).toFixed(3);
             }
 
+
             function money(value) {
                 return (Number(value) || 0).toFixed(2);
             }

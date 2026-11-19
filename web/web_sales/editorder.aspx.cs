@@ -192,8 +192,7 @@ public partial class web_sales_editorder : System.Web.UI.Page
         List<string> itemNames = new List<string>();
         mySqlConnection db = new mySqlConnection();
         StringBuilder sb = new StringBuilder();
-        TimeZoneInfo CurrentZone = TimeZoneInfo.FindSystemTimeZoneById(TimeZone);
-        DateTime TimeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CurrentZone);
+        DateTime TimeNow = BranchClock.Now(db, BranchId);
         string currdatetime = TimeNow.ToString("yyyy-MM-dd");
         string sqlQuery = "select ofr_id,ofr_title from tbl_offer_master where ofr_title like '" + variable + "%' and branch_id='" + BranchId + "' and DATE_FORMAT(ofr_start_date,'%Y-%m-%d') <= '" + currdatetime + "' and DATE_FORMAT(ofr_end_date,'%Y-%m-%d') >= '" + currdatetime + "' and ofr_status=0";
         DataTable dt = db.SelectQuery(sqlQuery);
@@ -259,13 +258,12 @@ public partial class web_sales_editorder : System.Web.UI.Page
     [WebMethod]
     public static string updateOrderStatus(string userid, string ordid, string status, string TimeZone, string assignId, string sm_delivery_vehicle_id, string sm_vehicle_no, string ownVehicleUsed)
     {
-        TimeZoneInfo CurrentZone = TimeZoneInfo.FindSystemTimeZoneById(TimeZone);
-        DateTime TimeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CurrentZone);
-        string processDate = DateTime.Parse(TimeNow.ToString()).ToString("yyyy-MM-dd HH:mm:ss");
+        mySqlConnection db = new mySqlConnection();
+        DateTime TimeNow = BranchClock.NowForSale(db, ordid);
+        string processDate = TimeNow.ToString("yyyy-MM-dd HH:mm:ss");
         string ret = "";
         string insQry = "";
 
-        mySqlConnection db = new mySqlConnection();
         db.BeginTransaction();
 
         // check for already canceled
@@ -1159,9 +1157,8 @@ public partial class web_sales_editorder : System.Web.UI.Page
                 return "E";
             }
 
-            //getting date
-            TimeZoneInfo CurrentZone = TimeZoneInfo.FindSystemTimeZoneById(HttpUtility.UrlDecode(HttpContext.Current.Request.Cookies["invntryTimeZone"].Value));
-            DateTime TimeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CurrentZone);
+            //getting date from the invoice's branch time zone
+            DateTime TimeNow = BranchClock.NowForSaleInTransaction(db, Convert.ToString(billNo));
             string edited_date = TimeNow.ToString("yyyy/MM/dd HH:mm:ss");
             //get previous transaction details
             DataTable dt = db.SelectQueryForTransaction("select action_ref_id,sm_invoice_no,partner_id,cust_name,cust_amount,cash_amt,wallet_amt,cheque_amt,cr,sm.branch_id from tbl_transactions tr inner join tbl_sales_master sm on sm.sm_id=tr.action_ref_id and action_type=1 inner join tbl_customer tc on tc.cust_id=sm.cust_id where id='" + trans_id + "'");
@@ -1596,8 +1593,8 @@ WHERE cu.cust_id='" + cust_id + "'";
                 return result;
             }
 
-            var time_zone = db.SelectScalar("SELECT ss.ss_default_time_zone  FROM tbl_system_settings ss");
             var old_cust_id = db.SelectScalar("SELECT ss.cust_id FROM tbl_sales_master ss WHERE ss.sm_id='" + order_id + "'");
+            string cust_updated_date = BranchClock.NowForSale(db, Convert.ToString(order_id)).ToString("yyyy-MM-dd HH:mm:ss");
 
             if (old_cust_id == new_cust_id)
             {
@@ -1614,10 +1611,10 @@ WHERE cu.cust_id='" + cust_id + "'";
             db.ExecuteQueryForTransaction("UPDATE tbl_transactions tr SET tr.partner_id='"+ new_cust_id + "' WHERE tr.action_type='1' AND tr.action_ref_id='"+ order_id + "' ");
 
             //3. update new customer balance
-            db.ExecuteQueryForTransaction("UPDATE tbl_customer SET cust_last_updated_date='" + Get_Current_Date_Time(time_zone) + "',cust_amount=(select (sum(dr)-sum(cr)) from tbl_transactions  where partner_id='" + new_cust_id + "' and partner_type=" + (int)Constants.PartnerType.CUSTOMER + ") where cust_id=" + new_cust_id + "");
+            db.ExecuteQueryForTransaction("UPDATE tbl_customer SET cust_last_updated_date='" + cust_updated_date + "',cust_amount=(select (sum(dr)-sum(cr)) from tbl_transactions  where partner_id='" + new_cust_id + "' and partner_type=" + (int)Constants.PartnerType.CUSTOMER + ") where cust_id=" + new_cust_id + "");
 
             //4. update old customer balance
-            db.ExecuteQueryForTransaction("UPDATE tbl_customer SET cust_last_updated_date='" + Get_Current_Date_Time(time_zone) + "',cust_amount=(select (sum(dr)-sum(cr)) from tbl_transactions  where partner_id='" + old_cust_id + "' and partner_type=" + (int)Constants.PartnerType.CUSTOMER + ") where cust_id=" + old_cust_id + "");
+            db.ExecuteQueryForTransaction("UPDATE tbl_customer SET cust_last_updated_date='" + cust_updated_date + "',cust_amount=(select (sum(dr)-sum(cr)) from tbl_transactions  where partner_id='" + old_cust_id + "' and partner_type=" + (int)Constants.PartnerType.CUSTOMER + ") where cust_id=" + old_cust_id + "");
 
             db.CommitTransaction();
             result = "Y";

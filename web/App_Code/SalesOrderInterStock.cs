@@ -433,15 +433,10 @@ public static partial class SalesOrderStock
 
     static string Plain(decimal d) { return d.ToString("0.########", CultureInfo.InvariantCulture); }
 
-    static DateTime TransferNow(mySqlConnection db, string timeZone)
+    static DateTime TransferNow(TransferParty source)
     {
-        if (!string.IsNullOrEmpty(timeZone))
-        {
-            try { return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(timeZone)); }
-            catch (TimeZoneNotFoundException) { }
-            catch (InvalidTimeZoneException) { }
-        }
-        return Now(db);
+        try { return BranchClock.FromBranchTimeZone(source.TimeZone, source.BranchId); }
+        catch (InvalidOperationException ex) { throw new StockException(ex.Message); }
     }
 
     static void ValidateTransferRequest(InterStockRequest rq)
@@ -524,7 +519,7 @@ public static partial class SalesOrderStock
                 });
             }
 
-            DateTime now = TransferNow(db, source.TimeZone);
+            DateTime now = TransferNow(source);
             var filters = new JObject
             {
                 { "cust_id", target.CustId },

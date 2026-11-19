@@ -606,3 +606,22 @@ Source:commonfunction
 -------------------------------
 
 =======================================================================================
+
+=======================================================================================
+2026-11-19 19:09:31:0483
+-------------------------------
+StackTrace:   at commonfunction.mySqlConnection.BeginTransaction() in C:\Users\Vishn\Source\Repos\devasteelbillcrm\commonfunction\mySqlConnection.cs:line 260
+   at login.mainLogin(String username, String password) in c:\Users\Vishn\source\repos\devasteelbillcrm\web\login.aspx.cs:line 28
+
+-------------------------------
+Message:Authentication to host 'srv667.hstgr.io' for user 'u611891957_devademo' using method 'mysql_native_password' failed with message: Access denied for user 'u611891957_devademo'@'%' to database 'u611891957_deva'
+
+-------------------------------
+InnerException:
+
+-------------------------------
+Source:commonfunction
+
+-------------------------------
+
+=======================================================================================

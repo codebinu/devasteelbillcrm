@@ -164,12 +164,12 @@ public partial class web_sales_manageorders : System.Web.UI.Page
     {
         string result = "";
         mySqlConnection db = new mySqlConnection();
+        string order_sm_id = order["sm_id"];
         try
         {
+            DateTime TimeNow = BranchClock.NowForSale(db, order_sm_id);
             db.BeginTransaction();
-            TimeZoneInfo CurrentZone = TimeZoneInfo.FindSystemTimeZoneById(order["time_zone"]);
-            DateTime TimeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CurrentZone);
-            string action_date = DateTime.Parse(TimeNow.ToString()).ToString("yyyy-MM-dd HH:mm:ss");
+            string action_date = TimeNow.ToString("yyyy-MM-dd HH:mm:ss");
             //start check for refreshment page
             string checkEntryChanged = "select count(sm_id) from tbl_sales_master where sm_last_updated_date=DATE_FORMAT('" + order["lastUpdatedDate"] + "','%Y-%m-%d %H:%i:%s') and sm_id=" + order["sm_id"];
             int changeCount = Convert.ToInt32(db.SelectScalarForTransaction(checkEntryChanged));
@@ -702,10 +702,17 @@ public partial class web_sales_manageorders : System.Web.UI.Page
     public static string savePayment(Dictionary<string, string> filters)
     {
         string resultStatus = "N";
-        TimeZoneInfo CurrentZone = TimeZoneInfo.FindSystemTimeZoneById(filters["timezone"]);
-        DateTime TimeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CurrentZone);
-        string currdatetime = TimeNow.ToString("yyyy/MM/dd HH:mm:ss");
         mySqlConnection db = new mySqlConnection();
+        string currdatetime;
+        try
+        {
+            currdatetime = BranchClock.NowForSale(db, filters["OrderId"]).ToString("yyyy/MM/dd HH:mm:ss");
+        }
+        catch (Exception ex)
+        {
+            new LogClass("manageorders").write(ex);
+            return resultStatus;
+        }
         try
         {
             db.BeginTransaction();

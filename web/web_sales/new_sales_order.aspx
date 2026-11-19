@@ -117,6 +117,21 @@
             loadUom();
             bindCustomerSearch();
             bindItemSearch();
+            // Number inputs still accept e, +, - ; block them so only plain non-negative decimals can be typed.
+            $(document).on("keydown", ".so-num", function (e) {
+                if (e.key === "e" || e.key === "E" || e.key === "+" || e.key === "-") e.preventDefault();
+            });
+            $(document).on("paste", ".so-num", function (e) {
+                var t = (e.originalEvent.clipboardData || window.clipboardData).getData("text");
+                if (!/^\s*\d*\.?\d*\s*$/.test(t)) e.preventDefault();
+            });
+            $(document).on("wheel", ".so-num", function () { $(this).blur(); });
+            $(document).on("input", ".so-digits", function () { this.value = this.value.replace(/\D/g, ""); });
+            // Cap decimals: UOM quantities/sizes 3, amounts 2 (data-dec).
+            $(document).on("input", ".so-num[data-dec]", function () {
+                var d = parseInt($(this).data("dec"), 10), v = this.value, i = v.indexOf(".");
+                if (i >= 0 && v.length - i - 1 > d) this.value = v.substring(0, i + 1 + d);
+            });
             $(document).on("input", "#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width,#itemSpec_Price,#itemSpec_Discount", function () { specRecalc(); });
             $(document).on("change", "#itemSpec_Uom", function () { specRecalc(); });
             renderItems();
@@ -742,16 +757,16 @@
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-sm-3 col-xs-6 form-group"><label for="itemSpec_Qty">Quantity</label><input type="text" class="form-control" id="itemSpec_Qty" /></div>
+                                        <div class="col-sm-3 col-xs-6 form-group"><label for="itemSpec_Qty">Quantity</label><input type="number" class="form-control so-num" id="itemSpec_Qty" min="0" step="0.001" data-dec="3" inputmode="decimal" /></div>
                                         <div class="col-sm-3 col-xs-6 form-group"><label for="itemSpec_Uom">UOM</label><select class="form-control" id="itemSpec_Uom"><option value="-1">Select</option></select></div>
-                                        <div class="col-sm-3 col-xs-6 form-group"><label for="itemSpec_Length">Length</label><input type="text" class="form-control" id="itemSpec_Length" /></div>
-                                        <div class="col-sm-3 col-xs-6 form-group"><label for="itemSpec_Width">Width</label><input type="text" class="form-control" id="itemSpec_Width" /></div>
+                                        <div class="col-sm-3 col-xs-6 form-group"><label for="itemSpec_Length">Length</label><input type="number" class="form-control so-num" id="itemSpec_Length" min="0" step="0.001" data-dec="3" inputmode="decimal" /></div>
+                                        <div class="col-sm-3 col-xs-6 form-group"><label for="itemSpec_Width">Width</label><input type="number" class="form-control so-num" id="itemSpec_Width" min="0" step="0.001" data-dec="3" inputmode="decimal" /></div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-sm-3 col-xs-6 form-group"><label>Final Qty<span id="itemSpec_FinalQtyUom"></span></label><input type="text" class="form-control" id="itemSpec_FinalQty" readonly="readonly" /><small id="itemSpec_FinalQtyErr" class="so-err"></small></div>
-                                        <div class="col-sm-3 col-xs-6 form-group"><label for="itemSpec_Price">Price</label><input type="text" class="form-control" id="itemSpec_Price" /></div>
-                                        <div class="col-sm-3 col-xs-6 form-group"><label for="itemSpec_Discount">Discount %</label><input type="text" class="form-control" id="itemSpec_Discount" /></div>
-                                        <div class="col-sm-3 col-xs-6 form-group"><label>Line Net</label><input type="text" class="form-control" id="itemSpec_Net" readonly="readonly" /></div>
+                                        <div class="col-sm-3 col-xs-6 form-group"><label>Final Qty<span id="itemSpec_FinalQtyUom"></span></label><input type="number" class="form-control" id="itemSpec_FinalQty" readonly="readonly" tabindex="-1" /><small id="itemSpec_FinalQtyErr" class="so-err"></small></div>
+                                        <div class="col-sm-3 col-xs-6 form-group"><label for="itemSpec_Price">Price</label><input type="number" class="form-control so-num" id="itemSpec_Price" min="0" step="0.01" data-dec="2" inputmode="decimal" /></div>
+                                        <div class="col-sm-3 col-xs-6 form-group"><label for="itemSpec_Discount">Discount %</label><input type="number" class="form-control so-num" id="itemSpec_Discount" min="0" max="100" step="0.01" data-dec="2" inputmode="decimal" /></div>
+                                        <div class="col-sm-3 col-xs-6 form-group"><label>Line Net</label><input type="number" class="form-control" id="itemSpec_Net" readonly="readonly" tabindex="-1" /></div>
                                     </div>
                                     <div class="so-err" id="itemSpec_LineErr" style="margin-bottom: 8px;"></div>
                                     <button type="button" id="btnSpecAdd" class="btn btn-success" onclick="addOrUpdateItem();"><i class="fa fa-plus"></i> Add Item</button>
@@ -836,7 +851,7 @@
                                 <td><input type="text" class="form-control input-sm" id="custName" placeholder="Name" autocomplete="off" /></td>
                                 <td></td>
                                 <td></td>
-                                <td><input type="text" class="form-control input-sm" id="custPhone" style="width: 120px;" placeholder="Mobile" /></td>
+                                <td><input type="tel" class="form-control input-sm so-digits" id="custPhone" style="width: 120px;" placeholder="Mobile" maxlength="15" inputmode="tel" /></td>
                                 <td></td>
                             </tr>
                         </thead>

@@ -413,7 +413,7 @@ public static class SalesOrderEdit
                 result.message = "No changes to save.";
                 return result;
             }
-            head.Add("smo_last_updated_date", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            head.Add("smo_last_updated_date", BranchClock.NowInTransaction(db, Convert.ToString(m["branch_id"])).ToString(BranchClock.StorageFormat));
 
             foreach (var u in lineUpdates)
             {

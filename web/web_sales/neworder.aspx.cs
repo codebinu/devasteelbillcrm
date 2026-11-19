@@ -1141,10 +1141,11 @@ public partial class web_sales_neworder : System.Web.UI.Page
         {
             mySqlConnection db = new mySqlConnection();
           
-            TimeZoneInfo CurrentZone = TimeZoneInfo.FindSystemTimeZoneById(TimeZone);
-            DateTime TimeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CurrentZone);
+            DateTime TimeNow = WarehouseId != 0
+                ? BranchClock.Now(db, Convert.ToString(WarehouseId))
+                : TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(TimeZone));
             string currdatetime = TimeNow.ToString("yyyy-MM-dd");
-            string qry_condition = "where 1 and DATE_FORMAT(ofr_start_date,'%Y-%m-%d') <= '" + currdatetime + "' and DATE_FORMAT(ofr_end_date,'%Y-%m-%d') >= '" + currdatetime + "' and ofr_status=0 ";
+            string qry_condition = "where 1 and DATE_FORMAT(ofr_start_date,'%Y-%m-%d') <= '" + currdatetime + "' and DATE_FORMAT(ofr_end_date,'%Y-%m-%d') >= '" + currdatetime + "'             and ofr_status=0 ";
 
             if (WarehouseId != 0)
             {
@@ -1207,8 +1208,7 @@ public partial class web_sales_neworder : System.Web.UI.Page
         List<string> itemNames = new List<string>();
         mySqlConnection db = new mySqlConnection();
         StringBuilder sb = new StringBuilder();
-        TimeZoneInfo CurrentZone = TimeZoneInfo.FindSystemTimeZoneById(TimeZone);
-        DateTime TimeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CurrentZone);
+        DateTime TimeNow = BranchClock.Now(db, BranchId);
         string currdatetime = TimeNow.ToString("yyyy-MM-dd");
         string sqlQuery = "select ofr_id,ofr_title from tbl_offer_master where ofr_title like '%" + variable + "%' and branch_id='" + BranchId + "' and DATE_FORMAT(ofr_start_date,'%Y-%m-%d') <= '" + currdatetime + "' and DATE_FORMAT(ofr_end_date,'%Y-%m-%d') >= '" + currdatetime + "' and ofr_status=0";
         DataTable dt = db.SelectQuery(sqlQuery);

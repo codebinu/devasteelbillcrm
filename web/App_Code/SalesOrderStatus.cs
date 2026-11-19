@@ -86,10 +86,11 @@ public static class SalesOrderStatus
     // in that same transaction. The order row must already be locked by LockStatus, so a concurrent hold or cancel cannot interleave.
     public static void MarkProcessedInTransaction(mySqlConnection db, int smoId, int staffId)
     {
-        db.ExecuteQueryForTransaction("update tbl_sales_master_order set smo_delivery_status=@p,smo_processed_id=@u,smo_processed_date=now() "
+        db.ExecuteQueryForTransaction("update tbl_sales_master_order set smo_delivery_status=@p,smo_processed_id=@u,smo_processed_date=@now "
             + "where smo_id=@o and smo_delivery_status=@a",
             new MySqlParameter[] { new MySqlParameter("@p", Processed), new MySqlParameter("@u", staffId),
-                new MySqlParameter("@o", smoId), new MySqlParameter("@a", Approved) });
+                new MySqlParameter("@o", smoId), new MySqlParameter("@a", Approved),
+                new MySqlParameter("@now", BranchClock.NowForSalesOrderInTransaction(db, smoId)) });
     }
 
     // Standalone variant for reservations committed outside our transaction (sp_save_production_entry). Failures are logged only,
@@ -99,10 +100,11 @@ public static class SalesOrderStatus
         var db = new mySqlConnection();
         try
         {
-            db.ExecuteQuery("update tbl_sales_master_order set smo_delivery_status=@p,smo_processed_id=@u,smo_processed_date=now() "
+            db.ExecuteQuery("update tbl_sales_master_order set smo_delivery_status=@p,smo_processed_id=@u,smo_processed_date=@now "
                 + "where smo_id=@o and smo_delivery_status=@a",
                 new MySqlParameter[] { new MySqlParameter("@p", Processed), new MySqlParameter("@u", staffId),
-                    new MySqlParameter("@o", smoId), new MySqlParameter("@a", Approved) });
+                    new MySqlParameter("@o", smoId), new MySqlParameter("@a", Approved),
+                    new MySqlParameter("@now", BranchClock.NowForSalesOrder(db, smoId)) });
         }
         catch (Exception ex)
         {
@@ -157,18 +159,20 @@ public static class SalesOrderStatus
                 return "The order is now " + Name(current) + " and cannot be changed to " + Name(newStatus) + ".";
             }
 
+            // Dates are stored in the order branch's configured time zone, not the database server's clock.
             string set = "smo_delivery_status=@new";
             switch (newStatus)
             {
-                case Approved: set += ",smo_approved_id=@u,smo_approved_date=now()"; break;
+                case Approved: set += ",smo_approved_id=@u,smo_approved_date=@now"; break;
                 case CancelledByCustomer:
-                case CancelledByCompany: set += ",smo_cancelled_id=@u,smo_cancelled_date=now()"; break;
+                case CancelledByCompany: set += ",smo_cancelled_id=@u,smo_cancelled_date=@now"; break;
                 case New: set += ",smo_cancelled_id=null,smo_cancelled_date=null"; break;
             }
             db.ExecuteQueryForTransaction("update tbl_sales_master_order set " + set
                 + " where smo_id=@o and smo_delivery_status=@old",
                 new MySqlParameter[] { new MySqlParameter("@new", newStatus), new MySqlParameter("@u", staffId),
-                    new MySqlParameter("@o", smoId), new MySqlParameter("@old", current) });
+                    new MySqlParameter("@o", smoId), new MySqlParameter("@old", current),
+                    new MySqlParameter("@now", BranchClock.NowForSalesOrderInTransaction(db, smoId)) });
             if (db.SelectScalarForTransaction("select row_count()") != "1")
                 throw new InvalidOperationException("Sales order status update did not apply.");
 

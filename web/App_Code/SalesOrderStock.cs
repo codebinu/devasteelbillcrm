@@ -299,7 +299,7 @@ public static partial class SalesOrderStock
     // otherwise one of its BOM components (raw material held for production). planQty is the production quantity the user chose (0 = default).
     public static StockActionResult Reserve(int smoId, int branchId, int status, int staffId, int sioId, decimal expectedQty, int compItmId, decimal planQty)
     {
-        return Run(delegate(mySqlConnection db, DateTime now)
+        return Run(smoId, delegate(mySqlConnection db, DateTime now)
         {
             RequireOpenLocked(db, smoId);
             LockLine(db, smoId, sioId);
@@ -342,7 +342,7 @@ public static partial class SalesOrderStock
     // Everything is re-validated against locked batch rows inside the transaction; any failure rolls back all rows.
     public static StockActionResult ReserveBatches(int smoId, int branchId, int status, int staffId, int sioId, int compItmId, List<BatchQty> allocations, decimal planQty)
     {
-        return Run(delegate(mySqlConnection db, DateTime now)
+        return Run(smoId, delegate(mySqlConnection db, DateTime now)
         {
             RequireOpenLocked(db, smoId);
             var wanted = new SortedDictionary<int, decimal>();
@@ -514,7 +514,7 @@ public static partial class SalesOrderStock
     // compItmId = 0 releases every reservation of the order line itself (all warehouses); otherwise the raw-material reservations of that BOM component.
     public static StockActionResult Unreserve(int smoId, int branchId, int status, int sioId, int compItmId)
     {
-        return Run(delegate(mySqlConnection db, DateTime now)
+        return Run(smoId, delegate(mySqlConnection db, DateTime now)
         {
             if (!IsReleaseStatus(SalesOrderStatus.LockStatus(db, smoId)))
                 throw new StockException("Reservations cannot be changed for an order in this status.");
@@ -546,7 +546,7 @@ public static partial class SalesOrderStock
     // Releases this order line's reservation on one batch (any warehouse); physical stock is never changed.
     public static StockActionResult UnreserveBatch(int smoId, int sioId, int batchId)
     {
-        return Run(delegate(mySqlConnection db, DateTime now)
+        return Run(smoId, delegate(mySqlConnection db, DateTime now)
         {
             if (!IsReleaseStatus(SalesOrderStatus.LockStatus(db, smoId)))
                 throw new StockException("Reservations cannot be changed for an order in this status.");
@@ -564,7 +564,7 @@ public static partial class SalesOrderStock
     // Applies to every reservation row the order line holds on that batch.
     public static StockActionResult SetPriority(int smoId, int sioId, int batchId, int priority)
     {
-        return Run(delegate(mySqlConnection db, DateTime now)
+        return Run(smoId, delegate(mySqlConnection db, DateTime now)
         {
             if (priority < 0 || priority > MaxPriority)
                 throw new StockException("Priority must be between 0 and " + MaxPriority + ".");
@@ -608,7 +608,7 @@ public static partial class SalesOrderStock
     // so a repeated or stale request cannot produce (and deduct raw material) a second time.
     public static StockActionResult MoveToProduction(int smoId, int branchId, int status, int staffId, string docBase, int sioId, decimal expectedQty, decimal planQty, decimal expectedProduced)
     {
-        return Run(delegate(mySqlConnection db, DateTime now)
+        return Run(smoId, delegate(mySqlConnection db, DateTime now)
         {
             RequireOpenLocked(db, smoId);
             LockLine(db, smoId, sioId);
@@ -617,12 +617,12 @@ public static partial class SalesOrderStock
             Calc c = Compute(s, l, planQty);
             if (c.Error != null)
                 throw new StockException(c.Error);
-            if (Math.Abs(R4(c.Produced) - expectedProduced) > 0.0005m)
+            if (Math.Abs(R6(c.Produced) - expectedProduced) > 0.0000005m)
                 throw new StockException("Production for this item changed since the page was loaded. The grid has been refreshed; please review and try again.");
             string produceIssue = ReservedProduceIssue(c);
             if (produceIssue != null)
                 throw new StockException(produceIssue);
-            if (Math.Abs(c.ProduceQty - Ceil3(expectedQty)) > Tolerance)
+            if (Math.Abs(c.ProduceQty - Ceil6(expectedQty)) > 0.0000005m)
                 throw new StockException("Stock changed since the page was loaded. The grid has been refreshed; please review and try again.");
 
             decimal outQty = Round6(c.ProduceQty / c.F);
@@ -705,14 +705,16 @@ public static partial class SalesOrderStock
                     });
     }
 
-    static StockActionResult Run(Func<mySqlConnection, DateTime, string> work)
+    static StockActionResult Run(int smoId, Func<mySqlConnection, DateTime, string> work)
     {
         var result = new StockActionResult();
         var db = new mySqlConnection();
         bool started = false;
         try
         {
-            DateTime now = Now(db);
+            DateTime now;
+            try { now = BranchClock.NowForSalesOrder(db, smoId); }
+            catch (InvalidOperationException ex) { throw new StockException(ex.Message); }
             db.BeginTransaction();
             started = true;
             string message = work(db, now);
@@ -751,17 +753,6 @@ public static partial class SalesOrderStock
     {
         try { db.CloseConnection(); }
         catch (Exception) { }
-    }
-
-    static DateTime Now(mySqlConnection db)
-    {
-        string tz = db.SelectScalar("SELECT ss_default_time_zone FROM tbl_system_settings");
-        if (!string.IsNullOrEmpty(tz))
-        {
-            try { return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(tz)); }
-            catch (TimeZoneNotFoundException) { }
-        }
-        return DateTime.UtcNow;
     }
 
     static bool IsOpenStatus(int status) { return SalesOrderStatus.CanReserve(status); }
@@ -805,6 +796,11 @@ public static partial class SalesOrderStock
 
     static int Exec(mySqlConnection db, string sql, params MySqlParameter[] ps)
     {
+        // The stock/batch quantity columns are DECIMAL(10,6). A value with more decimals is rounded by the database with a warning,
+        // which makes row_count() return -1 even though the row was updated, so quantities are rounded here first.
+        foreach (MySqlParameter p in ps)
+            if (p.Value is decimal)
+                p.Value = Round6((decimal)p.Value);
         db.ExecuteQueryForTransaction(sql, ps);
         return Convert.ToInt32(db.SelectScalarForTransaction("select row_count()"));
     }
@@ -831,6 +827,7 @@ public static partial class SalesOrderStock
     static decimal Round6(decimal d) { return Math.Round(d, 6, MidpointRounding.AwayFromZero); }
     static decimal Ceil6(decimal d) { return Math.Ceiling(d * 1000000m) / 1000000m; }
     static decimal R4(decimal d) { return Math.Round(d, 4, MidpointRounding.AwayFromZero); }
+    static decimal R6(decimal d) { return Math.Round(d, 6, MidpointRounding.AwayFromZero); }
     static string Fmt(decimal d) { return Math.Round(d, 3, MidpointRounding.AwayFromZero).ToString("0.###"); }
 
     static IEnumerable<Batch> Fifo(IEnumerable<Batch> batches)
@@ -1074,8 +1071,8 @@ public static partial class SalesOrderStock
         if (c.Remaining <= Tolerance * c.F)
             c.Remaining = 0m;
         c.Reservable = Floor3(Math.Min(c.Remaining, c.Free));
-        c.Needs = Ceil3(Math.Max(0m, c.Remaining - c.Free));
-        c.ProduceQty = planQty > 0 ? Ceil3(planQty) : (c.Needs > 0 ? c.Needs : Ceil3(c.Remaining));
+        c.Needs = Ceil6(Math.Max(0m, c.Remaining - c.Free));
+        c.ProduceQty = planQty > 0 ? Ceil6(planQty) : (c.Needs > 0 ? c.Needs : Ceil6(c.Remaining));
 
         List<BomRow> rows;
         s.Bom.TryGetValue(l.ItmId, out rows);
@@ -1227,9 +1224,9 @@ public static partial class SalesOrderStock
         row.remaining = R4(c.Remaining);
         row.available = R4(c.Reservable);
         row.needsProduction = R4(c.Needs);
-        row.produceQty = R4(c.ProduceQty);
-        row.produced = R4(c.Produced);
-        row.planQty = R4(planQty);
+        row.produceQty = R6(c.ProduceQty);
+        row.produced = R6(c.Produced);
+        row.planQty = R6(planQty);
         row.hasBom = c.HasBom;
         row.allocations = Allocations(s, l.ItmId, l.SioId, c.F, c.UomName);
         foreach (Comp cp in c.Comps)
@@ -1300,12 +1297,13 @@ public static partial class SalesOrderStock
                 new MySqlParameter("@b", batchId), new MySqlParameter("@io", inputOutput), new MySqlParameter("@q", qty), new MySqlParameter("@c", cost) });
     }
 
-    // Branch stock is an INT column, so fractional movements are rounded by the database.
+    // itbs_stock is DECIMAL(10,6) (max 9999.999999). In non-strict SQL mode an overflowing update is silently clamped and
+    // row_count() returns -1, so a negative count means the new balance does not fit the column.
     static void AdjustBranchStock(mySqlConnection db, int itbsId, decimal delta)
     {
         if (Exec(db, "update tbl_itembranch_stock set itbs_stock=coalesce(itbs_stock,0)+@d where itbs_id=@i",
             new MySqlParameter("@d", delta), new MySqlParameter("@i", itbsId)) < 0)
-            throw new StockException("Unable to update branch stock.");
+            throw new StockException("Unable to update branch stock: the resulting quantity is outside the range of tbl_itembranch_stock.itbs_stock (DECIMAL(10,6), max 9999.999999). No changes were saved.");
     }
 
     static void InsertLedger(mySqlConnection db, DateTime now, int staffId, int itbsId, int refId, int branchId, int batchId,

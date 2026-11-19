@@ -23,6 +23,8 @@
         .info-row .v { float: left; width: 58%; font-weight: 600; word-break: break-word; }
         #itemsTable input.form-control, #itemsTable select.form-control { min-width: 70px; padding: 3px 6px; height: 30px; }
         #itemsTable td.num input { text-align: right; }
+        #itemsTable input[type=number] { -moz-appearance: textfield; }
+        #itemsTable input[type=number]::-webkit-outer-spin-button, #itemsTable input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
         #itemsTable .name-col { min-width: 200px; }
         #itemsTable tr.changed > td { background: #fff8e1; }
         #itemsTable tr.invalid input, #itemsTable tr.invalid select { border-color: #a94442; }
@@ -211,14 +213,14 @@
                                                     <td><%= Enc(r["sl"]) %></td>
                                                     <td><%= Enc(r["itm_code"]) %></td>
                                                     <td><%= Enc(r["itm_name"]) %><% if (r["edit_reserved"].ToString() != "0") { %> <span class="label label-info" title="Stock is reserved for this item">Reserved</span><% } %></td>
-                                                    <td class="num"><input type="text" class="form-control f-qty" value="<%= Enc(r["edit_qty"]) %>" data-orig="<%= Enc(r["edit_qty_raw"]) %>"<%= ReadOnly %> /></td>
-                                                    <td class="num"><input type="text" class="form-control f-len" value="<%= Enc(r["edit_length"]) %>" data-orig="<%= Enc(r["edit_length_raw"]) %>"<%= ReadOnly %> /></td>
-                                                    <td class="num"><input type="text" class="form-control f-wid" value="<%= Enc(r["edit_width"]) %>" data-orig="<%= Enc(r["edit_width_raw"]) %>"<%= ReadOnly %> /></td>
+                                                    <td class="num"><input type="number" min="0" step="0.001" data-dec="3" inputmode="decimal" class="form-control f-qty so-num" value="<%= Enc(r["edit_qty"]) %>" data-orig="<%= Enc(r["edit_qty_raw"]) %>"<%= ReadOnly %> /></td>
+                                                    <td class="num"><input type="number" min="0" step="0.001" data-dec="3" inputmode="decimal" class="form-control f-len so-num" value="<%= Enc(r["edit_length"]) %>" data-orig="<%= Enc(r["edit_length_raw"]) %>"<%= ReadOnly %> /></td>
+                                                    <td class="num"><input type="number" min="0" step="0.001" data-dec="3" inputmode="decimal" class="form-control f-wid so-num" value="<%= Enc(r["edit_width"]) %>" data-orig="<%= Enc(r["edit_width_raw"]) %>"<%= ReadOnly %> /></td>
                                                     <td><select class="form-control f-uom"<%= Disabled %>><%= UomOptions(r["tum_id"], r["edit_uom"]) %></select></td>
                                                     <td class="num"><span class="c-final"><%= Num(r["sio_finalqty"]) %></span><span class="row-err"></span><span class="row-note"></span></td>
                                                     <td><%= Enc(r["uom"]) %></td>
-                                                    <td class="num"><input type="text" class="form-control f-price" value="<%= Money(r["sio_price"]) %>" data-orig="<%= Raw(r["sio_price"]) %>"<%= ReadOnly %> /></td>
-                                                    <td class="num"><input type="text" class="form-control f-rate" value="<%= Raw(r["sio_discount_rate"]) %>"<%= ReadOnly %> /></td>
+                                                    <td class="num"><input type="number" min="0" step="0.01" data-dec="2" inputmode="decimal" class="form-control f-price so-num" value="<%= Money(r["sio_price"]) %>" data-orig="<%= Raw(r["sio_price"]) %>"<%= ReadOnly %> /></td>
+                                                    <td class="num"><input type="number" min="0" max="100" step="0.01" data-dec="2" inputmode="decimal" class="form-control f-rate so-num" value="<%= Raw(r["sio_discount_rate"]) %>"<%= ReadOnly %> /></td>
                                                     <td style="text-align: right;" class="c-disc"><%= Money(r["sio_discount_amount"]) %></td>
                                                     <td style="text-align: right;"><%= Raw(r["sio_item_tax"]) %></td>
                                                     <td style="text-align: right;" class="c-tax"><%= Money(r["sio_tax_amount"]) %></td>
@@ -304,6 +306,19 @@
                 $('#savedBanner').text(stored);
             }
             if (!cfg.canEdit) { return; }
+
+            // Number inputs still accept e, +, - ; block them so only plain non-negative decimals can be typed.
+            $('#itemsTable').on('keydown', '.so-num', function (e) {
+                if (e.key === 'e' || e.key === 'E' || e.key === '+' || e.key === '-') { e.preventDefault(); }
+            }).on('paste', '.so-num', function (e) {
+                var t = (e.originalEvent.clipboardData || window.clipboardData).getData('text');
+                if (!/^\s*\d*\.?\d*\s*$/.test(t)) { e.preventDefault(); }
+            }).on('wheel', '.so-num', function () { $(this).blur(); })
+              .on('input', '.so-num[data-dec]', function () {
+                // Cap decimals: UOM quantities/sizes 3, amounts 2 (data-dec).
+                var d = parseInt($(this).data('dec'), 10), v = this.value, i = v.indexOf('.');
+                if (i >= 0 && v.length - i - 1 > d) { this.value = v.substring(0, i + 1 + d); }
+            });
 
             var initialTotals = {};
             $('.totals-box .v').each(function () { initialTotals[this.id] = $(this).text(); });

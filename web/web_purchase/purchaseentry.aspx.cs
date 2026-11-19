@@ -68,6 +68,19 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
         return JsonConvert.SerializeObject(dt, Formatting.Indented);
     }
 
+    [WebMethod]
+    public static string getBranchDate(string branchId)
+    {
+        try
+        {
+            return BranchClock.Now(new mySqlConnection(), branchId).ToString("yyyy-MM-dd");
+        }
+        catch (InvalidOperationException)
+        {
+            return "";
+        }
+    }
+
     [WebMethod(EnableSession = true)]
     public static string SavePurchaseEntryNew(PurchaseSaveRequest request)
     {
@@ -87,15 +100,17 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
                     return JsonConvert.SerializeObject(new { status = false, message = "Each item needs item id, positive quantity and valid price." });
             }
 
+            // Time comes from the purchase branch's configured time zone, not from the browser/user cookie.
             string currentDateTime;
             try
             {
-                TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById(string.IsNullOrEmpty(request.time_zone) ? TimeZoneInfo.Local.Id : request.time_zone);
-                currentDateTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz).ToString("yyyy-MM-dd HH:mm:ss");
+                DateTime branchNow = BranchClock.Now(new mySqlConnection(), h.warehouse);
+                currentDateTime = branchNow.ToString(BranchClock.StorageFormat);
+                h.purchasedate = BranchClock.PurchaseDateTime(h.purchasedate, branchNow, null);
             }
-            catch (Exception)
+            catch (InvalidOperationException ex)
             {
-                return JsonConvert.SerializeObject(new { status = false, message = "Invalid time zone." });
+                return JsonConvert.SerializeObject(new { status = false, message = ex.Message });
             }
 
             JsonSerializerSettings settings = new JsonSerializerSettings();
@@ -306,10 +321,9 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
 
             //check invoice exist already
             DataTable dt = new DataTable();
-            TimeZoneInfo CurrentZone = TimeZoneInfo.FindSystemTimeZoneById(filters["TimeZone"]);
-            DateTime TimeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CurrentZone);
+            DateTime TimeNow = BranchClock.NowInTransaction(db, filters["warehouse"]);
             string currdatetime = TimeNow.ToString("yyyy/MM/dd HH:mm:ss");
-            //  string jsonData = JsonConvert.SerializeObject(tableString);
+            filters["purchasedate"] = BranchClock.PurchaseDateTime(filters["purchasedate"], TimeNow, null);
 
             string invoiceCheckQry = "SELECT pm_id FROM tbl_purchase_master WHERE  pm_invoice_no ='" + filters["invoiceno"] + "'";
             string existId = db.SelectScalarForTransaction(invoiceCheckQry);

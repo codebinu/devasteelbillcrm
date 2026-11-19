@@ -322,11 +322,10 @@ public partial class web_sales_new_sales_order : System.Web.UI.Page
                 sTax += it.si_tax_amount.Value;
             }
 
-            string tzId = Convert.ToString(br.Rows[0]["branch_timezone"]);
             DateTime now;
-            try { now = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById(tzId)); }
-            catch (Exception) { now = DateTime.Now; }
-            string nowStr = now.ToString("yyyy-MM-dd HH:mm:ss");
+            try { now = BranchClock.FromBranchTimeZone(Convert.ToString(br.Rows[0]["branch_timezone"]), m.branch_id.Value); }
+            catch (InvalidOperationException ex) { return JsonConvert.SerializeObject(Fail(ex.Message)); }
+            string nowStr = now.ToString(BranchClock.StorageFormat);
 
             m.sm_userid = userId;
             m.sm_date = nowStr;

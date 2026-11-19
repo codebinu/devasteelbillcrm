@@ -39,7 +39,7 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
         sb.Append(",");
         string previouspaidqry = "select tv.vn_name,pm.vn_id,vn_balance,branch_name,pm_invoice_no,concat(tu.first_name,' ',tu.last_name) as user,"
         +" pm_netamount as net_amount,sum(cr)-sum(dr) as pm_balance,pm_netamount-(sum(cr)-sum(dr)) as pm_paidamount,"
-        +" pm_tax_amount as tax_amount,pm_ref_no,DATE_FORMAT(pm_date,'%Y-%m-%d') AS date,pm_note,"
+        +" pm_tax_amount as tax_amount,pm_ref_no,DATE_FORMAT(pm_date,'%Y-%m-%d') AS date,IF(TIME(pm_date)='00:00:00','',DATE_FORMAT(pm_date,'%d-%b-%Y %h:%i %p')) AS date_time,pm_note,"
         + " pm_total,pm_discount_rate,pm_discount_amount,pm_roundoff as roundOff,pm.branch_id,pm.branch_tax_method,pm_tax_excluded_amt,pm.branch_tax_inclusive"
         +" from tbl_purchase_master pm inner join tbl_vendor tv on tv.vn_id=pm.vn_id"
         + " inner join tbl_user_details tu on tu.user_id=pm.pm_userid"
@@ -86,15 +86,20 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
                     return JsonConvert.SerializeObject(new { status = false, message = "Each item needs item id, positive quantity and valid price." });
             }
 
+            // Time comes from the purchase branch's configured time zone, not from the browser/user cookie.
             string currentDateTime;
             try
             {
-                TimeZoneInfo tz = TimeZoneInfo.FindSystemTimeZoneById(string.IsNullOrEmpty(request.time_zone) ? TimeZoneInfo.Local.Id : request.time_zone);
-                currentDateTime = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz).ToString("yyyy-MM-dd HH:mm:ss");
+                mySqlConnection tzDb = new mySqlConnection();
+                DateTime branchNow = BranchClock.Now(tzDb, h.warehouse);
+                currentDateTime = branchNow.ToString(BranchClock.StorageFormat);
+                string existingPurchaseDate = tzDb.SelectScalar("select date_format(pm_date,'%Y-%m-%d %H:%i:%s') from tbl_purchase_master where pm_id=@p",
+                    new MySqlParameter[] { new MySqlParameter("@p", h.pm_id.Value) });
+                h.purchasedate = BranchClock.PurchaseDateTime(h.purchasedate, branchNow, existingPurchaseDate);
             }
-            catch
+            catch (InvalidOperationException ex)
             {
-                return JsonConvert.SerializeObject(new { status = false, message = "Invalid time zone." });
+                return JsonConvert.SerializeObject(new { status = false, message = ex.Message });
             }
 
             JsonSerializerSettings settings = new JsonSerializerSettings();
@@ -234,8 +239,7 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
         {
 
             DataTable itemsBefrEditDt, dt1 = new DataTable();
-            TimeZoneInfo CurrentZone = TimeZoneInfo.FindSystemTimeZoneById(filters["TimeZone"]);
-            DateTime TimeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CurrentZone);
+            DateTime TimeNow = BranchClock.NowForPurchase(db, filters["purchaseId"]);
             string currdatetime = TimeNow.ToString("yyyy/MM/dd HH:mm:ss");
             //  string jsonData = JsonConvert.SerializeObject(tableString);
             dynamic Itemsdata = JsonConvert.DeserializeObject(tableString);
@@ -495,9 +499,10 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
             string insert_to_purchase_items = "";
             //check invoice exist already
             DataTable dt = new DataTable();
-            TimeZoneInfo CurrentZone = TimeZoneInfo.FindSystemTimeZoneById(filters["TimeZone"]);
-            DateTime TimeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CurrentZone);
+            DateTime TimeNow = BranchClock.NowForPurchaseInTransaction(db, filters["purchaseId"]);
             string edited_date = TimeNow.ToString("yyyy/MM/dd HH:mm:ss");
+            string existingPurchaseDate = db.SelectScalarForTransaction("select date_format(pm_date,'%Y-%m-%d %H:%i:%s') from tbl_purchase_master where pm_id=" + Convert.ToInt32(filters["purchaseId"]));
+            filters["purchaseDate"] = BranchClock.PurchaseDateTime(filters["purchaseDate"], TimeNow, existingPurchaseDate);
             //  string jsonData = JsonConvert.SerializeObject(tableString);
             List<Dictionary<string, string>> items_after_edit = JsonConvert.DeserializeObject<List<Dictionary<string, string>>>(tableString);
             dynamic data = JsonConvert.DeserializeObject(tableString);
@@ -881,9 +886,9 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
         try
         {
             db.BeginTransaction();
-            //getting date
-            TimeZoneInfo CurrentZone = TimeZoneInfo.FindSystemTimeZoneById(HttpUtility.UrlDecode(HttpContext.Current.Request.Cookies["invntryTimeZone"].Value));
-            DateTime TimeNow = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, CurrentZone);
+            //getting date from the purchase branch's configured time zone
+            string payPurchaseId = db.SelectScalarForTransaction("select action_ref_id from tbl_transactions where id=" + trans_id);
+            DateTime TimeNow = BranchClock.NowForPurchaseInTransaction(db, payPurchaseId);
             string edited_date = TimeNow.ToString("yyyy/MM/dd HH:mm:ss");
             //get previous transaction details
             DataTable dt = db.SelectQueryForTransaction("select action_ref_id,partner_id,cash_amt,wallet_amt,cheque_amt,dr from tbl_transactions where id='" + trans_id + "'");
