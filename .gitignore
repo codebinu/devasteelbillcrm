@@ -26,3 +26,4 @@ Desktop.ini
 $RECYCLE.BIN/
 InvoiceMe/
 web/log/*.txt
+web/Web.config
