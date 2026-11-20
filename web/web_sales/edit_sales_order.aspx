@@ -108,11 +108,6 @@
                     <div class="alert alert-warning" style="margin-bottom: 10px;">
                         This sales order is shown read-only. <%= Enc(EditHint) %>
                     </div>
-                    <% } else { %>
-                    <div class="alert alert-info" style="margin-bottom: 10px;">
-                        You can change the payment type, order type, notes, and each item's quantity, size, unit, price and discount,
-                        and add or remove items (at least one item must remain). Orders with an invoice or stock reservations cannot be edited.
-                    </div>
                     <% } %>
                     <div id="editMessage" role="status" aria-live="polite"></div>
 
