@@ -8,7 +8,7 @@ using System.Text;
 
 // Editing an existing sales order (edit_sales_order.aspx): header fields (payment type, order type, notes) and the lines
 // (quantity, size, UOM, price, discount of existing lines; lines can be added and removed, but at least one must remain).
-//  - Allowed in New, On Hold, Approved and Processed orders that have no invoice, no reservation and no production entry.
+//  - Allowed in Draft, New, On Hold, Approved and Processed orders that have no invoice, no reservation and no production entry.
 //  - Final quantity, line amounts and order totals are recalculated here; the client preview is never trusted.
 //  - Tax rates of an existing line are kept as saved (sio_item_tax / sio_item_cess); only lines the user changed are rewritten.
 //    A new line takes its tax, price class and sales unit from the item master, like new_sales_order.aspx.
@@ -95,7 +95,7 @@ public static class SalesOrderEdit
 
     public static bool IsEditableStatus(int status)
     {
-        return status == SalesOrderStatus.New || status == SalesOrderStatus.OnHold
+        return SalesOrderStatus.IsUnapproved(status) || status == SalesOrderStatus.OnHold
             || status == SalesOrderStatus.Approved || status == SalesOrderStatus.Processed;
     }
 
@@ -603,7 +603,7 @@ public static class SalesOrderEdit
             var hp = new List<MySqlParameter>(head.Params);
             hp.Add(new MySqlParameter("@smo", req.smoId));
             db.ExecuteQueryForTransaction("update tbl_sales_master_order set " + string.Join(",", head.Sets) + " where smo_id=@smo", hp.ToArray());
-            // The status follows the saved order (for example a Processed order without reservations returns to Approved); New and On Hold stay as they are.
+            // The status follows the saved order (for example a Processed order without reservations returns to Approved); Draft, New and On Hold stay as they are.
             SalesOrderStatus.TryUpdateSalesOrderStatus(db, req.smoId, staffId);
 
             db.CommitTransaction();

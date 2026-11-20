@@ -168,7 +168,7 @@ public partial class web_sales_new_sales_order : System.Web.UI.Page
 
     // Saves the order through sp_save_sales_order_json. Amounts are recalculated here from DB tax/price data.
     [WebMethod(EnableSession = true)]
-    public static string SaveSalesOrder(SalesOrderSaveRequest request)
+    public static string SaveSalesOrder(SalesOrderSaveRequest request, bool asDraft)
     {
         try
         {
@@ -340,7 +340,7 @@ public partial class web_sales_new_sales_order : System.Web.UI.Page
             m.branch_tax_inclusive = inclusive.ToString();
             m.sm_price_class = custType;
             m.sm_type = 1;
-            m.sm_delivery_status = SalesOrderStatus.New; // new orders always start as New (0); approval is a separate server-validated action
+            m.sm_delivery_status = asDraft ? SalesOrderStatus.Draft : SalesOrderStatus.New; // approval is a separate server-validated action
             m.sm_order_type = m.sm_order_type ?? 0;
             m.sm_payment_type = m.sm_payment_type ?? 0;
             m.sm_discount_rate = (sTaxable + sDisc) == 0 ? 0 : Rnd(sDisc * 100m / (sTaxable + sDisc), acc);

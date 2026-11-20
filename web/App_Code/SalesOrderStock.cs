@@ -766,7 +766,7 @@ public static partial class SalesOrderStock
             return;
         if (status == SalesOrderStatus.OnHold)
             throw new StockException("This order is on hold. Approve it to resume and reserve or produce stock.");
-        if (status == SalesOrderStatus.New)
+        if (SalesOrderStatus.IsUnapproved(status))
             throw new StockException("This order has not been approved yet. Approve it to reserve or produce stock.");
         if (SalesOrderStatus.IsCancelled(status))
             throw new StockException("This order is cancelled. Stock cannot be reserved or produced.");
@@ -1261,7 +1261,7 @@ public static partial class SalesOrderStock
         row.canProduce = open && produceIssue == null;
         if (!open && (c.Reservable > 0 || c.Needs > 0))
             row.message = status == SalesOrderStatus.OnHold ? "Order is on hold. Approve it to resume and reserve stock."
-                : status == SalesOrderStatus.New ? "Approve the order to reserve stock."
+                : SalesOrderStatus.IsUnapproved(status) ? "Approve the order to reserve stock."
                 : SalesOrderStatus.IsCancelled(status) ? "Order is cancelled. Stock cannot be reserved."
                 : "Stock actions are not available for an order in this status.";
         else if (c.Remaining > 0 && c.Free <= 0)

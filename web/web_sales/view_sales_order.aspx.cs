@@ -556,14 +556,15 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
     void BindStatusActions()
     {
         StatusActions.Clear();
+        int createdStatus = currentStatus == SalesOrderStatus.Draft ? SalesOrderStatus.Draft : SalesOrderStatus.New;
         StatusActions.Add(new StatusAction {
-            Status = "New (Created)", Css = SalesOrderStatus.Css(SalesOrderStatus.New),
+            Status = SalesOrderStatus.Name(createdStatus) + " (Created)", Css = SalesOrderStatus.Css(createdStatus),
             User = DisplayRecordedValue(Order["seller_name"]),
             Date = DisplayRecordedValue(Order["orderDate"])
         });
         bool isDelivered = currentStatus == SalesOrderStatus.FullyDelivered || currentStatus == SalesOrderStatus.PartiallyDelivered;
         bool isCancelled = SalesOrderStatus.IsCancelled(currentStatus);
-        if (currentStatus != SalesOrderStatus.New)
+        if (!SalesOrderStatus.IsUnapproved(currentStatus))
             AddStatusAction("approved", SalesOrderStatus.Name(SalesOrderStatus.Approved), SalesOrderStatus.Css(SalesOrderStatus.Approved), currentStatus == SalesOrderStatus.Approved);
         // Orders approved before the Processed status existed carry processed details too, so it is listed only once the order is really Processed.
         if (currentStatus == SalesOrderStatus.Processed || currentStatus == SalesOrderStatus.OnHold || isDelivered || isCancelled)

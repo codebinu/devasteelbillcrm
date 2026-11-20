@@ -616,18 +616,22 @@
                 }
             };
         }
-        // The order is stored with status New (0); approving it is a separate action on the order view page.
-        function saveSalesOrder() {
+        // "Save Order" stores the order as New (1) and "Save as Draft" as Draft (0); approving it is a separate action on the order view page.
+        function saveSalesOrder(asDraft) {
             if (isSaving) return;
             var err = validateOrder();
             if (err) { showMsg("danger", err); return; }
             isSaving = true;
-            $("#btnSave").prop("disabled", true).html('<i class="fa fa-spinner fa-spin"></i> Saving...');
+            $("#btnSave, #btnSaveDraft").prop("disabled", true);
+            $(asDraft ? "#btnSaveDraft" : "#btnSave").html('<i class="fa fa-spinner fa-spin"></i> Saving...');
             $("#soMsg").hide();
-            ajaxCall("SaveSalesOrder", buildRequest(), function (d) {
+            var req = buildRequest();
+            req.asDraft = !!asDraft;
+            ajaxCall("SaveSalesOrder", req, function (d) {
                 var r = JSON.parse(d);
                 if (r.status) {
-                    showMsg("success", "Sales order #" + r.smo_id + " saved. Net amount: " + amt2(r.net_amount));
+                    showMsg("success", (asDraft ? "Draft sales order #" : "Sales order #") + r.smo_id + " saved. Net amount: " + amt2(r.net_amount)
+                        + (asDraft ? ". It stays in Draft until approved from the order view." : ""));
                     soItems = []; clearSpec(); clearCustomer(); $("#txtSpecialNote").val("");
                     sessionId = newSessionId();
                     renderItems();
@@ -642,7 +646,9 @@
         }
         function endSave() {
             isSaving = false;
-            $("#btnSave").prop("disabled", false).html('<i class="fa fa-save"></i> Save Order');
+            $("#btnSave, #btnSaveDraft").prop("disabled", false);
+            $("#btnSave").html('<i class="fa fa-save"></i> Save Order');
+            $("#btnSaveDraft").html('<i class="fa fa-file-o"></i> Save as Draft');
         }
     </script>
 </head>
@@ -814,7 +820,8 @@
                                     <tr><td>Tax</td><td class="text-right" id="lblTax">0</td></tr>
                                     <tr class="grand"><td>Net Amount</td><td class="text-right" id="lblNet">0</td></tr>
                                 </table>
-                                <button type="button" id="btnSave" class="btn btn-primary pull-right"                                 onclick="saveSalesOrder();"><i class="fa fa-save"></i> Save Order</button>
+                                <button type="button" id="btnSave" class="btn btn-primary pull-right" onclick="saveSalesOrder(false);"><i class="fa fa-save"></i> Save Order</button>
+                                <button type="button" id="btnSaveDraft" class="btn btn-default pull-right" style="margin-right: 6px;" onclick="saveSalesOrder(true);"><i class="fa fa-file-o"></i> Save as Draft</button>
                                 <div class="clearfix"></div>
                             </div>
                         </div>
