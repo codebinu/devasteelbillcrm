@@ -81,7 +81,7 @@
                 theme: 'ios', display: 'modal', mode: 'scroller', dateFormat: 'dd-mm-yy'
             });
             $('.footerDivContent').html("Copyright " + new Date().getFullYear() + " &copy;");
-            $("#txtProduct").keypress(function (e) {
+            $("#txtProduct, #txtOrder, #txtCustomer").keypress(function (e) {
                 if (e.which == 13) { loadGroups(true); return false; }
             });
             getBranches();
@@ -108,15 +108,18 @@
         function currentFilters() {
             var filters = {};
             if ($.trim($("#txtProduct").val()) != "") filters.product = $.trim($("#txtProduct").val());
+            if ($.trim($("#txtOrder").val()) != "") filters.order = $.trim($("#txtOrder").val());
+            if ($.trim($("#txtCustomer").val()) != "") filters.customer = $.trim($("#txtCustomer").val());
             if ($("#slBranch").val() && $("#slBranch").val() != "-1") filters.branch = $("#slBranch").val();
+            if ($("#slOrderStatus").val() && $("#slOrderStatus").val() != "-1") filters.order_status = $("#slOrderStatus").val();
             if ($("#txtSearchFromDate").val() != "") filters.from_date = $("#txtSearchFromDate").val();
             if ($("#txtSearchToDate").val() != "") filters.to_date = $("#txtSearchToDate").val();
             return filters;
         }
 
         function resetFilters() {
-            $("#txtProduct, #txtSearchFromDate, #txtSearchToDate").val("");
-            $("#slBranch").val("-1");
+            $("#txtProduct, #txtOrder, #txtCustomer, #txtSearchFromDate, #txtSearchToDate").val("");
+            $("#slBranch, #slOrderStatus").val("-1");
             loadGroups(true);
         }
 
@@ -137,6 +140,8 @@
                 groups = obj.groups;
                 $('#txtGroupCount').text(obj.count);
                 $('#truncatedNote').toggle(!!obj.truncated);
+                $('#heldBackNote').text(obj.heldBack ? obj.heldBack + ' order' + (obj.heldBack === 1 ? '' : 's') + ' with items to produce ' + (obj.heldBack === 1 ? 'is' : 'are')
+                    + ' not listed because ' + (obj.heldBack === 1 ? 'it is' : 'they are') + ' Draft, To be confirmed or On Hold. Approve ' + (obj.heldBack === 1 ? 'it' : 'them') + ' on the sales order to produce.' : '').toggle(!!obj.heldBack);
                 renderGroups();
             }, function () { Unloading(); alert("Internet Problem..!"); });
         }
@@ -154,7 +159,9 @@
                         ? '<input type="checkbox" class="line-check" data-group="' + gi + '" value="' + attr(lineKey(o)) + '" checked="checked" />'
                         : '';
                     return '<tr' + (o.ready ? '' : ' class="text-muted"') + '><td class="chk">' + box + '</td>'
-                        + '<td><b>#' + esc(o.smoId) + '</b><span class="sub-note">' + esc(o.orderRef) + ' &middot; ' + esc(o.orderDate) + '</span></td>'
+                        + '<td><b><a href="../web_sales/view_sales_order.aspx?smoId=' + encodeURIComponent(o.smoId) + '" target="_blank" title="Open the sales order">#' + esc(o.smoId) + '</a>'
+                        + (o.invoiceNo ? ' (' + esc(o.invoiceNo) + ')' : '') + '</b><span class="sub-note">' + esc(o.orderDate) + '</span>'
+                        + '<span class="' + attr(o.orderStatusClass) + '">' + esc(o.orderStatusText) + '</span></td>'
                         + '<td>' + esc(o.customer) + '</td>'
                         + '<td>' + esc(o.warehouse) + '</td>'
                         + '<td class="num">' + num(o.pending) + ' ' + esc(g.uom) + '</td>'
@@ -245,7 +252,7 @@
 
             function next(i) {
                 if (i >= list.length) { finish(); return; }
-                var o = list[i], label = 'Order #' + o.smoId + ' (' + o.orderRef + ')';
+                var o = list[i], label = 'Order #' + o.smoId + (o.invoiceNo ? ' (' + o.invoiceNo + ')' : '');
                 progress();
                 post('ProduceLine', { smoId: o.smoId, sioId: o.sioId, expectedPending: Number(o.pending) }, function (response) {
                     var r = response.d || {};
@@ -339,21 +346,42 @@
                                                 <span class="fa fa-cube form-control-feedback left" aria-hidden="true"></span>
                                             </div>
                                             <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
+                                                <label>Order</label>
+                                                <input type="text" class="form-control has-feedback-left" id="txtOrder" placeholder="Order # / invoice no" />
+                                                <span class="fa fa-file-text-o form-control-feedback left" aria-hidden="true"></span>
+                                            </div>
+                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
+                                                <label>Customer</label>
+                                                <input type="text" class="form-control has-feedback-left" id="txtCustomer" placeholder="Customer name / id" />
+                                                <span class="fa fa-user form-control-feedback left" aria-hidden="true"></span>
+                                            </div>
+                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
                                                 <label>Warehouse</label>
                                                 <select class="form-control" style="text-indent: 25px;" id="slBranch" onchange="loadGroups(true);"></select>
                                                 <span class="fa fa-map-marker form-control-feedback left" aria-hidden="true"></span>
                                             </div>
-                                            <div class="col-md-2 col-sm-6 col-xs-12 form-group has-feedback">
+                                            <div class="clearfix"></div>
+                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
+                                                <label>Order Status</label>
+                                                <select class="form-control" style="text-indent: 25px;" id="slOrderStatus" onchange="loadGroups(true);">
+                                                    <option value="-1" selected="selected">--All Status--</option>
+                                                    <option value="2">Approved</option>
+                                                    <option value="3">Processed</option>
+                                                    <option value="9">Partially Delivered</option>
+                                                </select>
+                                                <span class="fa fa-flag form-control-feedback left" aria-hidden="true"></span>
+                                            </div>
+                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
                                                 <label>Order date from</label>
                                                 <input type="text" class="form-control has-feedback-left" style="background-color: #fff" id="txtSearchFromDate" placeholder="From Date" />
                                                 <span class="fa fa-calendar form-control-feedback left" aria-hidden="true"></span>
                                             </div>
-                                            <div class="col-md-2 col-sm-6 col-xs-12 form-group has-feedback">
+                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
                                                 <label>Order date upto</label>
                                                 <input type="text" class="form-control has-feedback-left" style="background-color: #fff" id="txtSearchToDate" placeholder="To Date" />
                                                 <span class="fa fa-calendar form-control-feedback left" aria-hidden="true"></span>
                                             </div>
-                                            <div class="col-md-2 col-sm-12 col-xs-12 form-group">
+                                            <div class="col-md-3 col-sm-12 col-xs-12 form-group">
                                                 <label>&nbsp;</label>
                                                 <div>
                                                     <div class="btn btn-success mybtnstyl" onclick="loadGroups(true);">
@@ -392,7 +420,8 @@
                                     <div class="x_content">
                                         <div id="groupList"></div>
                                         <p id="truncatedNote" class="text-warning" style="display: none; font-size: 12px;">Only the newest 150 matching orders are considered. Narrow the filters to see older orders.</p>
-                                        <p class="text-muted" style="font-size: 11px;">Groups the open Production Queue lines (awaiting raw material, ready, partially produced) by finished item across Approved / Processed sales orders. Only lines whose raw material is fully reserved (<strong>Ready to produce</strong>) can be ticked; reserve the rest in the <a href="start_production.aspx">Production Queue</a>. Use <strong>Produce selected</strong> to process the ticked orders together. Each order still gets its own production entry and finished batch (one entry per order). Ready orders whose raw material is split over several batches or does not match the pending quantity are reported as failed in the log; produce them from the Production Queue.</p>
+                                        <p id="heldBackNote" class="text-warning" style="display: none; font-size: 12px;"></p>
+                                        <p class="text-muted" style="font-size: 11px;">Groups the open Production Queue lines (awaiting raw material, ready, partially produced) by finished item across Approved / Processed / Partially Delivered sales orders; Draft, To be confirmed, On Hold, cancelled and fully delivered orders are not listed, the same rule as reserving stock on a sales order. The list is rebuilt from the current order status every time. Only lines that can really be produced (raw material fully reserved in one batch that matches the pending quantity, no production entry saved for the order yet) can be ticked; the reason is shown under the others. Reserve the rest in the <a href="start_production.aspx">Production Queue</a>. One production entry is saved per sales order, so only one line of an order is offered here; produce its other lines from the Reserved Items tab of the sales order. Use <strong>Produce selected</strong> to process the ticked orders together. Each order is re-checked against its current status when produced, and the resulting order status is shown in the log.</p>
                                     </div>
                                 </div>
                             </div>

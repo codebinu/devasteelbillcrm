@@ -494,6 +494,20 @@ public static partial class SalesOrderStock
         return list;
     }
 
+    // Bulk Production produces a line only in the unambiguous case: exactly one usable raw-material reservation that yields exactly the
+    // pending quantity (the procedure consumes a whole reservation). Returns why it cannot (null when it can) and the reservation to use.
+    public static string BulkIssue(List<ProductionEntryInput> inputs, decimal pending, string uom, out ProductionEntryInput input)
+    {
+        input = null;
+        List<ProductionEntryInput> usable = inputs.Where(x => x.issue == null).ToList();
+        if (usable.Count != 1)
+            return "Raw material is reserved in " + usable.Count + " batches. Produce this order from the Production Queue.";
+        if (Math.Abs(usable[0].outputQty - pending) > Tolerance)
+            return "The reserved raw material produces " + Fmt(usable[0].outputQty) + " " + uom + ", not the pending " + Fmt(pending) + ". Produce this order from the Production Queue.";
+        input = usable[0];
+        return null;
+    }
+
     public static ProductionEntryOptions LoadProductionEntry(int smoId, int branchId, int status, string docBase, int sioId)
     {
         var o = new ProductionEntryOptions { sioId = sioId, orderRef = docBase, docNo = docBase };

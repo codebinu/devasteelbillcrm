@@ -30,7 +30,7 @@
         var sortBy = "date", sortDir = "desc";
         var statusMap = {
             0: ["Draft", "label label-default"],
-            1: ["New", "label label-warning"],
+            1: ["To be confirmed", "label label-warning"],
             2: ["Approved", "label label-success"],
             3: ["Processed", "label label-primary"],
             9: ["Partially Delivered", "label label-info"],
@@ -243,7 +243,7 @@
                                                 <select class="form-control" style="text-indent: 25px;" id="slOrderStatus" onchange="searchOrders(1);">
                                                     <option value="-1" selected="selected">--All Status--</option>
                                                     <option value="0">Draft</option>
-                                                    <option value="1">New</option>
+                                                    <option value="1">To be confirmed</option>
                                                     <option value="13">On Hold</option>
                                                     <option value="2">Approved</option>
                                                     <option value="3">Processed</option>

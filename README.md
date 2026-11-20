@@ -80,7 +80,7 @@ The page maps `smo_delivery_status` as follows (single definition: [`web/App_Cod
 | Value | Meaning |
 |---:|---|
 | 0 | Draft (saved with **Save as Draft**, not yet approved) |
-| 1 | New (saved with **Save Order**, not yet approved) |
+| 1 | New, shown as "To be confirmed" (saved with **Save Order**, not yet approved) |
 | 2 | Approved |
 | 3 | Processed (a valid reservation exists) |
 | 9 | Partially Delivered |
@@ -101,6 +101,15 @@ A partially delivered order stays open for reservations, production, transfers a
 The page allows editing in Draft, New, On Hold, Approved and Processed (when no invoice exists). Status updates include the previous status and the user's branch membership in the `UPDATE` predicate to avoid applying a stale or out-of-scope transition. These codes and transitions are application behavior; verify all other clients and workflows before changing them. `app_Retailer.aspx.cs` still lists `tbl_sales_master_order` rows with the stored values for its legacy quote flow, so its client sees the new numbers after the migration.
 
 The live database contains `sp_save_sales_order_json`. The local [`sales-order-procedure.inspected.sql`](sales-order-procedure.inspected.sql) file documents an inspected definition for it, but it is not a complete schema baseline or migration history. Compare it with the live routine before relying on it or deploying it.
+
+### Bulk Production
+
+[`web/web_production/bulk_production.aspx`](web/web_production/bulk_production.aspx) (server side: `ProductionPageService.SearchBulkGroups` / `ProduceLine`) produces the same item for several sales orders in one run. It follows the sales order status rules above rather than having its own:
+
+- Only Approved, Processed and Partially Delivered orders are listed (`SalesOrderStatus.CanReserve`, the same rule as reserving stock and the production entry). Draft, To be confirmed, On Hold, cancelled and Fully Delivered orders are not, and a note counts the Draft / To be confirmed / On Hold orders that were held back. The order status is shown with the shared label and colour (`SalesOrderStatus.Name` / `Css`), the order number links to `view_sales_order.aspx`, and the filters (product, order, customer, warehouse, order status, order dates) work like the sales order list.
+- The list is rebuilt from the database on every load. The Production Queue board cache is also dropped when any order on it has a different status than the one it was built with.
+- A line is selectable only when the production entry itself would accept it (`EntryIssue`, plus exactly one usable reservation that yields the pending quantity, `SalesOrderStock.BulkIssue`). One production entry is saved per sales order, so only the first producible line of an order is offered; the reason is shown on the others.
+- Each order is re-validated when produced (status read under the order row lock, `ProductionService.CheckOwnership`). Hold and cancel are refused while a production entry of that order is being saved, because the stored procedure commits on its own connection. After producing, the order status is recalculated (`UpdateSalesOrderStatus`, for example Approved becomes Processed) and shown in the run log.
 
 ### Sales-order overview row
 

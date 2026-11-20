@@ -326,6 +326,14 @@ public static partial class SalesOrderStatus
                 started = false;
                 return "The sales order was not found.";
             }
+            // A production entry being saved cannot be undone by a status change; the order row is locked here, so a save that has
+            // started is seen, and a save that starts later waits for this change and reads the new status.
+            if ((newStatus == OnHold || IsCancelled(newStatus)) && ProductionService.IsSaving(smoId))
+            {
+                db.RollBackTransaction();
+                started = false;
+                return "A production entry is being saved for this order. Try again in a moment.";
+            }
             // Salesmen (user type 2) can view their orders but not change their status.
             string userType = db.SelectScalarForTransaction("select user_type from tbl_user_details where user_id=@u",
                 new MySqlParameter[] { new MySqlParameter("@u", staffId) });

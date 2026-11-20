@@ -268,6 +268,8 @@ public static class ProductionPageService
     {
         public List<ProductionBoardRow> All;
         public bool Truncated;
+        // Orders that have items to produce but are Draft, To be confirmed or On Hold, so they are not on the board until approved.
+        public int HeldBack;
     }
 
     const int BoardCacheSeconds = 60;
@@ -339,11 +341,38 @@ public static class ProductionPageService
         return string.Join("|", parts);
     }
 
+    // A cached board is reused only while every order on it still has the status it was built with, so a hold, cancel, approval or
+    // delivery done on the sales order pages is never hidden behind the cache.
+    static bool StatusesCurrent(BoardData data)
+    {
+        var expected = new Dictionary<int, int>();
+        foreach (ProductionBoardRow r in data.All)
+            expected[r.smoId] = r.orderStatus;
+        if (expected.Count == 0)
+            return true;
+        var ps = new List<MySqlParameter>();
+        var names = new List<string>();
+        foreach (int id in expected.Keys)
+        {
+            names.Add("@i" + names.Count);
+            ps.Add(new MySqlParameter("@i" + ps.Count, id));
+        }
+        DataTable dt = new mySqlConnection().SelectQuery("select smo_id,smo_delivery_status from tbl_sales_master_order where smo_id in (" + string.Join(",", names) + ")", ps.ToArray());
+        if (dt == null || dt.Rows.Count != expected.Count)
+            return false;
+        foreach (DataRow r in dt.Rows)
+            if (expected[Convert.ToInt32(r["smo_id"])] != Convert.ToInt32(r["smo_delivery_status"]))
+                return false;
+        return true;
+    }
+
     static BoardData GetBoard(Dictionary<string, string> filters, int staffId)
     {
         string key = BoardKey(filters, staffId);
         string refresh;
         BoardData data = filters.TryGetValue("refresh", out refresh) && refresh == "1" ? null : HttpRuntime.Cache[key] as BoardData;
+        if (data != null && !StatusesCurrent(data))
+            data = null;
         if (data == null)
         {
             data = BuildBoard(filters, staffId);
@@ -354,16 +383,35 @@ public static class ProductionPageService
     }
 
     // Bulk Production: every open Production Queue line, grouped by finished item and UOM so the same item across several
-    // Approved / Processed orders can be produced together. Only lines that are ready can be selected. Oldest orders first.
+    // Approved / Processed / Partially Delivered orders can be produced together. Only lines that can really be produced are selectable
+    // (the same checks the production entry makes, and one line per order because one production entry is saved per order).
+    // The board is always rebuilt: a stale order status or quantity must not offer a line that the sales order no longer allows.
     public static string SearchBulkGroups(Dictionary<string, string> filters)
     {
-        const string Empty = "{\"count\":0,\"lines\":0,\"truncated\":false,\"groups\":[]}";
+        const string Empty = "{\"count\":0,\"lines\":0,\"truncated\":false,\"heldBack\":0,\"groups\":[]}";
         try
         {
             if (filters == null) filters = new Dictionary<string, string>();
             if (IsSalesman())
                 return Empty;
+            filters["refresh"] = "1";
             BoardData data = GetBoard(filters, StaffId());
+
+            Func<ProductionBoardRow, bool> producible = r => r.statusKey == ProductionBoardStatus.Ready && r.canProduce && r.entryIssue == null;
+            // A sales order takes one production entry through these screens, so only its first producible line is offered.
+            var firstOfOrder = new Dictionary<int, int>();
+            foreach (ProductionBoardRow r in data.All.Where(producible))
+            {
+                int first;
+                if (!firstOfOrder.TryGetValue(r.smoId, out first) || r.sioId < first)
+                    firstOfOrder[r.smoId] = r.sioId;
+            }
+            Func<ProductionBoardRow, bool> ready = r => producible(r) && firstOfOrder[r.smoId] == r.sioId;
+            Func<ProductionBoardRow, string> note = r => ready(r) ? r.message
+                : producible(r) ? "This order has another line to produce in this list. One production entry is saved per sales order; produce the rest from the Reserved Items tab of the sales order."
+                : r.statusKey == ProductionBoardStatus.Ready && r.entryIssue != null ? r.entryIssue
+                : r.message;
+
             var groups = data.All
                 .Where(r => ProductionBoardStatus.IsOpen(r.statusKey))
                 .GroupBy(r => new { r.itmId, uom = r.uom ?? "" })
@@ -375,24 +423,26 @@ public static class ProductionPageService
                     itemCode = g.First().itemCode,
                     uom = g.Key.uom,
                     totalPending = g.Sum(r => r.pending),
-                    readyCount = g.Count(r => r.statusKey == ProductionBoardStatus.Ready && r.canProduce),
+                    readyCount = g.Count(r => ready(r)),
                     orders = g.OrderBy(r => r.smoId).ThenBy(r => r.sioId).Select(r => new
                     {
                         r.smoId,
                         r.sioId,
-                        r.orderRef,
+                        invoiceNo = r.orderRef == "SO-" + r.smoId ? "" : r.orderRef,
                         r.customer,
                         r.warehouse,
                         r.orderDate,
+                        r.orderStatusText,
+                        orderStatusClass = SalesOrderStatus.Css(r.orderStatus),
                         r.pending,
                         r.status,
                         r.statusClass,
-                        r.message,
-                        ready = r.statusKey == ProductionBoardStatus.Ready && r.canProduce,
+                        message = note(r),
+                        ready = ready(r),
                         raw = string.Join(", ", r.raw.Select(c => c.name + " " + Math.Round(c.reserved, 4) + " " + c.uom))
                     }).ToList()
                 }).ToList();
-            return JsonConvert.SerializeObject(new { count = groups.Count, lines = groups.Sum(g => g.orders.Count), truncated = data.Truncated, groups = groups });
+            return JsonConvert.SerializeObject(new { count = groups.Count, lines = groups.Sum(g => g.orders.Count), truncated = data.Truncated, heldBack = data.HeldBack, groups = groups });
         }
         catch (HttpException)
         {
@@ -415,15 +465,21 @@ public static class ProductionPageService
             return new ProductionSaveResult { ok = false, message = o.message };
         if (!o.canSubmit)
             return new ProductionSaveResult { ok = false, message = o.blocker };
-        List<ProductionEntryInput> usable = o.inputs.Where(x => x.issue == null).ToList();
-        if (usable.Count != 1)
-            return new ProductionSaveResult { ok = false, message = "Raw material is reserved in " + usable.Count + " batches. Produce this order from the Production Queue." };
-        ProductionEntryInput input = usable[0];
+        ProductionEntryInput input;
+        string bulkIssue = SalesOrderStock.BulkIssue(o.inputs, o.pending, o.uom, out input);
+        if (bulkIssue != null)
+            return new ProductionSaveResult { ok = false, message = bulkIssue };
         if (Math.Abs(o.pending - expectedPending) > 0.0005m)
             return new ProductionSaveResult { ok = false, message = "The pending quantity changed (now " + Math.Round(o.pending, 3) + " " + o.uom + "). Reload and try again." };
-        if (Math.Abs(input.outputQty - o.pending) > 0.0005m)
-            return new ProductionSaveResult { ok = false, message = "The reserved raw material produces " + Math.Round(input.outputQty, 3) + " " + o.uom + ", not the pending " + Math.Round(o.pending, 3) + ". Produce this order from the Production Queue." };
-        return Save(smoId, sioId, input.reservationId, input.outputQty);
+        ProductionSaveResult saved = Save(smoId, sioId, input.reservationId, input.outputQty);
+        if (saved.ok)
+        {
+            // Saving recalculates the order status (for example Approved becomes Processed); report it like the sales order page shows it.
+            string statusName = SalesOrderStatus.Name(SalesOrderStatus.Read(smoId));
+            if (statusName != "")
+                saved.message += " Order status: " + statusName + ".";
+        }
+        return saved;
     }
 
     // Production Queue board: one row per manufactured line (item with a BOM) of Approved / Processed orders that is not fully delivered.
@@ -481,8 +537,8 @@ public static class ProductionPageService
     {
         {
             var ps = new List<MySqlParameter>();
-            string where = " where smo.smo_delivery_status in (" + SalesOrderStatus.Approved + "," + SalesOrderStatus.Processed + "," + SalesOrderStatus.PartiallyDelivered + ")"
-                + " and m.itsv_bom_enabled=1"
+            // Filters shared by the board and by the count of orders held back; the status condition is added separately.
+            string where = " where m.itsv_bom_enabled=1"
                 + " and exists (select 1 from tbl_item_master_bom bom where bom.itm_id_output=sio.itm_id and bom.itmbi_type=1)";
             AddBranchScope(filters, staffId, ps, ref where);
 
@@ -524,11 +580,23 @@ public static class ProductionPageService
                 ps.Add(new MySqlParameter("@toDate", d.Date.AddDays(1)));
             }
 
-            DataTable candidates = new mySqlConnection().SelectQuery("select smo.smo_id,smo.branch_id,smo.smo_delivery_status as st,smo.smo_invoice_no,tc.cust_name,tb.branch_name,"
-                + "DATE_FORMAT(smo.smo_date,'%d-%b-%Y') as od,sio.sio_id "
-                + "from tbl_sales_items_order sio inner join tbl_sales_master_order smo on smo.smo_id=sio.smo_id "
+            const string FromJoins = "from tbl_sales_items_order sio inner join tbl_sales_master_order smo on smo.smo_id=sio.smo_id "
                 + "inner join tbl_customer tc on tc.cust_id=smo.cust_id left join tbl_branch tb on tb.branch_id=smo.branch_id "
-                + "inner join tbl_item_master m on m.itm_id=sio.itm_id" + where
+                + "inner join tbl_item_master m on m.itm_id=sio.itm_id";
+
+            // Orders that need production but cannot be produced for until approved or resumed (Draft, To be confirmed, On Hold).
+            string heldCount = new mySqlConnection().SelectScalar("select count(distinct smo.smo_id) " + FromJoins + where
+                + " and smo.smo_delivery_status in (" + SalesOrderStatus.Draft + "," + SalesOrderStatus.New + "," + SalesOrderStatus.OnHold + ")", Clone(ps));
+
+            string statusCond = " and smo.smo_delivery_status in (" + SalesOrderStatus.Approved + "," + SalesOrderStatus.Processed + "," + SalesOrderStatus.PartiallyDelivered + ")";
+            int orderStatus;
+            if (filters.TryGetValue("order_status", out v) && int.TryParse(v, out orderStatus)
+                && (orderStatus == SalesOrderStatus.Approved || orderStatus == SalesOrderStatus.Processed || orderStatus == SalesOrderStatus.PartiallyDelivered))
+                statusCond = " and smo.smo_delivery_status=" + orderStatus;
+
+            DataTable candidates = new mySqlConnection().SelectQuery("select smo.smo_id,smo.branch_id,smo.smo_delivery_status as st,smo.smo_invoice_no,tc.cust_name,tb.branch_name,"
+                + "DATE_FORMAT(smo.smo_date,'%d-%b-%Y %H:%i') as od,sio.sio_id "
+                + FromJoins + where + statusCond
                 + " order by smo.smo_date desc,smo.smo_id desc,sio.row_no,sio.sio_id", ps.ToArray());
 
             var orders = new List<DataRow>();
@@ -590,7 +658,8 @@ public static class ProductionPageService
                     all.Add(r);
                 }
             }
-            return new BoardData { All = all, Truncated = truncated };
+            int held;
+            return new BoardData { All = all, Truncated = truncated, HeldBack = int.TryParse(heldCount, out held) ? held : 0 };
         }
     }
 

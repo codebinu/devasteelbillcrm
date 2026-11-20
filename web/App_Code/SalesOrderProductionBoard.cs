@@ -32,6 +32,8 @@ public class ProductionBoardRow
     public bool canAct;
     public bool rawReady;
     public bool canProduce;
+    // Why a line that looks ready cannot actually be produced through the one-entry-per-order production screens (null when it can).
+    public string entryIssue;
 
     // Reserving the finished item itself (stock that already exists must be reserved before anything is produced).
     public decimal availableFinished;
@@ -131,6 +133,16 @@ public static partial class SalesOrderStock
                     else
                         row.statusKey = row.rawReady && c.FinishedFirst == null ? ProductionBoardStatus.Ready : ProductionBoardStatus.Awaiting;
                     row.canProduce = open && r.needsProduction > 0 && row.rawReady && c.FinishedFirst == null;
+                    if (row.canProduce && row.statusKey == ProductionBoardStatus.Ready)
+                    {
+                        // The same checks the entry screens make when producing, so a "ready" line is one that really can be produced.
+                        ProductionPayloadContext ctx = ProductionService.LoadPayloadContext(smoId, l.SioId);
+                        List<ProductionEntryInput> inputs;
+                        ProductionEntryInput chosen;
+                        row.entryIssue = ctx.Ok
+                            ? EntryIssue(c, ctx, status, out inputs) ?? BulkIssue(inputs, R4(c.Needs), c.UomName, out chosen)
+                            : ctx.Message;
+                    }
                 }
                 row.status = ProductionBoardStatus.Text(row.statusKey);
                 row.statusClass = ProductionBoardStatus.Css(row.statusKey);

@@ -45,7 +45,7 @@ public static partial class SalesOrderStatus
         switch (status)
         {
             case Draft: return "Draft";
-            case New: return "New";
+            case New: return "To be confirmed";
             case OnHold: return "On Hold";
             case Approved: return "Approved";
             case Processed: return "Processed";

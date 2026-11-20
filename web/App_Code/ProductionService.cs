@@ -113,6 +113,13 @@ public static class ProductionService
         return null;
     }
 
+    // True while a production entry for the order is being saved by this process. Hold and cancel are refused meanwhile, because the
+    // procedure commits on its own connection and cannot take part in the status change's transaction.
+    public static bool IsSaving(int smoId)
+    {
+        return InFlight.ContainsKey(smoId);
+    }
+
     // The procedure checks that the reservation belongs to a valid order but not to the order being worked on,
     // and does not check the BOM, so both are verified here before the call.
     static string CheckOwnership(ProductionEntryRequest r)
@@ -120,6 +127,8 @@ public static class ProductionService
         ProductionPayloadContext ctx = LoadPayloadContext(r.SmoId, r.SioId);
         if (!ctx.Ok)
             return ctx.Message;
+        // Waits for a status change that holds the order row and reads its committed result; a later hold or cancel then finds this save in flight.
+        ctx.OrderStatus = LockedStatus(r.SmoId);
         if (!SalesOrderStatus.CanReserve(ctx.OrderStatus))
             return "Production cannot be entered unless the sales order is Approved, Processed or Partially Delivered.";
         if (ctx.ProductionExists)
@@ -240,6 +249,32 @@ public static class ProductionService
             result.ItpmId = 0;
         }
         return result;
+    }
+
+    // Reads the status under the order row lock in a transaction that ends at once, so it never overlaps the procedure's own transaction.
+    static int LockedStatus(int smoId)
+    {
+        var db = new mySqlConnection();
+        bool started = false;
+        try
+        {
+            db.BeginTransaction();
+            started = true;
+            int status = SalesOrderStatus.LockStatus(db, smoId);
+            db.CommitTransaction();
+            started = false;
+            return status;
+        }
+        finally
+        {
+            if (started)
+            {
+                try { db.RollBackTransaction(); }
+                catch (Exception) { }
+            }
+            try { db.CloseConnection(); }
+            catch (Exception) { }
+        }
     }
 
     public static bool EntryExists(string docNo)

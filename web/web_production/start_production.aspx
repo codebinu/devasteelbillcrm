@@ -906,7 +906,7 @@
                                             </table>
                                             <div id="divPagination"></div>
                                             <p id="truncatedNote" class="text-warning" style="display: none; font-size: 12px;">Only the newest 150 matching orders are shown. Narrow the filters to see older orders.</p>
-                                            <p class="text-muted" style="font-size: 11px;">Lists items that have a bill of materials on Approved / Processed sales orders that are not fully delivered. Reserve the raw materials for an item (expand <strong>Raw Materials</strong>), then use <strong>Produce</strong>. Reservations follow the same rules as the Reserved Items tab of the sales order.</p>
+                                            <p class="text-muted" style="font-size: 11px;">Lists items that have a bill of materials on Approved / Processed / Partially Delivered sales orders that are not fully delivered. Reserve the raw materials for an item (expand <strong>Raw Materials</strong>), then use <strong>Produce</strong>. Reservations follow the same rules as the Reserved Items tab of the sales order.</p>
                                         </div>
                                     </div>
                                     <div class="clearfix"></div>
