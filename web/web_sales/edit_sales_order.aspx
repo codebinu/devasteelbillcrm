@@ -110,8 +110,8 @@
                     </div>
                     <% } else { %>
                     <div class="alert alert-info" style="margin-bottom: 10px;">
-                        You can change the payment type, order type, notes, and each item's quantity, size, unit, price and discount.
-                        Changing an item's final quantity releases its stock reservations.
+                        You can change the payment type, order type, notes, and each item's quantity, size, unit, price and discount,
+                        and add or remove items (at least one item must remain). Orders with an invoice or stock reservations cannot be edited.
                     </div>
                     <% } %>
                     <div id="editMessage" role="status" aria-live="polite"></div>
@@ -183,6 +183,13 @@
                             <div class="x_panel">
                                 <div class="x_title"><strong><i class="fa fa-list"></i> Sales Order Items</strong><div class="clearfix"></div></div>
                                 <div class="x_content">
+                                    <% if (CanEdit) { %>
+                                    <div class="form-group" style="position: relative; max-width: 480px;">
+                                        <label for="itemSearch">Add Item</label>
+                                        <input type="text" id="itemSearch" class="form-control" placeholder="Search item by name or code" autocomplete="off" />
+                                        <ul id="itemResults" class="list-group" style="display: none; position: absolute; z-index: 20; left: 0; right: 0; max-height: 260px; overflow-y: auto; margin: 0;"></ul>
+                                    </div>
+                                    <% } %>
                                     <div style="overflow-x: auto;">
                                         <table class="table table-striped jambo_table table-bordered" id="itemsTable">
                                             <thead style="background-color: #f1eeee; color: #525252">
@@ -202,17 +209,18 @@
                                                     <th style="text-align: right;">Tax %</th>
                                                     <th style="text-align: right;">Tax / GST</th>
                                                     <th style="text-align: right;">Line Total</th>
+                                                    <% if (CanEdit) { %><th></th><% } %>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <% foreach (System.Data.DataRow r in Items.Rows) { %>
-                                                <tr data-sio-id="<%= Enc(r["sio_id"]) %>" data-target="<%= Enc(r["tum_id"]) %>" data-reserved="<%= Enc(r["edit_reserved"]) %>"
+                                                <tr data-sio-id="<%= Enc(r["sio_id"]) %>" data-itbs-id="<%= Enc(r["itbs_id"]) %>" data-target="<%= Enc(r["tum_id"]) %>"
                                                     data-tax="<%= Raw(r["sio_item_tax"]) %>" data-cess="<%= NumCol(r, "sio_item_cess") %>"
                                                     data-final="<%= Raw(r["sio_finalqty"]) %>" data-total="<%= Raw(r["sio_total"]) %>" data-disc="<%= Raw(r["sio_discount_amount"]) %>"
                                                     data-taxamt="<%= Raw(r["sio_tax_amount"]) %>" data-net="<%= Raw(r["sio_net_amount"]) %>" data-taxable="<%= Enc(r["edit_taxable"]) %>">
-                                                    <td><%= Enc(r["sl"]) %></td>
+                                                    <td class="c-sl"><%= Enc(r["sl"]) %></td>
                                                     <td><%= Enc(r["itm_code"]) %></td>
-                                                    <td><%= Enc(r["itm_name"]) %><% if (r["edit_reserved"].ToString() != "0") { %> <span class="label label-info" title="Stock is reserved for this item">Reserved</span><% } %></td>
+                                                    <td><%= Enc(r["itm_name"]) %></td>
                                                     <td class="num"><input type="number" min="0" step="0.001" data-dec="3" inputmode="decimal" class="form-control f-qty so-num" value="<%= Enc(r["edit_qty"]) %>" data-orig="<%= Enc(r["edit_qty_raw"]) %>"<%= ReadOnly %> /></td>
                                                     <td class="num"><input type="number" min="0" step="0.001" data-dec="3" inputmode="decimal" class="form-control f-len so-num" value="<%= Enc(r["edit_length"]) %>" data-orig="<%= Enc(r["edit_length_raw"]) %>"<%= ReadOnly %> /></td>
                                                     <td class="num"><input type="number" min="0" step="0.001" data-dec="3" inputmode="decimal" class="form-control f-wid so-num" value="<%= Enc(r["edit_width"]) %>" data-orig="<%= Enc(r["edit_width_raw"]) %>"<%= ReadOnly %> /></td>
@@ -225,10 +233,11 @@
                                                     <td style="text-align: right;"><%= Raw(r["sio_item_tax"]) %></td>
                                                     <td style="text-align: right;" class="c-tax"><%= Money(r["sio_tax_amount"]) %></td>
                                                     <td style="text-align: right;"><b class="c-net"><%= Money(r["sio_net_amount"]) %></b></td>
+                                                    <% if (CanEdit) { %><td><button type="button" class="btn btn-danger btn-xs btn-remove" title="Remove item"><i class="fa fa-trash"></i></button></td><% } %>
                                                 </tr>
                                                 <% } %>
                                                 <% if (Items.Rows.Count == 0) { %>
-                                                <tr><td colspan="15" style="text-align: center">No items found for this sales order.</td></tr>
+                                                <tr><td colspan="16" style="text-align: center">No items found for this sales order.</td></tr>
                                                 <% } %>
                                             </tbody>
                                         </table>
@@ -377,8 +386,7 @@
                 var origFinal = num($tr.attr('data-final'));
                 var r = {
                     ok: true, changed: changed, final: origFinal, total: num($tr.attr('data-total')), disc: num($tr.attr('data-disc')),
-                    tax: num($tr.attr('data-taxamt')), net: num($tr.attr('data-net')), taxable: num($tr.attr('data-taxable')),
-                    releases: false
+                    tax: num($tr.attr('data-taxamt')), net: num($tr.attr('data-net')), taxable: num($tr.attr('data-taxable'))
                 };
                 if (changed) {
                     var f = UomConversion.calculateFinalQuantity({
@@ -396,10 +404,6 @@
                     } else {
                         var a = lineAmounts(f.value, s.price, s.rate, num($tr.attr('data-tax')), num($tr.attr('data-cess')));
                         r.final = f.value; r.total = a.total; r.disc = a.disc; r.tax = a.tax; r.net = a.net; r.taxable = a.net - a.tax;
-                        if (Math.abs(f.value - origFinal) > 0.00005 && num($tr.attr('data-reserved')) > 0) {
-                            r.releases = true;
-                            $note.text('Reservations of this item will be released.');
-                        }
                     }
                 }
                 $tr.find('.c-final').text(r.ok ? String(Math.round(r.final * 1000) / 1000) : '-');
@@ -409,9 +413,18 @@
                 return r;
             }
 
+            var structureChanged = false;
+
+            function dataRows() { return $('#itemsTable tbody tr[data-sio-id]'); }
+
+            function renumber() {
+                dataRows().each(function (i) { $(this).find('.c-sl').text(i + 1); });
+                $('#itemsTable .btn-remove').prop('disabled', dataRows().length <= 1);
+            }
+
             function recalcAll() {
-                var t = { qty: 0, total: 0, disc: 0, taxable: 0, tax: 0, net: 0 }, any = false, bad = false;
-                $('#itemsTable tbody tr[data-sio-id]').each(function () {
+                var t = { qty: 0, total: 0, disc: 0, taxable: 0, tax: 0, net: 0 }, any = structureChanged, bad = false;
+                dataRows().each(function () {
                     var r = recalcRow($(this));
                     any = any || r.changed;
                     bad = bad || !r.ok;
@@ -424,33 +437,116 @@
                 } else if (!any) {
                     $.each(initialTotals, function (id, text) { $('#' + id).text(text); });
                 }
-                $('#btnSave').prop('disabled', bad);
+                $('#btnSave').prop('disabled', bad || dataRows().length === 0);
                 return { any: any, bad: bad };
             }
 
-            $('#itemsTable tbody tr[data-sio-id]').each(function () {
+            dataRows().each(function () {
                 $(this).data('sig', readRow($(this)).sig);
             });
+            renumber();
             recalcAll();
             $('#itemsTable').on('input change', 'input, select', recalcAll);
+
+            $('#itemsTable').on('click', '.btn-remove', function () {
+                if (dataRows().length <= 1) { showMsg('warning', 'A sales order must have at least one item.'); return; }
+                $(this).closest('tr').remove();
+                structureChanged = true;
+                renumber();
+                recalcAll();
+            });
+
+            // Adds a new line for a searched item; its values are entered like any other line and the server recalculates them on save.
+            function addItem(item) {
+                var exists = false;
+                dataRows().each(function () { if (parseInt($(this).attr('data-itbs-id'), 10) === item.itbsId) { exists = true; } });
+                if (exists) { showMsg('warning', item.name + ' is already in this sales order.'); return; }
+                var uoms = UomConversion.getCompatibleUoms(item.uomId);
+                if (!item.uomId || !UomConversion.findUom(item.uomId) || uoms.length === 0) {
+                    showMsg('danger', 'The sales unit of measure is not configured for ' + item.name + '.');
+                    return;
+                }
+                var $tr = $('<tr data-sio-id="0" class="changed"></tr>')
+                    .attr('data-itbs-id', item.itbsId).attr('data-target', item.uomId).attr('data-tax', item.tax).attr('data-cess', item.cess)
+                    .attr('data-final', 0).attr('data-total', 0).attr('data-disc', 0).attr('data-taxamt', 0).attr('data-net', 0).attr('data-taxable', 0);
+                function td(cls) { return $('<td></td>').addClass(cls || '').appendTo($tr); }
+                function numInput(cls, step, dec, value) {
+                    return $('<input type="number" min="0" inputmode="decimal" />').addClass('form-control so-num ' + cls)
+                        .attr('step', step).attr('data-dec', dec).val(value);
+                }
+                td('c-sl');
+                td().text(item.code);
+                td().text(item.name);
+                numInput('f-qty', '0.001', 3, '').appendTo(td('num'));
+                numInput('f-len', '0.001', 3, '').appendTo(td('num'));
+                numInput('f-wid', '0.001', 3, '').appendTo(td('num'));
+                var $uom = $('<select class="form-control f-uom"></select>').appendTo(td());
+                $.each(uoms, function (i, u) {
+                    $('<option></option>').val(u.tum_id).text(u.tum_name).prop('selected', String(u.tum_id) === String(item.uomId)).appendTo($uom);
+                });
+                $('<span class="c-final"></span>').appendTo(td('num')).after('<span class="row-err"></span><span class="row-note"></span>');
+                td().text(UomConversion.findUom(item.uomId).tum_name);
+                numInput('f-price', '0.01', 2, num(item.price).toFixed(2)).appendTo(td('num'));
+                numInput('f-rate', '0.01', 2, '0').attr('max', 100).appendTo(td('num'));
+                td().css('text-align', 'right').addClass('c-disc');
+                td().css('text-align', 'right').text(item.tax);
+                td().css('text-align', 'right').addClass('c-tax');
+                td().css('text-align', 'right').append('<b class="c-net"></b>');
+                $('<button type="button" class="btn btn-danger btn-xs btn-remove" title="Remove item"><i class="fa fa-trash"></i></button>').appendTo(td());
+                $tr.data('sig', '');
+                $('#itemsTable tbody').append($tr);
+                structureChanged = true;
+                renumber();
+                recalcAll();
+                $tr.find('.f-qty').focus();
+            }
+
+            var searchTimer = null, searchSeq = 0;
+            function hideResults() { $('#itemResults').hide().empty(); }
+            $('#itemSearch').on('input', function () {
+                var term = $.trim($(this).val());
+                clearTimeout(searchTimer);
+                if (term.length < 2) { hideResults(); return; }
+                searchTimer = setTimeout(function () {
+                    var seq = ++searchSeq;
+                    $.ajax({
+                        type: 'POST', url: 'edit_sales_order.aspx/SearchItems',
+                        data: JSON.stringify({ smoId: cfg.smoId, term: term }),
+                        contentType: 'application/json; charset=utf-8', dataType: 'json',
+                        success: function (response) {
+                            if (seq !== searchSeq) { return; }
+                            var $list = $('#itemResults').empty();
+                            var items = (response && response.d) || [];
+                            if (items.length === 0) {
+                                $list.append($('<li class="list-group-item text-muted"></li>').text('No items found'));
+                            }
+                            $.each(items, function (i, item) {
+                                $('<li class="list-group-item" style="cursor: pointer;"></li>')
+                                    .text(item.name + (item.code ? ' (' + item.code + ')' : '') + ' - stock ' + item.stock)
+                                    .on('mousedown', function (e) { e.preventDefault(); addItem(item); $('#itemSearch').val(''); hideResults(); })
+                                    .appendTo($list);
+                            });
+                            $list.show();
+                        },
+                        error: function () { hideResults(); showMsg('danger', 'Unable to search items. Please sign in again or try later.'); }
+                    });
+                }, 250);
+            }).on('blur', function () { setTimeout(hideResults, 150); });
 
             $('#btnSave').on('click', function () {
                 var state = recalcAll();
                 if (state.bad) { showMsg('danger', 'Fix the highlighted items before saving.'); return; }
+                if (dataRows().length === 0) { showMsg('danger', 'A sales order must have at least one item.'); return; }
                 if (!state.any && headerState() === initialHeader) { showMsg('info', 'There are no changes to save.'); return; }
 
-                var lines = [], releases = 0;
-                $('#itemsTable tbody tr[data-sio-id]').each(function () {
+                var lines = [];
+                dataRows().each(function () {
                     var $tr = $(this), s = readRow($tr);
-                    if ($tr.find('.row-note').text() !== '') { releases++; }
                     lines.push({
-                        sioId: parseInt($tr.attr('data-sio-id'), 10), qty: s.qty, length: s.len, width: s.wid,
-                        tumIdCust: s.uom, price: s.price, discountRate: s.rate
+                        sioId: parseInt($tr.attr('data-sio-id'), 10) || 0, itbsId: parseInt($tr.attr('data-itbs-id'), 10) || 0,
+                        qty: s.qty, length: s.len, width: s.wid, tumIdCust: s.uom, price: s.price, discountRate: s.rate
                     });
                 });
-                if (releases > 0 && !confirm('The final quantity of ' + releases + ' item(s) changed, so their stock reservations will be released. Continue?')) {
-                    return;
-                }
 
                 var $btn = $(this).prop('disabled', true);
                 $('#saveStatus').text('Saving...');

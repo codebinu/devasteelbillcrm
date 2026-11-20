@@ -5,15 +5,15 @@ using System.Collections.Generic;
 // This file is free of database access so the rules can be reviewed and tested on their own; the stored-data operations
 // (automatic recalculation and manual status changes) are in SalesOrderStatusStore.cs.
 //
-//   0 Draft | 1 On Hold | 2 Approved | 3 Processed | 9 Partially Delivered | 10 Fully Delivered | 11 Cancelled by Company | 12 Cancelled by Customer
+//   0 New | 1 On Hold | 2 Approved | 3 Processed | 9 Partially Delivered | 10 Fully Delivered | 11 Cancelled by Company | 12 Cancelled by Customer
 //
 // Two separate responsibilities:
 //   - Manual transitions (Approve, Put On Hold, Cancel) are user actions validated by CanTransition and applied by ChangeSalesOrderStatus.
 //   - Operational statuses (2, 3, 9, 10) are always derived from the current reservations, invoices and deliveries by Calculate and
-//     stored by UpdateSalesOrderStatus. Draft, On Hold and the cancelled statuses are never changed by that calculation.
+//     stored by UpdateSalesOrderStatus. New, On Hold and the cancelled statuses are never changed by that calculation.
 public static partial class SalesOrderStatus
 {
-    public const int Draft = 0;
+    public const int New = 0;
     public const int OnHold = 1;
     public const int Approved = 2;
     public const int Processed = 3;
@@ -41,7 +41,7 @@ public static partial class SalesOrderStatus
     {
         switch (status)
         {
-            case Draft: return "Draft";
+            case New: return "New";
             case OnHold: return "On Hold";
             case Approved: return "Approved";
             case Processed: return "Processed";
@@ -57,7 +57,7 @@ public static partial class SalesOrderStatus
     {
         switch (status)
         {
-            case Draft: return "label label-warning";
+            case New: return "label label-warning";
             case OnHold: return "label label-info";
             case Approved: return "label label-success";
             case Processed: return "label label-primary";
@@ -82,21 +82,21 @@ public static partial class SalesOrderStatus
     // Reservations may be released in every status except a fully delivered order.
     public static bool CanRelease(int status)
     {
-        return status == Draft || status == OnHold || CanReserve(status) || IsCancelled(status);
+        return status == New || status == OnHold || CanReserve(status) || IsCancelled(status);
     }
 
-    public static bool CanApprove(int status) { return status == Draft || status == OnHold; }
+    public static bool CanApprove(int status) { return status == New || status == OnHold; }
 
     // A fully delivered order cannot be put on hold.
-    public static bool CanHold(int status) { return status == Draft || status == Approved || status == Processed || status == PartiallyDelivered; }
+    public static bool CanHold(int status) { return status == New || status == Approved || status == Processed || status == PartiallyDelivered; }
 
     public static bool CanCancel(int status)
     {
-        return status == Draft || status == OnHold || status == Approved || status == Processed
+        return status == New || status == OnHold || status == Approved || status == Processed
             || status == PartiallyDelivered || status == FullyDelivered;
     }
 
-    // Manual (user-initiated) transitions only. Cancelled orders accept no further transition and no status can be set back to Draft.
+    // Manual (user-initiated) transitions only. Cancelled orders accept no further transition and no status can be set back to New.
     public static bool CanTransition(int from, int to)
     {
         switch (to)
@@ -139,7 +139,7 @@ public static partial class SalesOrderStatus
 
     // The status an order should have given its current stored status and its current valid records. It depends only on those inputs, so
     // repeated evaluation with unchanged data always gives the same result.
-    //   Cancelled, On Hold and Draft keep their value (a Draft is never approved automatically); the same goes for any unknown value.
+    //   Cancelled, On Hold and New keep their value (a New order is never approved automatically); the same goes for any unknown value.
     //   Otherwise: Fully Delivered, Partially Delivered (a valid invoice is delivered), Processed (a valid reservation exists), Approved.
     //   Processed belongs to the sales order and depends only on its reservations, never on its invoices.
     public static int Calculate(int current, IList<LineQuantity> lines, bool hasDeliveredInvoice, bool hasValidReservation)

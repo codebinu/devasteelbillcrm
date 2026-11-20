@@ -8,7 +8,7 @@ using System.Web;
 using System.Web.Services;
 using MySql.Data.MySqlClient;
 
-// Edits an existing sales order: header fields and the values of its existing lines. See SalesOrderEdit for the rules.
+// Edits an existing sales order: header fields and its lines (values, added and removed lines). See SalesOrderEdit for the rules.
 public partial class web_sales_edit_sales_order : System.Web.UI.Page
 {
     protected DataRow Order;
@@ -52,6 +52,9 @@ public partial class web_sales_edit_sales_order : System.Web.UI.Page
             }
             var t = Request.Cookies["invntrystaffTypeID"];
             string staffType = t != null ? t.Value : "";
+
+            // Recalculate before showing the order, so a stale status does not decide whether it can be edited.
+            SalesOrderStatus.UpdateSalesOrderStatus(smoId);
 
             string sql = "select smo.smo_id,smo.smo_invoice_no,smo.cust_id,smo.branch_id,tc.cust_name,tc.cust_tax_reg_id,"
                 + "tc.cust_phone,tc.cust_phone1,tc.cust_address,tc.cust_email,tc.cust_city,"
@@ -116,12 +119,11 @@ public partial class web_sales_edit_sales_order : System.Web.UI.Page
                 + "(select u.tum_name from tbl_item_uom u where u.tum_id=sio.tum_id limit 1) as uom "
                 + "from tbl_sales_items_order sio where sio.smo_id=@id order by sio.row_no",
                 new MySqlParameter[] { new MySqlParameter("@id", smoId) });
-            string[] extra = { "sl", "edit_qty", "edit_length", "edit_width", "edit_qty_raw", "edit_length_raw", "edit_width_raw", "edit_uom", "edit_taxable", "edit_reserved" };
+            string[] extra = { "sl", "edit_qty", "edit_length", "edit_width", "edit_qty_raw", "edit_length_raw", "edit_width_raw", "edit_uom", "edit_taxable" };
             foreach (string col in extra)
                 Items.Columns.Add(col, typeof(string));
 
             Dictionary<int, EditUom> uoms = SalesOrderEdit.LoadUoms(db, false);
-            Dictionary<int, int> reserved = SalesOrderEdit.ReservationCounts(db, false, smoId);
             bool hasTaxable = Items.Columns.Contains("sio_tax_excluded_total");
             int sl = 1;
             foreach (DataRow r in Items.Rows)
@@ -136,8 +138,6 @@ public partial class web_sales_edit_sales_order : System.Web.UI.Page
                 r["edit_width_raw"] = b.Width > 0 ? Raw(b.Width) : "";
                 r["edit_uom"] = b.TumCust.ToString();
                 r["edit_taxable"] = Raw(hasTaxable ? Dec(r["sio_tax_excluded_total"]) : Dec(r["sio_net_amount"]) - Dec(r["sio_tax_amount"]));
-                int count;
-                r["edit_reserved"] = reserved.TryGetValue(Convert.ToInt32(r["sio_id"]), out count) ? count.ToString() : "0";
                 ItemsQty += Dec(r["sio_finalqty"]);
             }
 
@@ -170,6 +170,24 @@ public partial class web_sales_edit_sales_order : System.Web.UI.Page
         authentication.userAuthentication();
         authentication.checkPageAcess(7);
         return SalesOrderEdit.Save(staffId, context.Request.Cookies["invntrystaffTypeID"].Value, request);
+    }
+
+    [WebMethod]
+    public static List<SalesOrderEditItem> SearchItems(int smoId, string term)
+    {
+        var context = HttpContext.Current;
+        int staffId = 0;
+        if (context == null
+            || context.Request.Cookies["invntrystaffId"] == null
+            || context.Request.Cookies["invntrystaffTypeID"] == null
+            || !int.TryParse(context.Request.Cookies["invntrystaffId"].Value, out staffId)
+            || staffId <= 0)
+            throw new HttpException(401, "Please sign in again.");
+
+        var authentication = new LoginAuthentication();
+        authentication.userAuthentication();
+        authentication.checkPageAcess(7);
+        return SalesOrderEdit.SearchItems(staffId, context.Request.Cookies["invntrystaffTypeID"].Value, smoId, term);
     }
 
     // Keeps a JSON literal safe inside an inline script block.
