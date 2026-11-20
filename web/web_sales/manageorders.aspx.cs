@@ -168,13 +168,24 @@ public partial class web_sales_manageorders : System.Web.UI.Page
         try
         {
             DateTime TimeNow = BranchClock.NowForSale(db, order_sm_id);
+            // An invoice of a sales order changes the order's status: the order row is locked first (locks are always taken order, then invoice)
+            // and the order is recalculated before commit.
+            int soId = 0;
+            int soInvoiceId;
+            if (int.TryParse(order_sm_id, out soInvoiceId))
+                soId = SalesOrderStatus.OrderOfInvoice(db, false, soInvoiceId);
+            int soStaffId;
+            int.TryParse(order["user_id"], out soStaffId);
             db.BeginTransaction();
+            if (soId > 0)
+                SalesOrderStatus.LockStatus(db, soId);
             string action_date = TimeNow.ToString("yyyy-MM-dd HH:mm:ss");
             //start check for refreshment page
             string checkEntryChanged = "select count(sm_id) from tbl_sales_master where sm_last_updated_date=DATE_FORMAT('" + order["lastUpdatedDate"] + "','%Y-%m-%d %H:%i:%s') and sm_id=" + order["sm_id"];
             int changeCount = Convert.ToInt32(db.SelectScalarForTransaction(checkEntryChanged));
             if (changeCount == 0)
             {
+                db.RollBackTransaction();
                 return "E";
             }
 
@@ -186,6 +197,7 @@ public partial class web_sales_manageorders : System.Web.UI.Page
 
             if (dt_sm.Rows[0]["sm_delivery_status"].ToString() == order["order_status"].ToString())
             {
+                db.RollBackTransaction();
                 result = "SUCCESS";
                 return result;
             }
@@ -195,6 +207,16 @@ public partial class web_sales_manageorders : System.Web.UI.Page
                 // Increase Stock - insert to transaction - change status - update cust_amount with date
                 if (dt_sm.Rows[0]["sm_delivery_status"].ToString() == "4" || dt_sm.Rows[0]["sm_delivery_status"].ToString() == "5")
                 {
+                    // Bringing a cancelled or rejected invoice back must not push the order past its ordered quantities (the order row is locked above).
+                    if (soId > 0 && order["order_status"] != "4" && order["order_status"] != "5")
+                    {
+                        string blocked = SalesOrderStatus.InvoiceReactivationBlock(db, true, soInvoiceId);
+                        if (blocked != null)
+                        {
+                            db.RollBackTransaction();
+                            return "BLOCKED:" + blocked;
+                        }
+                    }
                    
                     string qry = "select itbs_id,si_qty,si_foc,si_itm_type,itm_type,itm_name from tbl_sales_items where sm_id='" + order["sm_id"] + "' and ( si_itm_type='0' or si_itm_type='2') and itm_type='1'";
                     DataTable dt = db.SelectQueryForTransaction(qry);
@@ -600,6 +622,8 @@ public partial class web_sales_manageorders : System.Web.UI.Page
             }
             db.ExecuteQueryForTransaction("UPDATE tbl_sales_master SET sm_last_updated_date='" + action_date + "' where sm_id =" + order["sm_id"]);
             db.ExecuteQueryForTransaction("update tbl_transactions set last_updated_date='" + action_date + "' where action_type=1 and action_ref_id=" + order["sm_id"] + "");
+            if (soId > 0)
+                SalesOrderStatus.TryUpdateSalesOrderStatus(db, soId, soStaffId);
             db.CommitTransaction();
             result = "SUCCESS";
            

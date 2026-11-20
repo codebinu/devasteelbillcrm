@@ -607,6 +607,13 @@ where si.sm_id='" + order_id + "'";
     [WebMethod]
     public static string cancel_order(string sm_id, string user_id, string time_zone)
     {
+        string result = cancel_order_core(sm_id, user_id, time_zone);
+        SalesOrderStatus.UpdateSalesOrderStatusForInvoice(sm_id);
+        return result;
+    }
+
+    static string cancel_order_core(string sm_id, string user_id, string time_zone)
+    {
         string result = "";
         mySqlConnection db = new mySqlConnection();
         try
@@ -691,6 +698,19 @@ where si.sm_id='" + order_id + "'";
 
     [WebMethod]
     public static string update_order_status_online(Dictionary<string, string> order)
+    {
+        string soInvoice;
+        order.TryGetValue("sm_id", out soInvoice);
+        // A cancelled or rejected invoice of a sales order cannot be brought back when that would exceed the ordered quantities.
+        string blocked = SalesOrderStatus.InvoiceReactivationBlock(soInvoice, order.ContainsKey("order_status") ? order["order_status"] : "");
+        if (blocked != null)
+            return "{\"result\":\"FAILED\",\"message\":\"" + blocked.Replace("\"", "'").Replace("\\", "/") + "\"}";
+        string result = update_order_status_online_core(order);
+        SalesOrderStatus.UpdateSalesOrderStatusForInvoice(soInvoice);
+        return result;
+    }
+
+    static string update_order_status_online_core(Dictionary<string, string> order)
     {
         string result = "";
         mySqlConnection db = new mySqlConnection();
@@ -866,6 +886,15 @@ where si.sm_id='" + order_id + "'";
 
     [WebMethod]
     public static string editOrder(Dictionary<string, string> editedorder)
+    {
+        string result = editOrder_core(editedorder);
+        string soInvoice;
+        editedorder.TryGetValue("sm_id", out soInvoice);
+        SalesOrderStatus.UpdateSalesOrderStatusForInvoice(soInvoice);
+        return result;
+    }
+
+    static string editOrder_core(Dictionary<string, string> editedorder)
     {
         string result = "";
         mySqlConnection db = new mySqlConnection();

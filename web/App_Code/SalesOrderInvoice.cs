@@ -108,7 +108,7 @@ public static partial class SalesOrderStock
     }
 
     // Order lines with ordered, already invoiced and reserved quantities. The invoiced quantity counts every invoice linked to the order
-    // (sm_refid = smo_id, sm_is_inter_stock_transfer_invoice = 0).
+    // (sm_refid = smo_id, sm_is_inter_stock_transfer_invoice = 0) except cancelled or rejected ones, which free their quantity again.
     static List<SalesOrderInvoiceLine> ReadInvoiceLines(mySqlConnection db, bool tx, int smoId, int branchId, out Dictionary<int, decimal[]> factors)
     {
         Snapshot uoms = LoadUomSnapshot(db, tx);
@@ -117,7 +117,7 @@ public static partial class SalesOrderStock
             + "tis.branch_id as tis_branch,tis.itm_id as tis_itm,tis.itm_code,tp.tp_tax_percentage,tp.tp_cess,"
             + "m.itm_name,m.itm_type,m.itsv_uom_purchase,m.itsv_uom_sales,"
             + "ifnull((select sum(si.si_qty) from tbl_sales_items si inner join tbl_sales_master sm on sm.sm_id=si.sm_id "
-            + "where si.sio_id=sio.sio_id and sm.sm_refid=sio.smo_id and sm.sm_is_inter_stock_transfer_invoice=0),0) as invoiced,"
+            + "where si.sio_id=sio.sio_id and sm.sm_refid=sio.smo_id and sm.sm_is_inter_stock_transfer_invoice=0 and " + SalesOrderStatus.ValidInvoiceSql + "),0) as invoiced,"
             + "ifnull((select sum(r.itbsr_qty) from tbl_item_batchstock_reserve r inner join tbl_item_batch b on b.itbh_id=r.itbh_id "
             + "inner join tbl_itembranch_stock bs on bs.itbs_id=b.itbs_id where r.sio_id=sio.sio_id and bs.itm_id=sio.itm_id),0) as reserved_batch "
             + "from tbl_sales_items_order sio left join tbl_itembranch_stock tis on tis.itbs_id=sio.itbs_id "
@@ -227,7 +227,7 @@ public static partial class SalesOrderStock
             bool anyRemaining = page.Lines.Any(x => x.InvoiceableQty > 0);
             page.CanInvoice = IsOpenStatus(status) && anyRemaining;
             if (!IsOpenStatus(status))
-                page.Message = "Invoices can be created only for an Approved or Processed sales order.";
+                page.Message = "Invoices can be created only for an Approved, Processed or Partially Delivered sales order.";
             else if (!anyRemaining)
                 page.Message = "All quantities of this sales order have been invoiced.";
         }
@@ -368,7 +368,7 @@ public static partial class SalesOrderStock
                 throw new StockException("Sales order not found.");
             int status = I(so.Rows[0]["smo_delivery_status"]);
             if (!IsOpenStatus(status))
-                throw new StockException("Invoices can be created only for an Approved or Processed sales order.");
+                throw new StockException("Invoices can be created only for an Approved, Processed or Partially Delivered sales order.");
             int branchId = I(so.Rows[0]["branch_id"]);
 
             Dictionary<int, decimal[]> factors;
@@ -473,6 +473,8 @@ public static partial class SalesOrderStock
             DateTime invoiceDate = DateTime.ParseExact(db.SelectScalarForTransaction("select date_format(sm_date,'%Y-%m-%d %H:%i:%s') from tbl_sales_master where sm_id=@i",
                 new MySqlParameter[] { new MySqlParameter("@i", smId) }), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
             ConsumeInvoiceStock(db, invoiceDate, staffId, smId, picked, factors);
+            // The new invoice and the reservations it consumed change the order's status (the order row is locked above).
+            SalesOrderStatus.TryUpdateSalesOrderStatus(db, rq.smoId, staffId);
 
             db.CommitTransaction();
             started = false;
@@ -509,7 +511,7 @@ public static partial class SalesOrderStock
     {
         foreach (DataRow r in db.SelectQueryForTransaction("select sio.sio_id,sio.sio_finalqty,"
             + "(select ifnull(sum(si.si_qty),0) from tbl_sales_items si inner join tbl_sales_master sm on sm.sm_id=si.sm_id "
-            + "where si.sio_id=sio.sio_id and sm.sm_refid=sio.smo_id and sm.sm_is_inter_stock_transfer_invoice=0) as invoiced "
+            + "where si.sio_id=sio.sio_id and sm.sm_refid=sio.smo_id and sm.sm_is_inter_stock_transfer_invoice=0 and " + SalesOrderStatus.ValidInvoiceSql + ") as invoiced "
             + "from tbl_sales_items_order sio where sio.smo_id=@o",
             new MySqlParameter[] { new MySqlParameter("@o", rq.smoId) }).Rows)
         {

@@ -1256,6 +1256,9 @@
                         if (msg.d == "FAILED") {
                             alert("Error!.. Please Try Again...");
                             return;
+                        } else if (typeof msg.d === "string" && msg.d.indexOf("BLOCKED:") === 0) {
+                            alert(msg.d.substring(8));
+                            return;
                         }        else if(msg.d=="E"){
                             var result = confirm("Some One already changed the page..Do you want to reload and continue ?");
                             if(result){

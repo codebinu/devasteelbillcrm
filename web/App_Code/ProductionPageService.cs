@@ -481,7 +481,7 @@ public static class ProductionPageService
     {
         {
             var ps = new List<MySqlParameter>();
-            string where = " where smo.smo_delivery_status in (" + SalesOrderStatus.Approved + "," + SalesOrderStatus.Processed + ")"
+            string where = " where smo.smo_delivery_status in (" + SalesOrderStatus.Approved + "," + SalesOrderStatus.Processed + "," + SalesOrderStatus.PartiallyDelivered + ")"
                 + " and m.itsv_bom_enabled=1"
                 + " and exists (select 1 from tbl_item_master_bom bom where bom.itm_id_output=sio.itm_id and bom.itmbi_type=1)";
             AddBranchScope(filters, staffId, ps, ref where);

@@ -541,7 +541,14 @@ public partial class web_sales_editorder : System.Web.UI.Page
         try
         {
             // removing old items // reducing stock
+            // An invoice of a sales order changes the order's status: lock the order first, recalculate it before commit.
+            int soId = 0;
+            int soInvoiceId;
+            if (int.TryParse(editedorder["sm_id"], out soInvoiceId))
+                soId = SalesOrderStatus.OrderOfInvoice(db, false, soInvoiceId);
             db.BeginTransaction();
+            if (soId > 0)
+                SalesOrderStatus.LockStatus(db, soId);
             // FOR SALES_MASTER
 
             double sm_discount_rate = 0;
@@ -581,6 +588,7 @@ public partial class web_sales_editorder : System.Web.UI.Page
             int changeCount = Convert.ToInt32(db.SelectScalarForTransaction(checkEntryChanged));
             if (changeCount == 0)
             {
+                db.RollBackTransaction();
                 return "E";
             }
             //string branchQry = "select sm.branch_id,sm.cust_id,sm.total_balance,sm.sm_delivery_status,br.branch_tax_method,br.branch_tax_inclusive,br.branch_timezone from tbl_branch br join tbl_sales_master sm on sm.branch_id=br.branch_id where sm.sm_id='" + editedorder["sm_id"] + "' and sm.sm_parent='1'";
@@ -1064,6 +1072,8 @@ public partial class web_sales_editorder : System.Web.UI.Page
                 //newid = "N";
             }
 
+            if (soId > 0)
+                SalesOrderStatus.TryUpdateSalesOrderStatus(db, soId, 0);
             db.CommitTransaction();
             result = "SUCCESS";
             //result = "{\"result\":\"" + result + "\",\"new_netamount\":" + sm_netamount + ",\"new_custamount\":" + newcust_amount + "}";

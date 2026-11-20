@@ -29,14 +29,14 @@
     <script type="text/javascript">
         var sortBy = "date", sortDir = "desc";
         var statusMap = {
-            0: ["New", "label label-warning"],
-            1: ["Approved", "label label-success"],
-            2: ["Fully Delivered", "label label-success"],
-            3: ["Partially Delivered", "label label-info"],
-            4: ["Pending", "label label-info"],
-            5: ["Customer Cancelled", "label label-default"],
-            6: ["Company Cancelled", "label label-default"],
-            7: ["Processed", "label label-primary"]
+            0: ["Draft", "label label-warning"],
+            1: ["On Hold", "label label-info"],
+            2: ["Approved", "label label-success"],
+            3: ["Processed", "label label-primary"],
+            9: ["Partially Delivered", "label label-info"],
+            10: ["Fully Delivered", "label label-success"],
+            11: ["Cancelled by Company", "label label-default"],
+            12: ["Cancelled by Customer", "label label-default"]
         };
 
         function esc(s) {
@@ -241,14 +241,15 @@
                                                 <label>Order Status</label>
                                                 <select class="form-control" style="text-indent: 25px;" id="slOrderStatus" onchange="searchOrders(1);">
                                                     <option value="-1" selected="selected">--All Status--</option>
-                                                    <option value="0">New</option>
-                                                    <option value="4">Pending</option>
-                                                    <option value="1">Approved</option>
-                                                    <option value="7">Processed</option>
-                                                    <option value="3">Partially Delivered</option>
-                                                    <option value="2">Fully Delivered</option>
-                                                    <option value="5">Customer Cancelled</option>
-                                                    <option value="6">Company Cancelled</option>
+                                                    <option value="0">Draft</option>
+                                                    <option value="1">On Hold</option>
+                                                    <option value="2">Approved</option>
+                                                    <option value="3">Processed</option>
+                                                    <option value="9">Partially Delivered</option>
+                                                    <option value="10">Fully Delivered</option>
+                                                    <option value="cancelled">Cancelled (All)</option>
+                                                    <option value="12">Cancelled by Customer</option>
+                                                    <option value="11">Cancelled by Company</option>
                                                 </select>
                                                 <span class="fa fa-file form-control-feedback left" aria-hidden="true"></span>
                                             </div>

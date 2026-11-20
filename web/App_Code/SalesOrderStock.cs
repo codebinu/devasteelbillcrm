@@ -333,7 +333,7 @@ public static partial class SalesOrderStock
             if (needBatch > Tolerance)
                 throw new StockException("Unable to allocate the full quantity from the available batches.");
 
-            SalesOrderStatus.MarkProcessedInTransaction(db, smoId, staffId);
+            SalesOrderStatus.TryUpdateSalesOrderStatus(db, smoId, staffId);
             return "Reserved " + Fmt(reservable) + " " + t.UomName + " of " + t.Name + " from " + batchCount + " batch(es), oldest first.";
                     });
     }
@@ -413,7 +413,7 @@ public static partial class SalesOrderStock
             foreach (KeyValuePair<int, decimal> p in plan)
                 InsertReservation(db, p.Key, p.Value, sioId, now, staffId);
 
-            SalesOrderStatus.MarkProcessedInTransaction(db, smoId, staffId);
+            SalesOrderStatus.TryUpdateSalesOrderStatus(db, smoId, staffId);
             return "Reserved " + Fmt(total) + " " + t.UomName + " of " + t.Name + " from " + plan.Count + " selected batch(es).";
         });
     }
@@ -537,6 +537,7 @@ public static partial class SalesOrderStock
             int released = ReleaseItemReservations(db, sioId, target);
             if (released <= 0)
                 throw new StockException("There is no active reservation for this item.");
+            SalesOrderStatus.TryUpdateSalesOrderStatus(db, smoId, 0);
             return "Released " + released + " reservation allocation(s) for this " + (compItmId > 0 ? "component" : "item") + ". Physical stock was not changed.";
         });
     }
@@ -556,6 +557,7 @@ public static partial class SalesOrderStock
             if (Exec(db, "delete from tbl_item_batchstock_reserve where sio_id=@s and itbh_id=@b",
                 new MySqlParameter("@s", sioId), new MySqlParameter("@b", batchId)) <= 0)
                 throw new StockException("This reservation no longer exists. Please reload the page.");
+            SalesOrderStatus.TryUpdateSalesOrderStatus(db, smoId, 0);
             return "Released the reservation on batch " + batchNo + ". Physical stock was not changed.";
         });
     }
@@ -698,7 +700,7 @@ public static partial class SalesOrderStock
                 "Produced for sales order #" + smoId + " (production #" + docNo + ")");
             if (reserveQty > 0)
                 InsertReservation(db, newBatchId, reserveQty, sioId, now, staffId);
-            SalesOrderStatus.MarkProcessedInTransaction(db, smoId, staffId);
+            SalesOrderStatus.TryUpdateSalesOrderStatus(db, smoId, staffId);
 
             return "Produced " + Fmt(c.ProduceQty) + " " + c.UomName + " of " + l.Name + " (production #" + docNo + ")"
                 + (reserveQty > 0 ? " and reserved " + Fmt(reserveQty * c.F) + " " + c.UomName + " for this order." : "; it was added to finished stock.");
@@ -762,9 +764,9 @@ public static partial class SalesOrderStock
     {
         if (IsOpenStatus(status))
             return;
-        if (status == SalesOrderStatus.Pending)
-            throw new StockException("This order is on hold (Pending). Resume it to reserve or produce stock.");
-        if (status == SalesOrderStatus.New)
+        if (status == SalesOrderStatus.OnHold)
+            throw new StockException("This order is on hold. Approve it to resume and reserve or produce stock.");
+        if (status == SalesOrderStatus.Draft)
             throw new StockException("This order has not been approved yet. Approve it to reserve or produce stock.");
         if (SalesOrderStatus.IsCancelled(status))
             throw new StockException("This order is cancelled. Stock cannot be reserved or produced.");
@@ -845,7 +847,7 @@ public static partial class SalesOrderStock
         DataTable lines = db.SelectQueryForTransaction("select sio.sio_id,sio.itm_id,sio.itbs_id,sio.tum_id,sio.sio_finalqty,sio.itm_name as sio_name,"
             + "m.itm_code,m.itm_name,m.itsv_uom_purchase,m.itsv_uom_sales,m.itsv_bom_enabled,"
             + "ifnull((select sum(si.si_qty) from tbl_sales_items si inner join tbl_sales_master sm on sm.sm_id=si.sm_id "
-            + "where si.sio_id=sio.sio_id and sm.sm_refid=sio.smo_id and sm.sm_is_inter_stock_transfer_invoice=0),0) as invoiced,"
+            + "where si.sio_id=sio.sio_id and sm.sm_refid=sio.smo_id and sm.sm_is_inter_stock_transfer_invoice=0 and " + SalesOrderStatus.ValidInvoiceSql + "),0) as invoiced,"
             + "ifnull((select sum(pi.itpi_quantity) from tbl_item_pro_items pi inner join tbl_item_batch pb on pb.itbh_id=pi.itbh_id "
             + "where pi.itpi_inputoutput=2 and pb.itbh_custbatchid=concat('PRO-',pi.itpm_id,'-',sio.sio_id)),0) as produced,"
             + "tis.branch_id as tis_branch,tis.itm_id as tis_itm,tis.itbs_stock "
@@ -1258,8 +1260,8 @@ public static partial class SalesOrderStock
         string produceIssue = ReservedProduceIssue(c);
         row.canProduce = open && produceIssue == null;
         if (!open && (c.Reservable > 0 || c.Needs > 0))
-            row.message = status == SalesOrderStatus.Pending ? "Order is on hold (Pending). Resume it to reserve stock."
-                : status == SalesOrderStatus.New ? "Approve the order to reserve stock."
+            row.message = status == SalesOrderStatus.OnHold ? "Order is on hold. Approve it to resume and reserve stock."
+                : status == SalesOrderStatus.Draft ? "Approve the order to reserve stock."
                 : SalesOrderStatus.IsCancelled(status) ? "Order is cancelled. Stock cannot be reserved."
                 : "Stock actions are not available for an order in this status.";
         else if (c.Remaining > 0 && c.Free <= 0)

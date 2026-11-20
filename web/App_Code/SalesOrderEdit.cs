@@ -81,7 +81,7 @@ public static class SalesOrderEdit
 
     public static bool IsEditableStatus(int status)
     {
-        return status == SalesOrderStatus.New || status == SalesOrderStatus.Pending
+        return status == SalesOrderStatus.Draft || status == SalesOrderStatus.OnHold
             || status == SalesOrderStatus.Approved || status == SalesOrderStatus.Processed;
     }
 
@@ -431,6 +431,8 @@ public static class SalesOrderEdit
             var hp = new List<MySqlParameter>(head.Params);
             hp.Add(new MySqlParameter("@smo", req.smoId));
             db.ExecuteQueryForTransaction("update tbl_sales_master_order set " + string.Join(",", head.Sets) + " where smo_id=@smo", hp.ToArray());
+            // Changed quantities release reservations, which can move a Processed order back to Approved (Draft and On Hold stay as they are).
+            SalesOrderStatus.TryUpdateSalesOrderStatus(db, req.smoId, staffId);
 
             db.CommitTransaction();
             started = false;

@@ -434,7 +434,7 @@ public static partial class SalesOrderStock
     {
         inputs = new List<ProductionEntryInput>();
         if (!IsOpenStatus(status))
-            return status == SalesOrderStatus.Pending ? "This order is on hold (Pending). Resume it to enter production."
+            return status == SalesOrderStatus.OnHold ? "This order is on hold. Approve it to resume and enter production."
                 : "Production cannot be entered for an order in this status.";
         if (c.Error != null)
             return c.Error;
@@ -591,8 +591,8 @@ public static partial class SalesOrderStock
                 return result;
             }
             result.docNo = r.DocNo;
-            // The procedure saved a new finished-stock reservation on its own connection; record it on the order (no-op unless Approved).
-            SalesOrderStatus.MarkProcessed(smoId, staffId);
+            // The procedure saved a new finished-stock reservation on its own connection; recalculate the order's status.
+            SalesOrderStatus.UpdateSalesOrderStatus(smoId, staffId);
             result.itpmId = r.ItpmId;
             result.outputQty = input.outputQty;
             result.uom = c.UomName;
@@ -685,6 +685,7 @@ public static partial class SalesOrderStock
             Exec(db, "delete from tbl_item_pro_items where itpm_id=@j", new MySqlParameter("@j", itpmId));
             if (Exec(db, "delete from tbl_item_pro_master where itpm_id=@j", new MySqlParameter("@j", itpmId)) != 1)
                 throw new StockException("The production record could not be removed. No changes were made.");
+            SalesOrderStatus.TryUpdateSalesOrderStatus(db, smoId, staffId);
 
             return "Production " + docNo + " was undone: " + Fmt(j.OutQty) + " of finished stock removed and " + returned
                 + " raw-material allocation(s) returned and reserved for this order again.";

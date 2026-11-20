@@ -146,7 +146,7 @@
                                 <div class="x_title"><strong><i class="fa fa-list"></i> Items to Transfer</strong><div class="clearfix"></div></div>
                                 <div class="x_content">
                                     <div id="transferMessage">
-                                        <% if (!CanTransfer) { %><div class="alert alert-warning">Stock can be transferred only for an Approved or Processed sales order.</div><% } %>
+                                        <% if (!CanTransfer) { %><div class="alert alert-warning">Stock can be transferred only for an Approved, Processed or Partially Delivered sales order.</div><% } %>
                                     </div>
                                     <div id="itemsBusy" class="busy" style="display: none;"><i class="fa fa-spinner fa-spin"></i> Loading items...</div>
                                     <div style="overflow-x: auto;">

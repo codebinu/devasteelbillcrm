@@ -75,21 +75,48 @@ The ID relationships above are application conventions, not enforced foreign key
 
 The sales-order view is implemented in [`web/web_sales/view_sales_order.aspx.cs`](web/web_sales/view_sales_order.aspx.cs) and [`web/web_sales/view_sales_order.aspx`](web/web_sales/view_sales_order.aspx). It loads a single header from `tbl_sales_master_order`, loads lines from `tbl_sales_items_order`, and restricts visibility to branches in `tbl_user_branches`. Sales staff (user type `2`) are further restricted to their own orders and cannot change order status on this page.
 
-The page maps `smo_delivery_status` as follows:
+The page maps `smo_delivery_status` as follows (single definition: [`web/App_Code/SalesOrderStatus.cs`](web/App_Code/SalesOrderStatus.cs)):
 
 | Value | Meaning |
 |---:|---|
-| 0 | New |
-| 1 | Processed |
-| 2 | Fully Delivered |
-| 3 | Partially Delivered |
-| 4 | To be Confirmed |
-| 5 | Customer Cancelled |
-| 6 | Company Cancelled |
+| 0 | Draft (new order, not yet approved) |
+| 1 | On Hold |
+| 2 | Approved |
+| 3 | Processed (a valid reservation exists) |
+| 9 | Partially Delivered |
+| 10 | Fully Delivered |
+| 11 | Cancelled by Company |
+| 12 | Cancelled by Customer |
 
-The page allows approval from status 0 or 4, cancellation from 0, 1, or 4, and reopening from 5 or 6. Status updates include the previous status and the user's branch membership in the `UPDATE` predicate to avoid applying a stale or out-of-scope transition. These codes and transitions are application behavior; verify all other clients and workflows before changing them.
+Both **Save Order** and **Save as Draft** on `new_sales_order.aspx` store status 0; approving is a separate action on the view page. Orders created before this model use the old values (0 New, 1 Approved, 2 Fully Delivered, 3 Partially Delivered, 4 Pending, 5 Customer Cancelled, 6 Company Cancelled, 7 Processed); run [`sales-order-status-migration.sql`](sales-order-status-migration.sql) once, with the application stopped, to convert them.
+
+Two separate mechanisms change the status ([`SalesOrderStatus.cs`](web/App_Code/SalesOrderStatus.cs) holds the rules, [`SalesOrderStatusStore.cs`](web/App_Code/SalesOrderStatusStore.cs) the stored-data operations):
+
+- **Manual actions** (`ChangeSalesOrderStatus`): Approve (from Draft or On Hold), Put On Hold (from Draft, Approved, Processed or Partially Delivered, never from Fully Delivered) and Cancel by customer / company (from every non-cancelled status). A cancelled order accepts no further change. The transition, the branch scope and the user's permission (salesmen, user type 2, cannot change statuses) are validated on the server against the locked order row, and the update is guarded by the status that was read. Cancelling releases the order's reservations and does not touch its invoices. Approving an On Hold order resumes it and recalculates the operational status.
+- **Automatic calculation** (`UpdateSalesOrderStatus`): the single place that derives Approved / Processed / Partially Delivered / Fully Delivered. It recalculates from the current records every time, in this priority: cancelled and On Hold keep their status, Draft is never approved automatically, then Fully Delivered (every ordered quantity is invoiced and every invoiced quantity is delivered, judged per order line), Partially Delivered (a valid invoice has `sm_delivery_status = 2`), Processed (a reservation row with a quantity exists), Approved. Valid invoices are the order's invoices (`sm_refid = smo_id`, not inter-stock transfers) that are not cancelled (`sm_delivery_status = 4`) or rejected (5). The status moves backward as well as forward. It runs after reservation create / release / production, invoice creation, invoice cancel / delivery / reversal / edit (web and the `app_*` endpoints), inter-stock transfers, order edits, resuming an On Hold order, and when the order is opened. A delivered order with no linked invoice at all (delivered before invoices were linked to orders) is left unchanged.
+
+A partially delivered order stays open for reservations, production, transfers and invoicing, so its remaining quantity can be delivered. The recalculation is not part of the main operation's success: inside a transaction a failed recalculation is logged and corrected by the next recalculation.
+
+The page allows editing in Draft, On Hold, Approved and Processed (when no invoice exists). Status updates include the previous status and the user's branch membership in the `UPDATE` predicate to avoid applying a stale or out-of-scope transition. These codes and transitions are application behavior; verify all other clients and workflows before changing them. `app_Retailer.aspx.cs` still lists `tbl_sales_master_order` rows with the stored values for its legacy quote flow, so its client sees the new numbers after the migration.
 
 The live database contains `sp_save_sales_order_json`. The local [`sales-order-procedure.inspected.sql`](sales-order-procedure.inspected.sql) file documents an inspected definition for it, but it is not a complete schema baseline or migration history. Compare it with the live routine before relying on it or deploying it.
+
+### Sales-order overview row
+
+A one-row overview sits between the order header and the tabs of `view_sales_order.aspx`. It is requested by one `LoadOverview` page method after the page has finished loading (skeleton placeholders until then) and again only after a reserve / release / produce / undo action; switching tabs does not refetch. The figures come from [`web/App_Code/SalesOrderOverview.cs`](web/App_Code/SalesOrderOverview.cs) with aggregate queries only:
+
+- **Delivery completion** = delivered quantity / ordered quantity, per order line and capped at the ordered quantity, so it never exceeds 100% and is rounded down to one decimal. Delivered quantity is the quantity on delivered (`sm_delivery_status = 2`) invoices that are not cancelled or rejected, so cancelled invoices and reversed deliveries no longer count; each invoice line is counted once. Lines with no quantity are ignored.
+- **Overall completion** is a separate, weighted measure of how far every ordered unit has progressed, not an average of counts and not derived from the status number. Each line moves through up to four stages with these weights: Reservation 20, Production 20, Invoicing 25, Delivery 35. Per line and stage the progress is the quantity done / ordered quantity (capped at 1); a line's progress is the weighted sum divided by the weights of the stages that apply to it, and the order's value is the lines' progress weighted by their ordered quantity. A unit counts once in each stage with that stage's share of the weight, so quantities are not counted twice. Stages that do not apply are left out and the remaining weights scale up, so they never lower the result:
+  - *Reservation* (stock items only): reserved now + invoiced. Invoicing consumes the reservation, so an invoiced unit was reserved; cancelled invoices and released reservations stop counting.
+  - *Production* (stock items with an active BOM only): produced / (produced + shortfall), where the shortfall is what no reservation, invoice or production covers. A BOM item served entirely from stock, with nothing produced, has no production stage.
+  - *Invoicing*: quantity on valid (not cancelled or rejected) invoices.
+  - *Delivery*: quantity on valid delivered invoices.
+  Service lines have no reservation or production stage. Example: an order fully invoiced with 60% of it delivered shows Overall 82.5% and Delivery 60%.
+- **Reservation completion** = active reserved quantity of the lines' own item (converted to the line UOM) / ordered quantity of the stock lines, each line capped at its ordered quantity. The bar and percentage stop at 100%; the real (uncapped) reserved quantity is still returned and shown in the tooltip.- **Invoices**: valid invoices of the order (`sm_refid = smo_id`, not inter-stock transfers); delivered versus pending.
+- **Production**: the order's production jobs, as in the Production Details tab. A job is completed once its stock movements were applied (`tbl_stock_transactions`, action type 12) and pending while they are not.
+- **Transfers**: inter-stock transfer invoices of the order; completed = its purchase exists and is not cancelled, pending = the purchase is still to be created (cancelled purchases are shown in the tooltip).
+
+Each figure links to the corresponding tab.
 
 ### Sales-order invoices
 
@@ -97,7 +124,7 @@ The **Invoices** tab of the order view lists the invoices created for the order,
 
 - An invoice is an ordinary `tbl_sales_master` / `tbl_sales_items` bill saved by the same code as `neworder.aspx` (`web_sales_neworder.SaveInvoice`, which both pages call). It is linked with `tbl_sales_master.sm_refid = smo_id`, `sm_is_inter_stock_transfer_invoice = 0` and `tbl_sales_items.sio_id` = the order line. Only rows with both header values count as invoices of the order; normal bills (`sm_refid` NULL) and inter-stock-transfer invoices never do.
 - Quantities are in the order line's UOM, the unit of `si_qty`: remaining = `sio_finalqty` - `SUM(si_qty)` of the linked invoices, recalculated from the database on every load and save. `si_qty` must be `decimal(18,3)` ([`sales-order-invoice-decimal-qty.sql`](sales-order-invoice-decimal-qty.sql), run once before deploying), so invoice quantities may have up to 3 decimal places.
-- Orders in status Approved or Processed can be invoiced. Saving locks the order row, creates the invoice and then consumes the line's own reservations (oldest batch first, same item only): `tbl_item_batch.itbh_currentqty` and `tbl_itembranch_stock.itbs_stock` are reduced by the invoiced quantity converted to the batch UOM, reservation rows are reduced or deleted, and a batch-level `tbl_stock_transactions` row is written. Product lines can only be invoiced up to their reserved quantity. Everything runs in one transaction; the shared saver's `sm_sales_sessionid` check rejects a repeated submission.
+- Orders in status Approved, Processed or Partially Delivered can be invoiced. Cancelled (`sm_delivery_status` 4) and rejected (5) invoices no longer count as invoiced, so their quantity can be invoiced again. Saving locks the order row, creates the invoice and then consumes the line's own reservations (oldest batch first, same item only): `tbl_item_batch.itbh_currentqty` and `tbl_itembranch_stock.itbs_stock` are reduced by the invoiced quantity converted to the batch UOM, reservation rows are reduced or deleted, and a batch-level `tbl_stock_transactions` row is written. Product lines can only be invoiced up to their reserved quantity. Everything runs in one transaction, which also recalculates the order status before it commits; the shared saver's `sm_sales_sessionid` check rejects a repeated submission.
 - Cancelling or rejecting an invoice through `manageorders.aspx` still restores only `itbs_stock`; batch quantities and reservations are not restored.
 
 ### Inter-warehouse stock transfer

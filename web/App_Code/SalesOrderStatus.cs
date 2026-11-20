@@ -1,37 +1,54 @@
-using commonfunction;
-using MySql.Data.MySqlClient;
 using System;
-using System.Data;
+using System.Collections.Generic;
 
 // Single definition of the sales order (tbl_sales_master_order.smo_delivery_status) statuses, labels and transitions.
-// Existing database values are kept: 0 New, 1 Approved (previously labelled "Processed" and set by approval), 4 Pending
-// (previously "To be Confirmed"), 5/6 Cancelled. Processed (first successful reservation) is the only new value, 7.
-public static class SalesOrderStatus
+// This file is free of database access so the rules can be reviewed and tested on their own; the stored-data operations
+// (automatic recalculation and manual status changes) are in SalesOrderStatusStore.cs.
+//
+//   0 Draft | 1 On Hold | 2 Approved | 3 Processed | 9 Partially Delivered | 10 Fully Delivered | 11 Cancelled by Company | 12 Cancelled by Customer
+//
+// Two separate responsibilities:
+//   - Manual transitions (Approve, Put On Hold, Cancel) are user actions validated by CanTransition and applied by ChangeSalesOrderStatus.
+//   - Operational statuses (2, 3, 9, 10) are always derived from the current reservations, invoices and deliveries by Calculate and
+//     stored by UpdateSalesOrderStatus. Draft, On Hold and the cancelled statuses are never changed by that calculation.
+public static partial class SalesOrderStatus
 {
-    public const int New = 0;
-    public const int Approved = 1;
-    public const int FullyDelivered = 2;
-    public const int PartiallyDelivered = 3;
-    public const int Pending = 4;
-    public const int CancelledByCustomer = 5;
-    public const int CancelledByCompany = 6;
-    public const int Processed = 7;
+    public const int Draft = 0;
+    public const int OnHold = 1;
+    public const int Approved = 2;
+    public const int Processed = 3;
+    public const int PartiallyDelivered = 9;
+    public const int FullyDelivered = 10;
+    public const int CancelledByCompany = 11;
+    public const int CancelledByCustomer = 12;
 
     // Last status value; used to validate list filters.
-    public const int MaxValue = Processed;
+    public const int MaxValue = CancelledByCustomer;
+
+    // Invoice (tbl_sales_master.sm_delivery_status) values that matter for the order status.
+    public const int InvoiceDelivered = 2;
+    public const int InvoiceCancelled = 4;
+    public const int InvoiceRejected = 5;
+
+    // SQL predicate for the invoices that count towards invoiced quantity: every invoice that is not cancelled or rejected.
+    // "sm" is the tbl_sales_master alias.
+    public const string ValidInvoiceSql = "ifnull(sm.sm_delivery_status,0) not in (4,5)";
+
+    // Quantities are stored with 3 decimals.
+    const decimal QtyTolerance = 0.0005m;
 
     public static string Name(int status)
     {
         switch (status)
         {
-            case New: return "New";
+            case Draft: return "Draft";
+            case OnHold: return "On Hold";
             case Approved: return "Approved";
-            case FullyDelivered: return "Fully Delivered";
-            case PartiallyDelivered: return "Partially Delivered";
-            case Pending: return "Pending";
-            case CancelledByCustomer: return "Customer Cancelled";
-            case CancelledByCompany: return "Company Cancelled";
             case Processed: return "Processed";
+            case PartiallyDelivered: return "Partially Delivered";
+            case FullyDelivered: return "Fully Delivered";
+            case CancelledByCompany: return "Cancelled by Company";
+            case CancelledByCustomer: return "Cancelled by Customer";
             default: return "";
         }
     }
@@ -40,165 +57,101 @@ public static class SalesOrderStatus
     {
         switch (status)
         {
-            case New: return "label label-warning";
+            case Draft: return "label label-warning";
+            case OnHold: return "label label-info";
             case Approved: return "label label-success";
-            case FullyDelivered: return "label label-success";
-            case PartiallyDelivered: return "label label-info";
-            case Pending: return "label label-info";
             case Processed: return "label label-primary";
-            case CancelledByCustomer:
-            case CancelledByCompany: return "label label-default";
+            case PartiallyDelivered: return "label label-info";
+            case FullyDelivered: return "label label-success";
             default: return "label label-default";
         }
     }
 
     public static bool IsCancelled(int status) { return status == CancelledByCustomer || status == CancelledByCompany; }
 
-    // Stock may be reserved, allocated or produced against the order only in these statuses.
-    public static bool CanReserve(int status) { return status == Approved || status == Processed; }
-
-    // Reservations may be released in every status except a delivered order.
-    public static bool CanRelease(int status)
+    // Statuses whose value is calculated from reservations, invoices and deliveries.
+    public static bool IsOperational(int status)
     {
-        return status == New || status == Approved || status == Pending || status == Processed || IsCancelled(status);
+        return status == Approved || status == Processed || status == PartiallyDelivered || status == FullyDelivered;
     }
 
-    public static bool CanApprove(int status) { return status == New || status == Pending; }
-    public static bool CanHold(int status) { return status == New || status == Approved || status == Processed; }
-    public static bool CanCancel(int status) { return status == New || status == Approved || status == Pending || status == Processed; }
-    public static bool CanReopen(int status) { return IsCancelled(status); }
+    // Stock may be reserved, allocated, produced or invoiced against the order only in these statuses. A partially delivered order
+    // must stay open, otherwise its remaining quantity could never be invoiced.
+    public static bool CanReserve(int status) { return status == Approved || status == Processed || status == PartiallyDelivered; }
 
+    // Reservations may be released in every status except a fully delivered order.
+    public static bool CanRelease(int status)
+    {
+        return status == Draft || status == OnHold || CanReserve(status) || IsCancelled(status);
+    }
+
+    public static bool CanApprove(int status) { return status == Draft || status == OnHold; }
+
+    // A fully delivered order cannot be put on hold.
+    public static bool CanHold(int status) { return status == Draft || status == Approved || status == Processed || status == PartiallyDelivered; }
+
+    public static bool CanCancel(int status)
+    {
+        return status == Draft || status == OnHold || status == Approved || status == Processed
+            || status == PartiallyDelivered || status == FullyDelivered;
+    }
+
+    // Manual (user-initiated) transitions only. Cancelled orders accept no further transition and no status can be set back to Draft.
     public static bool CanTransition(int from, int to)
     {
         switch (to)
         {
             case Approved: return CanApprove(from);
-            case Pending: return CanHold(from);
+            case OnHold: return CanHold(from);
             case CancelledByCustomer:
             case CancelledByCompany: return CanCancel(from);
-            case New: return CanReopen(from);
-            case Processed: return from == Approved;
             default: return false;
         }
     }
 
-    // Moves Approved to Processed inside the caller's open transaction. Call only after a new reservation row was inserted
-    // in that same transaction. The order row must already be locked by LockStatus, so a concurrent hold or cancel cannot interleave.
-    public static void MarkProcessedInTransaction(mySqlConnection db, int smoId, int staffId)
+    // Ordered, invoiced (valid invoices only) and delivered (valid invoices that are delivered) quantity of one order line.
+    public sealed class LineQuantity
     {
-        db.ExecuteQueryForTransaction("update tbl_sales_master_order set smo_delivery_status=@p,smo_processed_id=@u,smo_processed_date=@now "
-            + "where smo_id=@o and smo_delivery_status=@a",
-            new MySqlParameter[] { new MySqlParameter("@p", Processed), new MySqlParameter("@u", staffId),
-                new MySqlParameter("@o", smoId), new MySqlParameter("@a", Approved),
-                new MySqlParameter("@now", BranchClock.NowForSalesOrderInTransaction(db, smoId)) });
+        public decimal Ordered;
+        public decimal Invoiced;
+        public decimal Delivered;
     }
 
-    // Standalone variant for reservations committed outside our transaction (sp_save_production_entry). Failures are logged only,
-    // because the reservation has already been committed and must still be reported to the user.
-    public static void MarkProcessed(int smoId, int staffId)
+    // Fully delivered only when every ordered quantity is invoiced and every invoiced quantity is delivered. Lines are judged on their own
+    // quantities, never on the number or status of invoices.
+    public static bool IsFullyDelivered(IList<LineQuantity> lines)
     {
-        var db = new mySqlConnection();
-        try
+        bool any = false;
+        if (lines == null)
+            return false;
+        foreach (LineQuantity l in lines)
         {
-            db.ExecuteQuery("update tbl_sales_master_order set smo_delivery_status=@p,smo_processed_id=@u,smo_processed_date=@now "
-                + "where smo_id=@o and smo_delivery_status=@a",
-                new MySqlParameter[] { new MySqlParameter("@p", Processed), new MySqlParameter("@u", staffId),
-                    new MySqlParameter("@o", smoId), new MySqlParameter("@a", Approved),
-                    new MySqlParameter("@now", BranchClock.NowForSalesOrder(db, smoId)) });
+            if (l == null || l.Ordered <= 0m)
+                continue;
+            any = true;
+            if (l.Invoiced + QtyTolerance < l.Ordered)
+                return false;
+            if (l.Delivered + QtyTolerance < l.Invoiced)
+                return false;
         }
-        catch (Exception ex)
-        {
-            new LogClass("salesordererror").write(ex);
-        }
+        return any;
     }
 
-    // Locks the order row for the rest of the transaction and returns its current status (-1 when the order does not exist).
-    public static int LockStatus(mySqlConnection db, int smoId)
+    // The status an order should have given its current stored status and its current valid records. It depends only on those inputs, so
+    // repeated evaluation with unchanged data always gives the same result.
+    //   Cancelled, On Hold and Draft keep their value (a Draft is never approved automatically); the same goes for any unknown value.
+    //   Otherwise: Fully Delivered, Partially Delivered (a valid invoice is delivered), Processed (a valid reservation exists), Approved.
+    //   Processed belongs to the sales order and depends only on its reservations, never on its invoices.
+    public static int Calculate(int current, IList<LineQuantity> lines, bool hasDeliveredInvoice, bool hasValidReservation)
     {
-        string value = db.SelectScalarForTransaction("select smo_delivery_status from tbl_sales_master_order where smo_id=@o for update",
-            new MySqlParameter[] { new MySqlParameter("@o", smoId) });
-        int status;
-        return int.TryParse(value, out status) ? status : -1;
-    }
-
-    // Current status outside a transaction (-1 when missing); used by integrations that cannot join the reservation transaction.
-    public static int Read(int smoId)
-    {
-        string value = new mySqlConnection().SelectScalar("select smo_delivery_status from tbl_sales_master_order where smo_id=@o",
-            new MySqlParameter[] { new MySqlParameter("@o", smoId) });
-        int status;
-        return int.TryParse(value, out status) ? status : -1;
-    }
-
-    // Validated status change. The order row is locked, the transition is checked against the locked status, and the update is
-    // guarded by the expected old status. Cancelling releases every reservation of the order in the same transaction so that no stock
-    // stays allocated; holding an order never releases reservations. Returns null on success, otherwise the reason.
-    public static string Change(int smoId, int staffId, int newStatus)
-    {
-        var db = new mySqlConnection();
-        bool started = false;
-        try
-        {
-            db.BeginTransaction();
-            started = true;
-
-            string scope = db.SelectScalarForTransaction("select smo_delivery_status from tbl_sales_master_order where smo_id=@o "
-                + "and branch_id in (select branch_id from tbl_user_branches where user_id=@u) for update",
-                new MySqlParameter[] { new MySqlParameter("@o", smoId), new MySqlParameter("@u", staffId) });
-            int current;
-            if (!int.TryParse(scope, out current))
-            {
-                db.RollBackTransaction();
-                started = false;
-                return "The sales order was not found.";
-            }
-            if (!CanTransition(current, newStatus))
-            {
-                db.RollBackTransaction();
-                started = false;
-                return "The order is now " + Name(current) + " and cannot be changed to " + Name(newStatus) + ".";
-            }
-
-            // Dates are stored in the order branch's configured time zone, not the database server's clock.
-            string set = "smo_delivery_status=@new";
-            switch (newStatus)
-            {
-                case Approved: set += ",smo_approved_id=@u,smo_approved_date=@now"; break;
-                case CancelledByCustomer:
-                case CancelledByCompany: set += ",smo_cancelled_id=@u,smo_cancelled_date=@now"; break;
-                case New: set += ",smo_cancelled_id=null,smo_cancelled_date=null"; break;
-            }
-            db.ExecuteQueryForTransaction("update tbl_sales_master_order set " + set
-                + " where smo_id=@o and smo_delivery_status=@old",
-                new MySqlParameter[] { new MySqlParameter("@new", newStatus), new MySqlParameter("@u", staffId),
-                    new MySqlParameter("@o", smoId), new MySqlParameter("@old", current),
-                    new MySqlParameter("@now", BranchClock.NowForSalesOrderInTransaction(db, smoId)) });
-            if (db.SelectScalarForTransaction("select row_count()") != "1")
-                throw new InvalidOperationException("Sales order status update did not apply.");
-
-            if (IsCancelled(newStatus))
-                db.ExecuteQueryForTransaction("delete r from tbl_item_batchstock_reserve r "
-                    + "inner join tbl_sales_items_order sio on sio.sio_id=r.sio_id where sio.smo_id=@o",
-                    new MySqlParameter[] { new MySqlParameter("@o", smoId) });
-
-            db.CommitTransaction();
-            started = false;
-            return null;
-        }
-        catch (Exception ex)
-        {
-            if (started)
-            {
-                try { db.RollBackTransaction(); }
-                catch (Exception) { }
-            }
-            new LogClass("salesordererror").write(ex);
-            return "The status could not be changed. No changes were made.";
-        }
-        finally
-        {
-            try { db.CloseConnection(); }
-            catch (Exception) { }
-        }
+        if (!IsOperational(current))
+            return current;
+        if (IsFullyDelivered(lines))
+            return FullyDelivered;
+        if (hasDeliveredInvoice)
+            return PartiallyDelivered;
+        if (hasValidReservation)
+            return Processed;
+        return Approved;
     }
 }

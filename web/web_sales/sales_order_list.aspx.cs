@@ -90,7 +90,11 @@ public partial class web_sales_sales_order_list : System.Web.UI.Page
                 cond += " and smo.branch_id in (select branch_id from tbl_user_branches where user_id = @bu)";
                 ps.Add(new MySqlParameter("@bu", staffIdNum));
             }
-            if (filters.TryGetValue("order_status", out v) && int.TryParse(v, out n) && n >= 0 && n <= SalesOrderStatus.MaxValue)
+            if (filters.TryGetValue("order_status", out v) && v == "cancelled")
+            {
+                cond += " and smo.smo_delivery_status in (" + SalesOrderStatus.CancelledByCompany + "," + SalesOrderStatus.CancelledByCustomer + ")";
+            }
+            else if (filters.TryGetValue("order_status", out v) && int.TryParse(v, out n) && n >= 0 && n <= SalesOrderStatus.MaxValue)
             {
                 cond += " and smo.smo_delivery_status = @status";
                 ps.Add(new MySqlParameter("@status", n));

@@ -83,9 +83,111 @@
         #tabInterstock .it-pair .v { font-weight: 600; }
         #tabInterstock .it-section table { margin: 6px 0; background: #fff; font-size: 12px; }
         #tabInterstock .it-totals { margin-bottom: 6px; font-size: 12px; font-weight: 600; }
+
+        /* One-row overview below the order header */
+        .so-overview { display: flex; align-items: stretch; background: #fff; border: 1px solid #E6E9ED; border-radius: 3px; margin: 0 0 10px 0; min-height: 46px; }
+        .so-overview .ov-item { display: flex; align-items: center; flex: 1 1 0; min-width: 0; padding: 6px 14px; color: #333; text-decoration: none; border-left: 1px solid #eef0f2; line-height: 1.25; }
+        .so-overview .ov-item:first-child { border-left: 0; }
+        .so-overview .ov-metric { flex: 1.3 1 0; }
+        a.ov-item:hover, a.ov-item:focus { background: #f7f9fa; text-decoration: none; color: #333; outline: none; }
+        .so-overview .ov-ico { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 50%; background: #eef6f4; color: #26b99a; text-align: center; line-height: 26px; font-size: 13px; margin-right: 10px; }
+        .so-overview .ov-body { min-width: 0; flex: 1 1 auto; }
+        .so-overview .ov-label { display: block; color: #8a949b; font-size: 10px; letter-spacing: .5px; text-transform: uppercase; white-space: nowrap; }
+        .so-overview .ov-value { display: block; font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .so-overview .ov-value small { font-weight: 400; color: #8a949b; font-size: 12px; }
+        .so-overview .ov-pct { font-size: 17px; font-weight: 700; margin-right: 4px; }
+        .so-overview .ov-bar { height: 4px; background: #eceff1; border-radius: 2px; margin-top: 4px; overflow: hidden; }
+        .so-overview .ov-bar > span { display: block; height: 100%; width: 0; border-radius: 2px; transition: width .5s ease, background-color .5s ease; }
+        .so-overview .ov-real { display: block; }
+        .so-overview .ov-skel { display: none; }
+        .so-overview.ov-loading .ov-skel { display: block; height: 10px; width: 80%; border-radius: 3px; margin: 3px 0; background: linear-gradient(90deg, #eceff1 25%, #f6f8f9 50%, #eceff1 75%); background-size: 200% 100%; animation: ovShimmer 1.2s linear infinite; }
+        .so-overview.ov-loading .ov-real { display: none; }
+        .so-overview .ov-error { color: #a94442; font-size: 12px; padding: 12px 14px; }
+        @keyframes ovShimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+        @media (max-width: 991px) {
+            .so-overview { flex-wrap: wrap; }
+            .so-overview .ov-item, .so-overview .ov-metric { flex: 1 1 30%; border-left: 0; border-top: 1px solid #eef0f2; }
+            .so-overview .ov-item:nth-child(-n+2) { flex-basis: 50%; border-top: 0; }
+            .so-overview .ov-item:nth-child(2) { border-left: 1px solid #eef0f2; }
+        }
+        @media (max-width: 480px) { .so-overview .ov-item, .so-overview .ov-item:nth-child(-n+2) { flex-basis: 100%; border-left: 0; } .so-overview .ov-item:nth-child(2) { border-top: 1px solid #eef0f2; } }
     </style>
 
     <script type="text/javascript">
+        // Overview row: fetched once after the page has rendered, and again only when stock actions change the figures.
+        var ovBusy = false, ovQueued = false, ovTimer = null;
+        function ovEsc(s) { return $('<div/>').text(s == null ? '' : String(s)).html(); }
+        function ovFmt(n) { return (Number(n) || 0).toLocaleString(undefined, { maximumFractionDigits: 3 }); }
+        function ovPlural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+        function ovColor(pct) { return 'hsl(' + Math.round(28 + 94 * Math.min(100, Math.max(0, pct)) / 100) + ',68%,45%)'; }
+        function ovColorBlue(pct) { return 'hsl(' + Math.round(210 - 45 * Math.min(100, Math.max(0, pct)) / 100) + ',65%,46%)'; }
+        function ovMetric(id, pct, color, title) {
+            $('#' + id + 'Text').text(ovFmt(pct) + '%').css('color', color);
+            $('#' + id + 'Bar').css({ width: Math.min(100, pct) + '%', backgroundColor: color });
+            $('#' + id).attr('title', title);
+        }
+        function ovRender(d) {
+            var box = $('#soOverview');
+            ovMetric('ovOverall', d.overallPct, ovColor(d.overallPct),
+                'Overall progress of the ordered quantities through reservation, production (where a BOM applies), invoicing and delivery. Stages that do not apply are left out.');
+            ovMetric('ovDelivery', d.deliveryPct, ovColorBlue(d.deliveryPct),
+                'Delivered ' + ovFmt(d.deliveredQty) + ' of ' + ovFmt(d.orderedQty) + ' ordered (delivered, non-cancelled invoices only)');            $('#ovInvoices .ov-value').html(ovEsc(ovPlural(d.invoiceTotal, 'Invoice', 'Invoices')) + ' <small>&middot; ' + d.invoiceDelivered + ' Delivered</small>');
+            $('#ovInvoices').attr('title', d.invoiceDelivered + ' delivered, ' + d.invoicePending + ' pending (cancelled invoices are not counted)');
+            $('#ovProduction .ov-value').html(ovEsc(ovPlural(d.productionTotal, 'Production', 'Productions')) + ' <small>&middot; ' + d.productionCompleted + ' Completed</small>');
+            $('#ovProduction').attr('title', d.productionCompleted + ' completed, ' + d.productionPending + ' pending (stock movements not yet applied)');
+            $('#ovTransfers .ov-value').html(ovEsc(ovPlural(d.transferTotal, 'Transfer', 'Transfers')) + ' <small>&middot; ' + d.transferCompleted + ' Completed</small>');
+            $('#ovTransfers').attr('title', d.transferCompleted + ' completed, ' + d.transferPending + ' pending purchase' + (d.transferCancelled ? ', ' + d.transferCancelled + ' cancelled' : ''));
+            $('#ovReserved .ov-value').html(ovEsc(ovFmt(d.reservedPct) + '%') + ' <small>Reserved</small>');
+            $('#ovReserved').attr('title', ovFmt(d.reservedActualQty) + ' reserved of ' + ovFmt(d.reservableQty) + ' ordered stock quantity (' + ovFmt(d.unreservedQty) + ' still to reserve)');
+            box.removeClass('ov-loading').find('.ov-error').remove();
+            box.find('.ov-item').show();
+        }
+        function loadOverview() {
+            var box = $('#soOverview');
+            if (!box.length || ovBusy) { ovQueued = ovQueued || ovBusy; return; }
+            ovBusy = true;
+            $.ajax({
+                type: 'POST',
+                url: 'view_sales_order.aspx/LoadOverview',
+                data: JSON.stringify({ smoId: parseInt(box.attr('data-order-id'), 10) }),
+                contentType: 'application/json; charset=utf-8',
+                dataType: 'json',
+                success: function (response) {
+                    if (response.d && response.d.ok) { ovRender(response.d); return; }
+                    ovFail();
+                },
+                error: ovFail,
+                complete: function () {
+                    ovBusy = false;
+                    if (ovQueued) { ovQueued = false; loadOverview(); }
+                }
+            });
+        }
+        function ovFail() {
+            var box = $('#soOverview');
+            box.removeClass('ov-loading');
+            if (!box.find('.ov-error').length) {
+                box.find('.ov-item').hide();
+                box.append('<div class="ov-error">Overview unavailable. <a href="#" id="ovRetry">Retry</a></div>');
+            }
+        }
+        function refreshOverview() {
+            clearTimeout(ovTimer);
+            ovTimer = setTimeout(loadOverview, 400);
+        }
+        $(window).on('load', function () { setTimeout(loadOverview, 0); });
+        $(document).on('click', '#ovRetry', function (e) {
+            e.preventDefault();
+            $('#soOverview').addClass('ov-loading').find('.ov-error').remove();
+            $('#soOverview .ov-item').show();
+            loadOverview();
+        });
+        $(document).on('click', '#soOverview a.ov-item[data-tab]', function (e) {
+            e.preventDefault();
+            var tab = $('#soTabs a[href="' + $(this).attr('data-tab') + '"]');
+            tab.trigger('click');
+            $('html, body').animate({ scrollTop: tab.closest('.x_panel').offset().top - 70 }, 250);
+        });
         // Used by the status buttons: confirm first, then show the shared page loader while the postback runs.
         function confirmStatusChange(message) {
             if (!confirm(message)) return false;
@@ -394,6 +496,9 @@
                         $('#reservedBody').html(html || '<tr><td colspan="10" style="text-align: center">No items found for this sales order.</td></tr>');
                         $('#reservedLoading').hide();
                         $('#reservedGrid').show();
+                        if (fromAction === true) {
+                            refreshOverview();
+                        }
                     },
                     error: function () {
                         $('#reservedLoading').show().html('Unable to load reserved items. <button type="button" id="retryReserved" class="btn btn-default btn-xs">Retry</button>');
@@ -966,6 +1071,9 @@
                         $('#productionGrid').toggle(d.rows.length > 0);
                         $('#productionLoading').hide();
                         $('#productionContent').show();
+                        if (keepMessage === true) {
+                            refreshOverview();
+                        }
                     },
                     error: function () {
                         $('#productionContent').hide();
@@ -1467,6 +1575,45 @@
 
                     <div class="row">
                         <div class="col-md-12 col-sm-12 col-xs-12">
+                            <div class="so-overview ov-loading" id="soOverview" data-order-id="<%= Enc(Order["smo_id"]) %>" role="region" aria-label="Sales order overview">
+                                <div class="ov-item ov-metric" id="ovOverall">
+                                    <span class="ov-ico"><i class="fa fa-tachometer"></i></span>
+                                    <span class="ov-body">
+                                        <span class="ov-label">Overall</span>
+                                        <span class="ov-skel"></span>
+                                        <span class="ov-real"><span class="ov-value"><span class="ov-pct" id="ovOverallText">0%</span><small>Complete</small></span><span class="ov-bar"><span id="ovOverallBar"></span></span></span>
+                                    </span>
+                                </div>
+                                <div class="ov-item ov-metric" id="ovDelivery">
+                                    <span class="ov-ico"><i class="fa fa-truck"></i></span>
+                                    <span class="ov-body">
+                                        <span class="ov-label">Delivery</span>
+                                        <span class="ov-skel"></span>
+                                        <span class="ov-real"><span class="ov-value"><span class="ov-pct" id="ovDeliveryText">0%</span><small>Delivered</small></span><span class="ov-bar"><span id="ovDeliveryBar"></span></span></span>
+                                    </span>
+                                </div>
+                                <a class="ov-item" id="ovInvoices" href="#tabInvoices" data-tab="#tabInvoices">
+                                    <span class="ov-ico"><i class="fa fa-file-text-o"></i></span>
+                                    <span class="ov-body"><span class="ov-label">Invoices</span><span class="ov-skel"></span><span class="ov-value ov-real">&mdash;</span></span>
+                                </a>
+                                <a class="ov-item" id="ovProduction" href="#tabProduction" data-tab="#tabProduction">
+                                    <span class="ov-ico"><i class="fa fa-cogs"></i></span>
+                                    <span class="ov-body"><span class="ov-label">Production</span><span class="ov-skel"></span><span class="ov-value ov-real">&mdash;</span></span>
+                                </a>
+                                <a class="ov-item" id="ovTransfers" href="#tabInterstock" data-tab="#tabInterstock">
+                                    <span class="ov-ico"><i class="fa fa-exchange"></i></span>
+                                    <span class="ov-body"><span class="ov-label">Transfers</span><span class="ov-skel"></span><span class="ov-value ov-real">&mdash;</span></span>
+                                </a>
+                                <a class="ov-item" id="ovReserved" href="#tabReserved" data-tab="#tabReserved">
+                                    <span class="ov-ico"><i class="fa fa-cubes"></i></span>
+                                    <span class="ov-body"><span class="ov-label">Reserved</span><span class="ov-skel"></span><span class="ov-value ov-real">&mdash;</span></span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 col-sm-12 col-xs-12">
                             <div class="x_panel">
                                 <div class="x_content">
                                     <div class="tabs-scroll">
@@ -1775,11 +1922,9 @@
                                     </div>
                                     <div>
                                         <asp:LinkButton ID="btnApprove" runat="server" CssClass="btn btn-success" OnClick="btnApprove_Click" OnClientClick="return confirmStatusChange('Approve this sales order? It will become eligible for stock reservation.');"><i class="fa fa-check"></i> Approve</asp:LinkButton>
-                                        <asp:LinkButton ID="btnResume" runat="server" CssClass="btn btn-success" OnClick="btnResume_Click" OnClientClick="return confirmStatusChange('Resume and approve this sales order? Stock will not be reserved automatically.');"><i class="fa fa-play"></i> Resume / Approve</asp:LinkButton>
-                                        <asp:LinkButton ID="btnHold" runat="server" CssClass="btn btn-info" OnClick="btnHold_Click" OnClientClick="return confirmStatusChange('Put this sales order on hold (Pending)? No further stock can be reserved until it is resumed. Existing reservations are kept.');"><i class="fa fa-pause"></i> Put on Hold</asp:LinkButton>
-                                        <asp:LinkButton ID="btnCancelCustomer" runat="server" CssClass="btn btn-warning" OnClick="btnCancelCustomer_Click" OnClientClick="return confirmStatusChange('Cancel this sales order as cancelled by the customer? All of its stock reservations will be released.');"><i class="fa fa-times"></i> Cancel (Customer)</asp:LinkButton>
-                                        <asp:LinkButton ID="btnCancelCompany" runat="server" CssClass="btn btn-danger" OnClick="btnCancelCompany_Click" OnClientClick="return confirmStatusChange('Cancel this sales order as cancelled by the company? All of its stock reservations will be released.');"><i class="fa fa-ban"></i> Cancel (Company)</asp:LinkButton>
-                                        <asp:LinkButton ID="btnReopen" runat="server" CssClass="btn btn-primary" OnClick="btnReopen_Click" OnClientClick="return confirmStatusChange('Reopen this sales order as New?');"><i class="fa fa-undo"></i> Reopen</asp:LinkButton>
+                                        <asp:LinkButton ID="btnHold" runat="server" CssClass="btn btn-info" OnClick="btnHold_Click" OnClientClick="return confirmStatusChange('Put this sales order on hold? No further stock can be reserved or invoiced until it is approved again. Existing reservations are kept.');"><i class="fa fa-pause"></i> Put on Hold</asp:LinkButton>
+                                        <asp:LinkButton ID="btnCancelCustomer" runat="server" CssClass="btn btn-warning" OnClick="btnCancelCustomer_Click" OnClientClick="return confirmStatusChange('Cancel this sales order as cancelled by the customer? All of its stock reservations will be released. This cannot be undone.');"><i class="fa fa-times"></i> Cancel (Customer)</asp:LinkButton>
+                                        <asp:LinkButton ID="btnCancelCompany" runat="server" CssClass="btn btn-danger" OnClick="btnCancelCompany_Click" OnClientClick="return confirmStatusChange('Cancel this sales order as cancelled by the company? All of its stock reservations will be released. This cannot be undone.');"><i class="fa fa-ban"></i> Cancel (Company)</asp:LinkButton>
                                         <% if (ActionHint != "") { %><span class="text-muted"><%= Enc(ActionHint) %></span><% } %>
                                     </div>
                                 </div>

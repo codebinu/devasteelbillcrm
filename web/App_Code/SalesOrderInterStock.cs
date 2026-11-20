@@ -203,7 +203,7 @@ public static partial class SalesOrderStock
         if (so == null || so.Rows.Count == 0)
             throw new StockException("Sales order not found.");
         if (!IsOpenStatus(I(so.Rows[0]["smo_delivery_status"])))
-            throw new StockException("Stock can be transferred only for an Approved or Processed sales order.");
+            throw new StockException("Stock can be transferred only for an Approved, Processed or Partially Delivered sales order.");
         return so.Rows[0];
     }
 
@@ -547,6 +547,8 @@ public static partial class SalesOrderStock
             result.salesDone = true;
             result.salesId = smId;
             LinkTransferInvoice(db, smId, rq.smoId);
+            // The procedure committed on its own connection and reduced the reservations of the order: recalculate its status.
+            SalesOrderStatus.UpdateSalesOrderStatus(rq.smoId, staffId);
 
             // The purchase is created later by the user (Create Purchase in the Interstock Transfer Invoices list).
             result.ok = true;

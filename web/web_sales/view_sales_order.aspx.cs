@@ -39,6 +39,9 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
             var t = Request.Cookies["invntrystaffTypeID"];
             string staffType = t != null ? t.Value : "";
 
+            // Recalculate before showing the order, so a status left stale by a failed or interrupted recalculation is corrected on open.
+            SalesOrderStatus.UpdateSalesOrderStatus(smoId);
+
             string sql = "select smo.smo_id,smo.smo_invoice_no,smo.cust_id,tc.cust_name,tc.cust_tax_reg_id,"
                 + "tc.cust_phone,tc.cust_phone1,tc.cust_address,tc.cust_email,tc.cust_city,"
                 + "tb.branch_name,smo.smo_total,smo.smo_discount_amount,smo.smo_tax_amount,smo.smo_tax_excluded_amt,smo.smo_netamount,smo.smo_roundoff,"
@@ -92,27 +95,26 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
 
             // Salesmen (type 2) can view their own orders but cannot change the status.
             bool canAct = staffType != "2";
-            btnApprove.Visible = canAct && st == SalesOrderStatus.New;
-            btnResume.Visible = canAct && st == SalesOrderStatus.Pending;
+            btnApprove.Visible = canAct && SalesOrderStatus.CanApprove(st);
             btnHold.Visible = canAct && SalesOrderStatus.CanHold(st);
             btnCancelCustomer.Visible = canAct && SalesOrderStatus.CanCancel(st);
             btnCancelCompany.Visible = btnCancelCustomer.Visible;
-            btnReopen.Visible = canAct && SalesOrderStatus.CanReopen(st);
-            HasActions = btnApprove.Visible || btnResume.Visible || btnHold.Visible || btnCancelCustomer.Visible || btnReopen.Visible;
+            HasActions = btnApprove.Visible || btnHold.Visible || btnCancelCustomer.Visible;
             if (!canAct)
                 ActionHint = "You do not have permission to change the status of this order.";
             else if (!HasActions)
-                ActionHint = "No further actions are available for this order status.";
-            else if (st == SalesOrderStatus.Pending)
-                ActionHint = "This order is on hold. Stock cannot be reserved until it is resumed.";
+                ActionHint = SalesOrderStatus.IsCancelled(st) ? "This order is cancelled; no further status changes are allowed." : "No further actions are available for this order status.";
+            else if (st == SalesOrderStatus.OnHold)
+                ActionHint = "This order is on hold. Stock cannot be reserved or invoiced until it is approved again; approving restores its status from its reservations and invoices.";
+            else if (st == SalesOrderStatus.FullyDelivered)
+                ActionHint = "A fully delivered order cannot be put on hold.";
 
             switch (Request.QueryString["done"])
             {
                 case "approved": ActionMessage = "Sales order approved. It is now eligible for stock reservation."; break;
-                case "resumed": ActionMessage = "Sales order resumed and approved. Stock is not reserved automatically."; break;
-                case "hold": ActionMessage = "Sales order put on hold (Pending). Existing reservations were kept; no further reservations are allowed until it is resumed."; break;
+                case "resumed": ActionMessage = "Sales order approved again. Its status was recalculated from its reservations and invoices."; break;
+                case "hold": ActionMessage = "Sales order put on hold. Existing reservations were kept; no further reservations or invoices are allowed until it is approved again."; break;
                 case "cancelled": ActionMessage = "Sales order cancelled. Its stock reservations were released."; break;
-                case "reopened": ActionMessage = "Sales order reopened."; break;
                 case "failed": ActionMessage = "The status could not be changed because the order was modified or is not in a valid state."; break;
             }
 
@@ -358,6 +360,14 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
         }
     }
 
+    // Figures of the one-row overview. Requested separately and after the page has rendered, in a single call.
+    [WebMethod]
+    public static SalesOrderOverviewResult LoadOverview(int smoId)
+    {
+        OrderAccess a = OpenOrder(smoId);
+        return SalesOrderStock.LoadOverview(smoId, a.BranchId);
+    }
+
     [WebMethod]
     public static ProductionEntryOptions LoadProductionEntry(int smoId, int sioId)
     {
@@ -478,7 +488,7 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
             Transfers = SalesOrderStock.LoadInterStockTransfers(smoId);
             CanCreateTransfer = SalesOrderStatus.CanReserve(Convert.ToInt32(Order["smo_delivery_status"]));
             if (!CanCreateTransfer)
-                TransferHint = "Stock can be transferred only for an Approved or Processed sales order.";
+                TransferHint = "Stock can be transferred only for an Approved, Processed or Partially Delivered sales order.";
             string invoiceId = Convert.ToString(Request.QueryString["invoiceId"]), purchaseId = Convert.ToString(Request.QueryString["purchaseId"]);
             int n;
             if (!int.TryParse(invoiceId, out n)) invoiceId = "";
@@ -547,22 +557,22 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
     {
         StatusActions.Clear();
         StatusActions.Add(new StatusAction {
-            Status = "New (Created)", Css = SalesOrderStatus.Css(SalesOrderStatus.New),
+            Status = "Draft (Created)", Css = SalesOrderStatus.Css(SalesOrderStatus.Draft),
             User = DisplayRecordedValue(Order["seller_name"]),
             Date = DisplayRecordedValue(Order["orderDate"])
         });
         bool isDelivered = currentStatus == SalesOrderStatus.FullyDelivered || currentStatus == SalesOrderStatus.PartiallyDelivered;
         bool isCancelled = SalesOrderStatus.IsCancelled(currentStatus);
-        if (currentStatus != SalesOrderStatus.New)
+        if (currentStatus != SalesOrderStatus.Draft)
             AddStatusAction("approved", SalesOrderStatus.Name(SalesOrderStatus.Approved), SalesOrderStatus.Css(SalesOrderStatus.Approved), currentStatus == SalesOrderStatus.Approved);
         // Orders approved before the Processed status existed carry processed details too, so it is listed only once the order is really Processed.
-        if (currentStatus == SalesOrderStatus.Processed || currentStatus == SalesOrderStatus.Pending || isDelivered || isCancelled)
+        if (currentStatus == SalesOrderStatus.Processed || currentStatus == SalesOrderStatus.OnHold || isDelivered || isCancelled)
             AddStatusAction("processed", SalesOrderStatus.Name(SalesOrderStatus.Processed), SalesOrderStatus.Css(SalesOrderStatus.Processed), currentStatus == SalesOrderStatus.Processed);
         if (isDelivered || isCancelled)
             AddStatusAction("packed", "Packed", "label label-info", false);
         if (isDelivered)
             AddStatusAction("delivered", SalesOrderStatus.Name(currentStatus), SalesOrderStatus.Css(currentStatus), true);
-        if (currentStatus == SalesOrderStatus.Pending)
+        if (currentStatus == SalesOrderStatus.OnHold)
         {
             StatusActions.Add(new StatusAction {
                 Status = SalesOrderStatus.Name(currentStatus), Css = SalesOrderStatus.Css(currentStatus), User = "Not recorded", Date = "Not recorded"
@@ -594,17 +604,12 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
 
     protected void btnApprove_Click(object sender, EventArgs e)
     {
-        ChangeStatus(SalesOrderStatus.Approved, "approved");
-    }
-
-    protected void btnResume_Click(object sender, EventArgs e)
-    {
-        ChangeStatus(SalesOrderStatus.Approved, "resumed");
+        ChangeStatus(SalesOrderStatus.Approved, currentStatus == SalesOrderStatus.OnHold ? "resumed" : "approved");
     }
 
     protected void btnHold_Click(object sender, EventArgs e)
     {
-        ChangeStatus(SalesOrderStatus.Pending, "hold");
+        ChangeStatus(SalesOrderStatus.OnHold, "hold");
     }
 
     protected void btnCancelCustomer_Click(object sender, EventArgs e)
@@ -617,16 +622,12 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
         ChangeStatus(SalesOrderStatus.CancelledByCompany, "cancelled");
     }
 
-    protected void btnReopen_Click(object sender, EventArgs e)
-    {
-        ChangeStatus(SalesOrderStatus.New, "reopened");
-    }
-
-    // SalesOrderStatus.Change validates the transition against the locked order row, so a stale page cannot apply an invalid change.
+    // ChangeSalesOrderStatus validates the transition and the user's permission against the locked order row, so a stale page cannot
+    // apply an invalid change.
     void ChangeStatus(int newStatus, string doneKey)
     {
         bool ok = Order != null && staffType != "2" && SalesOrderStatus.CanTransition(currentStatus, newStatus)
-            && SalesOrderStatus.Change(smoId, staffId, newStatus) == null;
+            && SalesOrderStatus.ChangeSalesOrderStatus(smoId, staffId, newStatus) == null;
         Response.Redirect("view_sales_order.aspx?smoId=" + smoId + "&done=" + (ok ? doneKey : "failed"));
     }
 

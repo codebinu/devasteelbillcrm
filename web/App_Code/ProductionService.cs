@@ -121,7 +121,7 @@ public static class ProductionService
         if (!ctx.Ok)
             return ctx.Message;
         if (!SalesOrderStatus.CanReserve(ctx.OrderStatus))
-            return "Production cannot be entered unless the sales order is Approved or Processed.";
+            return "Production cannot be entered unless the sales order is Approved, Processed or Partially Delivered.";
         if (ctx.ProductionExists)
             return "A production entry already exists for this sales order (" + ctx.DocNo + ").";
         foreach (ProductionInputReservation i in ctx.Inputs)
