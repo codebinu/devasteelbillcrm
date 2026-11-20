@@ -21,6 +21,8 @@ function loadMenu() {
     htm += '</li>';
 
 
+    htm += '<li><a href="../web_inventory/track_batch.aspx"><i class="fa fa-barcode"></i> <label style="font-size:12px;">Track Batch</label></a></li>';
+
     htm += '<li><a><i class="fa fa-truck"></i><label style="font-size:12px;"> Purchase</label> <span class="fa fa-chevron-down"></span></a>';
     htm += '<ul class="nav child_menu">';
     htm += '<li><a href="../web_purchase/vendors.aspx"><label style="font-size:12px;">Suppliers</label></a></li>';

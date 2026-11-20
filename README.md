@@ -149,6 +149,21 @@ The **Interstock Transfer Invoices** tab of the order view (right after **Invoic
 - Both procedures commit internally, so the invoice and the purchase cannot share a transaction. The invoice is saved first; if the purchase fails, the invoice stays, the page reports an incomplete transfer, and **Retry Purchase** calls the purchase procedure again. A purchase already linked to the invoice (by `sm_id`, or by `pm_ref_no`, vendor and warehouse) is never created twice. A named MySQL lock per order serialises concurrent transfers.
 
 
+## Track Batch
+
+The **Track Batch** menu item (above **Purchase**) opens [`web/web_inventory/track_batch.aspx`](web/web_inventory/track_batch.aspx), a read-only list of `tbl_item_batch`, and [`track_batch_details.aspx`](web/web_inventory/track_batch_details.aspx) (`?batchId=`), the batch's origin, reservations, invoices, inter-stock transfers, production use and timeline. All queries are in [`web/App_Code/BatchTrace.cs`](web/App_Code/BatchTrace.cs); nothing writes to the database. Access follows the **Purchase Lists** permission (`tbl_page_links` page 4), the page methods re-check it, and batches are limited to the user's `tbl_user_branches`. [`track-batch-indexes.sql`](track-batch-indexes.sql) holds optional indexes.
+
+How a batch is linked (verified against the live schema and the workflows above):
+
+- **Origin:** a purchase line (`tbl_purchase_items.itbh_id`) or a production output row (`tbl_item_pro_items.itbh_id`, `itpi_inputoutput = 2`). `itbh_created_doc_type` is `2` for both and `itbh_created_doc_id` is the `pi_id` for a purchase but the `itpm_id` for production, so neither is used to tell them apart; a batch with no or ambiguous references shows "Origin Not Identified". A production batch is tied to its sales order the way production history does it (`itbh_custbatchid = PRO-<itpm_id>-<sio_id>`).
+- **Customer vs system batch:** `itbh_custbatchid` is a customer batch unless it is empty or the `PUR-<id>-<row>` / `PRO-<id>-<line>` default stored by the purchase / production procedures.
+- **Reservations:** `tbl_item_batchstock_reserve` rows (`itbsr_qty` in the batch UOM) through `sio_id`. A reservation is deleted when consumed or released and no history is kept, so only active reservations are listed; consumption is taken from invoices, transfers and production.
+- **Invoices:** `tbl_stock_transactions` rows with `action_type = 1`, `itbh_id` and `action_ref_id = sm_id` (batch UOM), plus invoices whose `tbl_sales_items.itbh_id` points at the batch (legacy and inter-stock invoices; their quantity is in the invoice line UOM and is only added to a total when it equals the batch UOM). Cancelled (4) and rejected (5) invoices are listed but not counted in Total invoiced; their stock is not returned to the batch.
+- **Inter-stock transfers:** an invoice with `sm_is_inter_stock_transfer_invoice = 1` (out) and the purchase with `pm_is_inter_stock_transfer_invoice = 1` that receives it (in, `sm_id` / `pm_ref_no` = invoice id). The receiving purchase creates its own batch, so a transfer links two different batches.
+- **Production use:** `tbl_item_pro_items` rows with `itpi_inputoutput = 1`.
+- **Current quantity:** `itbh_currentqty`, as everywhere else in the application (reservations do not reduce it; free stock is current minus reserved). It is never rebuilt from the other quantities.
+- **Other transactions:** `tbl_stock_transactions` rows for the batch that none of the records above explain.
+
 ## Stored procedures
 
 The configured database currently exposes these procedures:
