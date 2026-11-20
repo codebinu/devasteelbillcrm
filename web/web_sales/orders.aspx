@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head id="Head1" runat="server">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <title>Bills  | Invoice Me</title>
+    <title>Orders &amp; Invoices | Invoice Me</title>
     <script src="../js/common.js" type="text/javascript"></script>
     <script type="text/javascript" src="../js/jquery-2.0.3.js"></script>
 
@@ -31,18 +31,106 @@
     <link href="../mobiscroll/css/mobiscroll-2.0rc3.full.min.css" rel="stylesheet" type="text/css" />
     <!--date picker-->
 
-    <link href="../css/bootstrap/mystyle.css" rel="stylesheet" />
+    <style type="text/css">
+        .od-page { --od-ink: #1f2d3d; --od-muted: #7b8794; --od-line: #e6e9ee; --od-brand: #2a3f54; }
+
+        .od-filter label { font-size: 12px; font-weight: 600; color: var(--od-muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; }
+        .od-filter .form-control { height: 36px; background: #fff; }
+        .od-filter .od-filter-actions { padding-top: 4px; }
+        .od-filter .od-filter-actions .btn { margin: 0 0 0 6px; }
+
+        .od-list-head { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding: 4px 0 10px; }
+        .od-list-head .od-count { font-weight: 600; color: var(--od-ink); }
+        .od-list-head .od-count .badge { background: var(--od-brand); margin-left: 6px; }
+        .od-list-head .od-perpage { color: var(--od-muted); font-size: 13px; }
+        .od-list-head .od-perpage select { margin-left: 6px; }
+
+        #tblOrders { margin-bottom: 0; }
+        #tblOrders thead th { background: #f6f8fa; color: #52606d; font-size: 12px; text-transform: uppercase; letter-spacing: .4px; border-bottom: 2px solid var(--od-line); white-space: nowrap; vertical-align: middle; }
+        #tblOrders tbody td { vertical-align: middle; border-top: 1px solid var(--od-line); padding: 12px 8px; }
+        #tblOrders tbody tr.od-row { cursor: pointer; transition: background-color .15s; }
+        #tblOrders tbody tr.od-row:hover { background-color: #f1f6fb; }
+        #tblOrders tbody tr.od-row.od-cancelled td { opacity: .6; }
+        #tblOrders tbody tr.od-row.od-cancelled .od-amount { text-decoration: line-through; }
+        .od-num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+        .od-invoice { font-weight: 600; color: #1a73b8; }
+        .od-invoice small { display: block; font-weight: 400; color: var(--od-muted); }
+        .od-unbilled { color: #d9534f; }
+        .od-customer { color: var(--od-ink); font-weight: 600; }
+        .od-tag { font-size: 11px; padding: 2px 6px; border-radius: 3px; background: #eef1f4; color: #52606d; margin-left: 6px; font-weight: 600; }
+        .od-meta { color: var(--od-muted); font-size: 13px; }
+        .od-meta .fa { margin-right: 5px; }
+        .od-meta small { display: block; }
+        .od-due { color: #d9534f; font-weight: 600; }
+        .od-settled { color: #26b99a; }
+        .od-status { font-size: 11px; padding: 4px 8px; border-radius: 10px; font-weight: 600; margin: 0 2px 2px 0; display: inline-block; }
+        .od-hl { background: #fff3a8; color: inherit; padding: 0; }
+        .od-empty { text-align: center; padding: 40px 10px !important; color: var(--od-muted); }
+        .od-empty .fa { font-size: 36px; display: block; margin-bottom: 10px; color: #c5ccd3; }
+        .od-skeleton td { padding: 16px 8px !important; }
+        .od-skeleton .od-bar { height: 12px; border-radius: 6px; background: linear-gradient(90deg, #eef1f4 25%, #f8f9fb 50%, #eef1f4 75%); background-size: 200% 100%; animation: od-shimmer 1.2s infinite; }
+        @keyframes od-shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+        #divPagination { text-align: center; padding-top: 10px; }
+
+        @media (max-width: 767px) {
+            .od-hide-sm { display: none !important; }
+            #tblOrders thead { display: none; }
+            #tblOrders, #tblOrders tbody, #tblOrders tbody tr.od-row, #tblOrders tbody td { display: block; width: 100%; }
+            #tblOrders tbody tr.od-row { border: 1px solid var(--od-line); border-radius: 4px; margin-bottom: 10px; padding: 6px 4px; background: #fff; }
+            #tblOrders tbody td { border-top: 0; padding: 4px 10px; }
+            #tblOrders tbody td.od-num { text-align: left; }
+            #tblOrders tbody td[data-label]:before { content: attr(data-label) ": "; color: var(--od-muted); font-size: 12px; }
+        }
+    </style>
 
     <script type="text/javascript">
         var BranchId;
-        $(document).ready(function () {
 
-            // console.log(JSON.parse($.cookie("search-data")));
-            ////alert(history.previous);
-            //if (document.referrer == previousPageURL) {
-            //    alert("Its a back button click...");
-            //    //Specific code here...
-            //}
+        //0=New, 1=Processed, 2=Delivered, 3=To be confirmed, 4=Canceled, 5=Rejected, 6=Pending
+        var statusMap = {
+            0: ["New", "label-warning"],
+            1: ["Processed", "label-primary"],
+            2: ["Delivered", "label-success"],
+            3: ["To be confirmed", "label-info"],
+            4: ["Canceled", "label-default"],
+            5: ["Rejected", "label-default"],
+            6: ["Pending", "label-default"]
+        };
+        var printPages = { 0: "billreceipt.aspx", 1: "normalBillreceipt.aspx", 2: "gstBillreceipt.aspx" };
+
+        // helpers for safe, readable rendering of values
+        function odEscape(value) {
+            return $('<div/>').text(value == null ? '' : String(value)).html();
+        }
+
+        function odHighlight(search, value) {
+            var text = odEscape(value);
+            if (!search) return text;
+            var safe = odEscape(search).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return text.replace(new RegExp('(' + safe + ')', 'gi'), '<mark class="od-hl">$1</mark>');
+        }
+
+        function odMoney(value) {
+            var n = parseFloat(value);
+            if (isNaN(n)) n = 0;
+            return n.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function odSkeleton() {
+            var htm = '';
+            for (var i = 0; i < 5; i++) {
+                htm += '<tr class="od-skeleton"><td colspan="8"><div class="od-bar"></div></td></tr>';
+            }
+            $('#tblOrders > tbody').html(htm);
+        }
+
+        function odEmpty(message) {
+            $('#tblOrders > tbody').html('<tr><td colspan="8" class="od-empty"><i class="fa fa-inbox"></i>' + message + '</td></tr>');
+            $('#txttotalordercount').text(0);
+            $('#divPagination').html('');
+        }
+
+        $(document).ready(function () {
             BranchId = $.cookie("invntrystaffBranchId");
             if (!BranchId) {
                 location.href = "../dashboard.aspx";
@@ -50,8 +138,7 @@
             }
 
             var yyyy = new Date().getFullYear();
-            var curr_date = new Date().getDate();
-            $('#txtSearchFromDate').scroller({
+            $('#txtSearchFromDate, #txtSearchToDate').scroller({
                 preset: 'date',
                 endYear: yyyy + 100,
                 setText: 'Next',
@@ -60,25 +147,9 @@
                 display: 'modal',
                 mode: 'scroller',
                 dateFormat: 'dd-mm-yy'
-                // dateFormat: 'dd-MM-yy'
-            });
-            $('#txtSearchToDate').scroller({
-                preset: 'date',
-                endYear: yyyy + 100,
-                setText: 'Next',
-                invalid: {},
-                theme: 'ios',
-                display: 'modal',
-                mode: 'scroller',
-                dateFormat: 'dd-mm-yy'
-                //dateFormat: 'dd-MM-yy'
             });
             getBranches();
-            //   takeQuerystring();
-            $('.footerDivContent').html("Copyright " + new Date().getFullYear() + " ©");
-
-            //// resetFilters();
-
+            $('.footerDivContent').html("Copyright " + new Date().getFullYear() + " &copy;");
         });
 
         function getBranches() {
@@ -91,23 +162,16 @@
                 success: function (msg) {
                     Unloading();
                     var obj = JSON.parse(msg.d);
-                    var htm = "";
-                    htm += '<option value="-1" selected="selected">--All Warehouses--</option>';
+                    var htm = '<option value="-1" selected="selected">All warehouses</option>';
                     $.each(obj, function (i, row) {
-                        htm += '<option value="' + row.branch_id + '">' + row.branch_name + '</option>';
+                        htm += '<option value="' + odEscape(row.branch_id) + '">' + odEscape(row.branch_name) + '</option>';
                     });
                     $("#slBranch").html(htm);
                     showsalespersons();
-                    //     $("#slBranch").val(BranchId);
-
-
-
-
                 },
-                error: function (xhr, status) {
+                error: function () {
                     Unloading();
-                    // alert("fail" + status + ":::" + xhr.d);
-                    alert("Internet Problem..!");
+                    odEmpty('Could not load warehouses. Please check your connection and try again.');
                 }
             });
         }
@@ -123,106 +187,60 @@
                 dataType: "json",
                 success: function (msg) {
                     Unloading();
-                    // alert(msg.d);
                     if (msg.d == "") {
-                        alert("Error..!");
+                        odEmpty('Could not load sales persons.');
                         return;
                     }
-                    else {
-                        $("#comboSalesPerson").html(msg.d);
-                        //  alert(getQueryString("sellerId"));
-                        if (getQueryString("sellerId") != undefined && getQueryString("sellerId") != "") {
-                            $("#comboSalesPerson").val(getQueryString("sellerId"));
-                        }
-                        var event = getQueryString("event");
-                        if (event == "back") {
-                            console.log(JSON.parse($.cookie("search-data")));
-                            var searchObject = JSON.parse($.cookie("search-data"));
-                            if (searchObject.branch == undefined) {
-                                $("#slBranch").val(-1);
-                            } else {
-                                $("#slBranch").val(searchObject.branch);
-                            }
-                            if (searchObject.seller_id == undefined) {
-                                $("#comboSalesPerson").val(0);
-                            } else {
-                                $("#comboSalesPerson").val(searchObject.seller_id);
-                            }
-                            if (searchObject.order_status == undefined) {
-                                $("#slOrderStatus").val(-1);
-                            } else {
-                                $("#slOrderStatus").val(searchObject.order_status);
-                            }
-                            if (searchObject.payment_status == undefined) {
-                                $("#slPaymentStatus").val(-1);
-                            } else {
-                                $("#slPaymentStatus").val(searchObject.payment_status);
-                            }
-                            if (searchObject.search == undefined) {
-                                $("#txtSearch").val("");
-                            } else {
-                                $("#txtSearch").val(searchObject.search);
-                            }
-                            if (searchObject.custSearch == undefined) {
-                                $("#txtCustSearch").val("");
-                            } else {
-                                $("#txtCustSearch").val(searchObject.custSearch);
-                            }
-                            if (searchObject.to_date == undefined) {
-                                $("#txtSearchToDate").val("");
-                            } else {
-                                $("#txtSearchToDate").val(searchObject.to_date);
-                            }
-                            if (searchObject.from_date == undefined) {
-                                $("#txtSearchFromDate").val("");
-                            } else {
-                                $("#txtSearchFromDate").val(searchObject.from_date);
-                            }
-                            //  alert(searchObject.seller_id);
-                            searchOrders(1);
-
-                        } else {
-                            takeQuerystring();
-
-                        }
-
-                        return;
+                    $("#comboSalesPerson").html(msg.d);
+                    if (getQueryString("sellerId") != undefined && getQueryString("sellerId") != "") {
+                        $("#comboSalesPerson").val(getQueryString("sellerId"));
+                    }
+                    if (getQueryString("event") == "back" && restoreSavedSearch()) {
+                        searchOrders(1);
+                    } else {
+                        takeQuerystring();
                     }
                 },
-                error: function (xhr, status) {
+                error: function () {
                     Unloading();
-                    alert("Internet Problem..!");
+                    odEmpty('Could not load sales persons. Please check your connection and try again.');
                 }
             });
-        }//end
+        }
+
+        // restores the filters saved by the last search (used when coming back from an order)
+        function restoreSavedSearch() {
+            var saved;
+            try {
+                saved = JSON.parse($.cookie("search-data"));
+            } catch (ex) {
+                return false;
+            }
+            if (!saved) return false;
+            $("#slBranch").val(saved.branch == undefined ? -1 : saved.branch);
+            $("#selType").val(saved.type == undefined ? -1 : saved.type);
+            $("#comboSalesPerson").val(saved.seller_id == undefined ? 0 : saved.seller_id);
+            $("#slOrderStatus").val(saved.order_status == undefined ? -1 : saved.order_status);
+            $("#slPaymentStatus").val(saved.payment_status == undefined ? -1 : saved.payment_status);
+            $("#txtSearch").val(saved.search == undefined ? "" : saved.search);
+            $("#txtCustSearch").val(saved.custSearch == undefined ? "" : saved.custSearch);
+            $("#txtSearchToDate").val(saved.to_date == undefined ? "" : saved.to_date);
+            $("#txtSearchFromDate").val(saved.from_date == undefined ? "" : saved.from_date);
+            return true;
+        }
 
         function takeQuerystring() {
             var orderStatus = getQueryString("orderStatus");
             var paymentStatus = getQueryString("paymentStatus");
             var fromDate = getQueryString("fromdate");
             var toDate = getQueryString("todate");
-            var customername = getQueryString("customername");
             var customerId = getQueryString("customerid");
-            if (customername == undefined) {
-                customername = "";
-            }
-            if (customerId == undefined) {
-                customerId = "";
-            }
-            //deliverySalesstatus=0&salesId=0&fromdate=18-01-2015&todate=18-01-2017
-            if (orderStatus == undefined) {
-                orderStatus = -1;
-            }
-            if (paymentStatus == undefined) {
-                paymentStatus = -1;
-            }
-            if (fromDate == undefined) {
-                fromDate = "";
-            }
-            if (toDate == undefined) {
-                toDate = "";
-            }
-            customername = customername.replace(/%20/g, " ");
+            if (customerId == undefined) customerId = "";
+            if (orderStatus == undefined) orderStatus = -1;
+            if (paymentStatus == undefined) paymentStatus = -1;
+            if (fromDate == undefined) fromDate = "";
+            if (toDate == undefined) toDate = "";
+
             $("#txtCustSearch").val(customerId);
             $("#slBranch").val(-1);
             $("#slPaymentStatus").val(paymentStatus);
@@ -236,10 +254,9 @@
             var filters = {};
             var perpage = $("#slPerpage").val();
             var branchId = $.cookie("invntrystaffBranchId");
-            // alert(branchId);
             var CountryId = $.cookie("invntrystaffCountryId");
 
-            if ((!branchId || branchId == "undefined" || branchId == "" || branchId == "null") || (!CountryId || CountryId == "undefined" || CountryId == "" || CountryId == "null")) {
+            if ((!branchId || branchId == "undefined" || branchId == "null") || (!CountryId || CountryId == "undefined" || CountryId == "null")) {
                 location.href = "../dashboard.aspx";
                 return false;
             }
@@ -252,9 +269,8 @@
 
             if ($("#slBranch").val() != undefined) {
                 filters.branch = $("#slBranch").val();
-            }
-            else {
-                //  setting branch from cookie if branches are not loaded
+            } else {
+                // setting branch from cookie if branches are not loaded
                 filters.branch = BranchId;
             }
 
@@ -276,154 +292,123 @@
             if ($("#selType").val() != -1 && $("#selType").val() != undefined) {
                 filters.type = $("#selType").val();
             }
-            //if($("#comboSalesPerson").val() != "0")  {
             filters.seller_id = $("#comboSalesPerson").val();
 
-            //  alert(filters.seller_id);
-            //}
-            //else if (getQueryString("sellerId") != undefined && getQueryString("sellerId") != "" && getQueryString("sellerId") != "0") {
-
-            //    filters.seller_id = getQueryString("sellerId");
-            //}
-
-            //console.log(JSON.stringify(filters));
             $.cookie("search-data", JSON.stringify(filters));
             loading();
+            odSkeleton();
 
             $.ajax({
                 type: "POST",
                 url: "Orders.aspx/searchOrders",
-                data: "{'page':" + page + ",'filters':" + JSON.stringify(filters) + ",'perpage':'" + perpage + "'}",
+                data: JSON.stringify({ page: page, filters: filters, perpage: parseInt(perpage, 10) }),
                 contentType: "application/json; charset=utf-8",
                 dataType: "json",
                 success: function (msg) {
-                    //   console.log(msg.d);
-                    var obj = JSON.parse(msg.d);
-                    var htm = "";
-                    var html = "";
-                    var classType = "";
-                    $('#tblOrders > tbody').html("");
-                    if (obj.count == 0) {
-                        //htm += "</div></div><div class='cl' style='height:5px;'></div>";
-                        htm += '<td colspan="4" style="text-align:center"></div></div><div class="cl" style="height:5px;"></div><label>Empty</label></td>';
-                        $("#txttotalordercount").text(0);
+                    Unloading();
+                    var obj;
+                    try {
+                        obj = JSON.parse(msg.d);
+                    } catch (ex) {
+                        // server returns "N" (or an error text) when nothing can be listed
+                        odEmpty('No orders or invoices found');
+                        return;
                     }
+                    if (!obj.data || obj.count == 0) {
+                        odEmpty('No orders or invoices found<br /><small>Try changing the filters or create a new order.</small>');
+                        return;
+                    }
+
+                    var htm = "";
                     $.each(obj.data, function (i, row) {
-                        $("#txttotalordercount").text(obj.count);
-                        //0=New, 1=procesd, 2=deliverd, 3=to be confirm,4=cancel,5=reject
-                        var status;
-                        var status_class;
-                        switch (row.order_status) {
-                            case 0: status = "New"; status_class = "label label-warning"; break;
-                            case 1: status = "Processed"; status_class = "label label-primary"; break;
-                            case 2: status = "Delivered"; status_class = "label label-success"; break;
-                            case 3: status = "To be confirmed"; status_class = "label label-info"; break;
-                            case 4: status = "Canceled"; status_class = "label label-default"; break;
-                            case 5: status = "Rejected"; status_class = "label label-default"; break;
-                            case 6: status = "Pending"; status_class = "label label-default"; break;
-                            default: status = "New"; status_class = "label label-warning"; break;
+                        var status = parseInt(row.order_status, 10);
+                        var st = statusMap[status] || statusMap[0];
+                        var cancelled = status == 4 || status == 5;
+                        var billed = row.invoiceNum !== null && row.invoiceNum !== "";
+                        var balance = parseFloat(row.total_balance) || 0;
+                        var net = parseFloat(row.net_amount) || 0;
+                        var url = 'manageorders.aspx?orderId=' + encodeURIComponent(row.ref_id);
+                        var printPage = printPages[row.branch_tax_method];
 
-                        }
-                    
-                        htm += '<tr>';
-                        htm += '<td>';
-                        htm += '<div style="width:700px;">';
-                        htm += '<div>';
-                        htm += '<div class="fl">';
-                        htm += '<span class="myorderMData fl">';
-
-                        if (row.invoiceNum != "" && row.invoiceNum !== null) {
-                            htm += '<a href="manageorders.aspx?orderId=' + row.ref_id + '"><label class="fl" style="color: inherit; margin-bottom:0px;font-weight:normal;cursor:pointer" >' + getHighlightedValue(filters.search, row.invoiceNum.toString()) + '(' + getHighlightedValue(filters.search, row.sm_id.toString()) + ')</label></a>';
+                        htm += '<tr class="od-row' + (cancelled ? ' od-cancelled' : '') + '" data-href="' + url + '">';
+                        htm += '<td data-label="Invoice"><a class="od-invoice" href="' + url + '">';
+                        if (billed) {
+                            htm += odHighlight(filters.search, row.invoiceNum);
                         } else {
-                            htm += '<a href="manageorders.aspx?orderId=' + row.ref_id + '"><label class="fl" style="color: inherit; margin-bottom:0px;font-weight:normal;cursor:pointer" ><span style="color:red">(Not billed yet)</span>(' + getHighlightedValue(filters.search, row.sm_id.toString()) + ')</label></a>';
+                            htm += '<span class="od-unbilled">Not billed yet</span>';
                         }
-                        htm += '<label class="fl" style="margin-bottom:0px; padding-left:5px; padding-right:5px; font-size:14px;"><a>' + getHighlightedValue(filters.search, row.cust_name) + '</a></label><span>(Class ' + row.class + ')</span>';
-                        htm += "<span class='status " + status_class + "'>" + status + "</span>";
+                        htm += '<small>Order #' + odHighlight(filters.search, row.sm_id) + '</small></a></td>';
 
-
-                        if (row.total_balance > 0) {
-                            htm += '<span class="label label-danger" style="margin-left:2px;">Outstanding</span>';
-                        }
-                        if (row.srm_smid != null) {
-                            htm += '<span class="label label-default" style="margin-left:2px;">Returned</span>';
-                        }
-
-
-                        htm += '</div>';
-                        htm += '</div>';
-                        htm += '<div class="clear"></div>';
-                        htm += '<div style="text-align: left;">';
-                        htm += '<span class="myorderSData" style="color:#361efb;font-size:15px;">Ordered:  </span><label class="fa fa-calendar myicons" ></label><span class="myorderSData">' + row.orderDate + '</span>&nbsp;&nbsp;<label class="fa fa-edit myicons"></label>';
-                        htm += '<span class="myorderSData">' + row.seller_name + '</span></div>';
-                        if (row.invoiceNum != "" && row.invoiceNum !== null) {
-                            htm += '<span class="myorderSData" style="color:#361efb;font-size:15px;"> Billed:  </span><label class="fa fa-calendar myicons" ></label><span class="myorderSData">' + row.billedDate + '</span>';
-
-                            if (row.billedBy != null) {
-                                htm += '&nbsp;&nbsp;<label class="fa fa-edit myicons"></label><span class="myorderSData">' + row.billedBy + '</span></div>';
-                            }
-                        }
-                        htm += '</div>';
+                        htm += '<td data-label="Customer" class="od-customer">' + odHighlight(filters.custSearch, row.cust_name);
+                        if (row['class']) htm += '<span class="od-tag">Class ' + odEscape(row['class']) + '</span>';
                         htm += '</td>';
-                        htm += '<td style="text-align:center";>' + row.net_amount + '</td>';
-                        if (row.total_balance > 0) {
-                            htm += '<td style="text-align:center;color:red">' + row.total_balance + '</td>';
+
+                        htm += '<td data-label="Dates" class="od-meta od-hide-sm"><i class="fa fa-calendar"></i>' + odEscape(row.orderDate)
+                            + '<small><i class="fa fa-user"></i>' + odEscape($.trim(row.seller_name)) + '</small>';
+                        if (billed && row.billedDate) {
+                            htm += '<small><i class="fa fa-file-text-o"></i>Billed ' + odEscape(row.billedDate)
+                                + (row.billedBy ? ' by ' + odEscape($.trim(row.billedBy)) : '') + '</small>';
                         }
-                        if (row.total_balance <= 0) {
-                            htm += '<td style="text-align:center;color:green">' + row.total_balance + '</td>';
+                        htm += '</td>';
+
+                        htm += '<td data-label="Net Amount" class="od-num od-amount">&#8377; ' + odMoney(net) + '</td>';
+                        if (cancelled) {
+                            htm += '<td data-label="Balance" class="od-num od-meta">&mdash;</td>';
+                        } else if (balance > 0) {
+                            htm += '<td data-label="Balance" class="od-num od-due">&#8377; ' + odMoney(balance) + '</td>';
+                        } else {
+                            htm += '<td data-label="Balance" class="od-num od-settled">&#8377; ' + odMoney(0) + '</td>';
                         }
-                        htm += '<td>';
-                        htm += '<a href="manageorders.aspx?orderId=' + row.ref_id + '" class="btn btn-primary btn-xs">';
-                        htm += '<li class="fa fa-eye" style="font-size:large;"></li>';
-                        htm += '</a>';
-                        htm += '<div class="btn btn-primary btn-xs" onclick="gotoPrintPage(' + row.branch_tax_method + ',' + row.ref_id + ')">';
-                        htm += '<li class="fa fa-print" style="font-size:large;"></li>';
-                        htm += '</div>';
+
+                        htm += '<td data-label="Payment">';
+                        if (cancelled) {
+                            htm += '<span class="od-meta">&mdash;</span>';
+                        } else if (balance > 0) {
+                            htm += '<span class="label label-danger od-status">Outstanding</span>';
+                        } else {
+                            htm += '<span class="label label-success od-status">Paid</span>';
+                        }
+                        htm += '</td>';
+
+                        htm += '<td data-label="Status"><span class="label ' + st[1] + ' od-status">' + st[0] + '</span>';
+                        if (row.srm_smid != null) htm += '<span class="label label-default od-status">Returned</span>';
+                        htm += '</td>';
+
+                        htm += '<td class="text-right" style="white-space:nowrap"><a href="' + url + '" class="btn btn-primary btn-xs" title="View"><i class="fa fa-eye"></i> View</a>';
+                        if (printPage) {
+                            htm += ' <a href="' + printPage + '?orderId=' + encodeURIComponent(row.ref_id) + '" class="btn btn-default btn-xs" title="Print"><i class="fa fa-print"></i></a>';
+                        }
                         htm += '</td>';
                         htm += '</tr>';
-
-
                     });
-                    //  alert(htm);
-                    $('#tblOrders > tbody').html(htm);
-                    html += '<tr>';
-                    html += '<td colspan="4">';
-                    html += '<div  id="divPagination" style="text-align: center;">';
-                    html += '</div>';
-                    html += '</td>';
-                    html += '</tr>';
-                    // alert(htm);
-                    $('#tblOrders > tbody').append(html);
-                    //$('#tblOrders > tbody').html(htm);
-                    $('#divPagination').html(paginate(obj.count, perpage, page, "searchOrders"));
-                    console.log(JSON.parse($.cookie("search-data")));
-                    //$("#paginatediv").html(paginate(obj.count, perpage, page, "searchOrders"));
-                    Unloading();
 
+                    $('#tblOrders > tbody').html(htm);
+                    $('#txttotalordercount').text(obj.count);
+                    $('#divPagination').html(paginate(obj.count, perpage, page, "searchOrders"));
                 },
-                error: function (xhr, status) {
+                error: function () {
                     Unloading();
-                    // alert("fail" + status + ":::" + xhr.d);
-                    alert("Internet Problem..!");
+                    odEmpty('Could not load orders. Please check your connection and try again.');
                 }
             });
         }
 
         function resetFilters() {
             window.location.href = "orders.aspx";
-
-
         }
 
-        function gotoPrintPage(taxMethod, orderId) {
-            if (taxMethod == 0) {
-                window.location.href = "billreceipt.aspx?orderId=" + orderId;
-            } else if (taxMethod == 1) {
-                window.location.href = "normalBillreceipt.aspx?orderId=" + orderId;
-            } else if (taxMethod == 2) {
-                window.location.href = "gstBillreceipt.aspx?orderId=" + orderId;
+        // whole row is clickable, links/buttons keep their own behaviour
+        $(document).on('click', '#tblOrders tr.od-row', function (e) {
+            if ($(e.target).closest('a').length) return;
+            location.href = $(this).data('href');
+        });
+
+        $(document).on('keydown', '#txtSearch, #txtCustSearch, #txtSearchFromDate, #txtSearchToDate', function (e) {
+            if (e.which === 13) {
+                e.preventDefault();
+                searchOrders(1);
             }
-            // alert(taxMethod);
-        }
+        });
     </script>
 
 </head>
@@ -444,7 +429,6 @@
                     <div class="left_col scroll-view">
                         <div class="navbar nav_title" style="border: 0;">
                             <a href="#" class="site_title">
-                                <!--<i class="fa fa-paw"></i>-->
                                 <span>Invoice</span></a>
                         </div>
 
@@ -486,80 +470,60 @@
                 <div class="top_nav">
                     <div class="nav_menu">
                         <nav>
-
-                        <div class="navbar-header" style="width: 100%; display: flex; align-items: center">
+                            <div class="navbar-header" style="width: 100%; display: flex; align-items: center">
                                 <div class="nav toggle" style="padding: 5px;">
                                     <a id="menu_toggle"><i class="fa fa-bars"></i></a>
                                 </div>
-                                <div class="col-md-6 col-xs-6">
-                                    <label style="font-weight: bold; font-size: 16px;">Orders & Invoices</label>
-                                </div>
-                                <div class="col-md-6 col-xs-5">
-
-
-
-                                   <a href="neworder.aspx" target="_blank"> <div class="btn btn-primary btn-xs pull-right" style=" margin-top:5px"><label style="color: #fff; margin-right: 5px; font-size: 14px;" class="fa fa-plus-square"></label>New Order / Invoice</div></a>
-                                  
-                                </div>
+                                <label style="font-weight: bold; font-size: 16px; margin: 0 auto 0 0;">Orders &amp; Invoices</label>
+                                <a href="neworder.aspx" target="_blank" class="btn btn-primary btn-xs" style="margin-right: 10px;"><i class="fa fa-plus-square"></i>&nbsp; New Order / Invoice</a>
                             </div>
-
                         </nav>
                     </div>
                 </div>
                 <!-- /top navigation -->
 
                 <!-- page content -->
-                <div class="right_col" role="main">
+                <div class="right_col od-page" role="main">
                     <div class="">
 
                         <div class="clearfix"></div>
                         <div class="row">
                             <div class="col-md-12 col-sm-12 col-xs-12">
-                                <div class="x_panel">
+                                <div class="x_panel od-filter">
                                     <div class="x_title" style="margin-bottom: 0px;">
-                                        <strong>Filter</strong>
+                                        <strong><i class="fa fa-filter"></i>&nbsp; Filters</strong>
                                         <ul class="nav navbar-right panel_toolbox">
                                             <li><a class="collapse-link"><i class="fa fa-chevron-up"></i></a>
                                             </li>
-
-                                            <%--<li><a class="close-link"><i class="fa fa-close"></i></a>
-                                            </li>--%>
                                         </ul>
-
+                                        <div class="clearfix"></div>
                                     </div>
                                     <div class="x_content">
 
-                                        <form class="form-horizontal form-label-left input_mask">
-                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback" id="divsearchwarehouse">
-                                                <label>Warehouse</label>
-                                                <select class="form-control" style="text-indent: 25px;" id="slBranch" onchange="javascript:searchOrders(1);">
+                                        <div class="form-horizontal form-label-left input_mask">
+                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group">
+                                                <label for="slBranch">Warehouse</label>
+                                                <select class="form-control" id="slBranch" onchange="searchOrders(1);">
                                                 </select>
-                                                <span class="fa fa-map-marker form-control-feedback left" aria-hidden="true"></span>
                                             </div>
-
-                                              <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback" id="div1">
-                                                  <label>Orders / Invoices</label>
-                                                <select class="form-control" style="text-indent: 25px;" id="selType" onchange="javascript:searchOrders(1);">
-                                               <option value="-1" selected="selected">--All Orders & Invoices--</option>
-                                                     <option value="0">Orders Only</option>
-                                                     <option value="1">Invoices Only</option>
-                                                     </select>
-                                                <span class="fa fa-map-marker form-control-feedback left" aria-hidden="true"></span>
-                                            </div>
-                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
-                                                <label>Salesman / User</label>
-                                                <select class="form-control" style="text-indent: 25px;" id="comboSalesPerson" onchange="javascript:searchOrders(1);">
-                                                    <option>--Select Sales Person--</option>
-                                                    <option>Sales Person1</option>
-                                                    <option>Sales Person2</option>
+                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group">
+                                                <label for="selType">Orders / Invoices</label>
+                                                <select class="form-control" id="selType" onchange="searchOrders(1);">
+                                                    <option value="-1" selected="selected">All orders &amp; invoices</option>
+                                                    <option value="0">Orders only</option>
+                                                    <option value="1">Invoices only</option>
                                                 </select>
-                                                <span class="fa fa-users form-control-feedback left" aria-hidden="true"></span>
                                             </div>
-                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
-                                                <label>Order / Invoice Status</label>
-                                                <select class="form-control" style="text-indent: 25px;" id="slOrderStatus" onchange="javascript:searchOrders(1);">
-                                                    <option value="-1" selected="true">--All Status--</option>
-
+                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group">
+                                                <label for="comboSalesPerson">Salesman / User</label>
+                                                <select class="form-control" id="comboSalesPerson" onchange="searchOrders(1);">
+                                                    <option value="0">Select Sales Person</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group">
+                                                <label for="slOrderStatus">Status</label>
+                                                <select class="form-control" id="slOrderStatus" onchange="searchOrders(1);">
+                                                    <option value="-1" selected="selected">All status</option>
                                                     <option value="3">To be Confirmed</option>
                                                     <option value="0">New</option>
                                                     <option value="1">Processed</option>
@@ -567,67 +531,43 @@
                                                     <option value="4">Canceled</option>
                                                     <option value="5">Rejected</option>
                                                 </select>
-                                                <span class="fa fa-file form-control-feedback left" aria-hidden="true"></span>
                                             </div>
 
-
-
-                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
-                                                <label>Payment Status</label>
-                                                <select class="form-control" style="text-indent: 25px;" id="slPaymentStatus" onchange="javascript:searchOrders(1);">
-                                                    <option value="-1" selected="selected">--All Orders/Invoices--</option>
+                                            <div class="col-md-2 col-sm-6 col-xs-12 form-group">
+                                                <label for="slPaymentStatus">Payment</label>
+                                                <select class="form-control" id="slPaymentStatus" onchange="searchOrders(1);">
+                                                    <option value="-1" selected="selected">All</option>
                                                     <option value="1">Completed</option>
                                                     <option value="2">Outstanding</option>
                                                 </select>
-                                                <span class="fa fa-file-text-o form-control-feedback left" aria-hidden="true"></span>
                                             </div>
-                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
-                                                <label>Order / Invoice</label>
-                                                <input type="text" class="form-control has-feedback-left" id="txtSearch" placeholder="Search with Order / invoice No" />
-                                                <span class="fa fa-search form-control-feedback left" aria-hidden="true"></span>
+                                            <div class="col-md-2 col-sm-6 col-xs-12 form-group">
+                                                <label for="txtSearchFromDate">From date</label>
+                                                <input type="text" class="form-control" id="txtSearchFromDate" placeholder="dd-mm-yyyy" />
                                             </div>
-                                           
-                                            <div class="col-md-2 col-sm-6 col-xs-12 form-group has-feedback" id="tdresult" style="display: none;">
-                                                <select class="form-control" style="text-indent: 25px;" id="txtpageno">
-                                                    <option>--Result Per Page--</option>
-                                                    <option value="50">50</option>
-                                                    <option value="100">100</option>
-                                                    <option value="200">200</option>
-                                                </select>
-                                                <span class="fa fa-archive form-control-feedback left" aria-hidden="true"></span>
+                                            <div class="col-md-2 col-sm-6 col-xs-12 form-group">
+                                                <label for="txtSearchToDate">To date</label>
+                                                <input type="text" class="form-control" id="txtSearchToDate" placeholder="dd-mm-yyyy" />
                                             </div>
-
-
-                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
-                                                <label>Dated from</label>
-                                                <input type="text" class="form-control has-feedback-left" style="background-color:#fff" id="txtSearchFromDate" placeholder="From Date" />
-                                                <span class="fa fa-calendar form-control-feedback left" aria-hidden="true"></span>
+                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group">
+                                                <label for="txtSearch">Order / Invoice</label>
+                                                <input type="text" class="form-control" id="txtSearch" placeholder="Order id / invoice no." />
                                             </div>
-                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group has-feedback">
-                                                <label>Dated Upto</label>
-                                                <input type="text" class="form-control has-feedback-left" style="background-color:#fff" id="txtSearchToDate" placeholder="To Date" />
-                                                <span class="fa fa-calendar form-control-feedback left" aria-hidden="true"></span>
-                                            </div>
-                                             <div class="col-md-6 col-sm-6 col-xs-12 form-group has-feedback">
-                                                 <label>Search for Customer</label>
-                                                <input type="text" class="form-control has-feedback-left" id="txtCustSearch" placeholder="Search with Customer ID/ Customer Name" />
-                                                <span class="fa fa-search form-control-feedback left" aria-hidden="true"></span>
+                                            <div class="col-md-3 col-sm-6 col-xs-12 form-group">
+                                                <label for="txtCustSearch">Customer</label>
+                                                <input type="text" class="form-control" id="txtCustSearch" placeholder="Customer ID / name" />
                                             </div>
 
-                                            <div class="col-md-6 col-sm-6 col-xs-12 ">
-                                                
-                                                <div class="btn btn-success mybtnstyl" onclick="javascript:searchOrders(1);"  style="float:right">
-                                                    <li class="fa fa-search" style="margin-right: 5px;"></li>
-                                                    Search
+                                            <div class="col-md-12 col-sm-12 col-xs-12 od-filter-actions">
+                                                <div class="btn btn-success pull-right" onclick="searchOrders(1);">
+                                                    <i class="fa fa-search"></i>&nbsp; Search
                                                 </div>
-
-                                                <div class="btn btn-primary mybtnstyl" onclick="javascript:resetFilters();"  style="float:right">
-                                                    <li class="fa fa-refresh" style="margin-right: 5px;"></li>
-                                                    Reset
+                                                <div class="btn btn-default pull-right" onclick="resetFilters();">
+                                                    <i class="fa fa-refresh"></i>&nbsp; Reset
                                                 </div>
                                             </div>
-
-                                        </form>
+                                            <div class="clearfix"></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -637,82 +577,47 @@
                         <div class="row">
                             <div class="col-md-12 col-sm-12 col-xs-12">
                                 <div class="x_panel">
-                                    <div class="x_title" style="margin-bottom: 0px;">
-                                        <!--      <h2>Hover rows</h2>-->
-                                        <div class="col-md-6 col-sm-12 col-xs-12">
-                                            <label>Orders / Invoices</label><span class="badge" style="color: #fff; margin-left: 5px; background: #d00101; padding-left: 5px; padding-right: 5px;" id="txttotalordercount"></span>
-
-                                        </div>
-                                        <div class="col-md-6 col-sm-12 col-xs-12">
-                                            <ul class="nav navbar-right panel_toolbox">
-
-                                                <li>
-                                                    <select id="slPerpage" onchange="javascript:searchOrders(1);" name="datatable-checkbox_length" aria-controls="datatable-checkbox" class=" input-sm">
-                                                        <option value="50">50</option>
-                                                        <option value="100">100</option>
-                                                        <option value="250">250</option>
-                                                        <option value="500">500</option>
-                                                    </select></li>
-
-
-                                                <%--<li><a class="close-link"><i class="fa fa-close"></i></a>
-                                            </li>--%>
-                                            </ul>
-                                        </div>
-
-                                        <div class="clearfix"></div>
-                                    </div>
-                                    <div class="col-md-12 col-sm-12 col-xs-12" style="overflow-x: auto;">
-                                        <div class="x_content">
-                                            <table id="tblOrders" class="table table-striped jambo_table bulk_action" style="table-layout: auto;">
-                                                <thead style="background-color:#f1eeee;color:#525252">
-                                                    <tr>
-                                                        <th>Order / Invoice Details</th>
-                                                        <th style="text-align: center;">Net Amount</th>
-                                                        <th style="text-align: center;">Balance</th>
-                                                        <th>Action</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr>
-                                                        <td colspan="4" style="text-align: center">
-                                                            <label>Empty</label>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td colspan="3">
-                                                            <div class="border"></div>
-                                                        </td>
-
-                                                    </tr>
-
-                                                </tbody>
-                                            </table>
-
-
-                                            <div class="col-md-12 col-sm-12 col-xs-12" style="overflow-x: auto;">
-                                                <div class="x_content">
-
-
-                                                    <!--<div class="dataTables_paginate paging_simple_numbers" id="datatable_paginate">
-				<div class="col-md-12 text-center">
-				<ul class="pagination"><li class="paginate_button previous disabled" id="datatable_previous"><a href="#" aria-controls="datatable" data-dt-idx="0" tabindex="0">Previous</a></li><li class="paginate_button active"><a href="#" aria-controls="datatable" data-dt-idx="1" tabindex="0">1</a></li><li class="paginate_button "><a href="#" aria-controls="datatable" data-dt-idx="2" tabindex="0">2</a></li><li class="paginate_button "><a href="#" aria-controls="datatable" data-dt-idx="3" tabindex="0">3</a></li><li class="paginate_button "><a href="#" aria-controls="datatable" data-dt-idx="4" tabindex="0">4</a></li><li class="paginate_button next" id="datatable_next"><a href="#" aria-controls="datatable" data-dt-idx="7" tabindex="0">Next</a></li></ul></div></div>-->
-                                                </div>
-
-
-                                            </div>
-
+                                    <div class="od-list-head">
+                                        <div class="od-count">Orders / Invoices<span class="badge" id="txttotalordercount">0</span></div>
+                                        <div class="od-perpage">
+                                            Rows per page
+                                            <select id="slPerpage" onchange="searchOrders(1);" class="input-sm">
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                                <option value="250">250</option>
+                                                <option value="500">500</option>
+                                            </select>
                                         </div>
                                     </div>
+                                    <div class="table-responsive">
+                                        <table id="tblOrders" class="table">
+                                            <thead>
+                                                <tr>
+                                                    <th>Invoice</th>
+                                                    <th>Customer</th>
+                                                    <th class="od-hide-sm">Dates</th>
+                                                    <th class="od-num">Net Amount</th>
+                                                    <th class="od-num">Balance</th>
+                                                    <th>Payment</th>
+                                                    <th>Status</th>
+                                                    <th></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td colspan="8" class="od-empty"><i class="fa fa-spinner fa-spin"></i>Loading orders...</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div id="divPagination"></div>
                                 </div>
 
                             </div>
                         </div>
                         <!-- /page content -->
 
-
                     </div>
-
 
                 </div>
                 <!-- footer content -->
@@ -720,7 +625,7 @@
                     <div class="pull-right">
                         <div class="footerDiv">
                             <div class="footerDivContent">
-                                Copyright 2014 ©
+                                Copyright 2014 &copy;
                             </div>
                         </div>
                     </div>
@@ -730,12 +635,6 @@
             </div>
         </div>
     </form>
-
-    <!-- jQuery -->
-    <%--<script src="../js/bootstrap/jquery.min.js"></script>--%>
-    <!-- jQuery -->
-    <!-- Bootstrap -->
-
 
     <script src="../js/bootstrap/bootstrap.min.js"></script>
     <!-- FastClick -->
