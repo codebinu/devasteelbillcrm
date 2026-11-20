@@ -164,6 +164,19 @@ How a batch is linked (verified against the live schema and the workflows above)
 - **Current quantity:** `itbh_currentqty`, as everywhere else in the application (reservations do not reduce it; free stock is current minus reserved). It is never rebuilt from the other quantities.
 - **Other transactions:** `tbl_stock_transactions` rows for the batch that none of the records above explain.
 
+## Stock View
+
+The **Stock View** menu item (above **Track Batch**) opens [`web/web_inventory/stock_view.aspx`](web/web_inventory/stock_view.aspx), an item-level (not batch-level) stock overview per warehouse or for all warehouses, with item details in [`stock_view_details.aspx`](web/web_inventory/stock_view_details.aspx) (`?itemId=&wh=`) and an Excel export of everything that matches the filters ([`stock_view_export.aspx`](web/web_inventory/stock_view_export.aspx)). All queries are in [`web/App_Code/StockView.cs`](web/App_Code/StockView.cs); nothing writes to the database. Access follows the **Stock Management** permission (`tbl_page_links` page 13), the page methods re-check it, and warehouses are limited to the user's `tbl_user_branches`. [`stock-view-indexes.sql`](stock-view-indexes.sql) holds optional indexes.
+
+Quantities are shown in the item's sales UOM and follow the existing workflows (verified against the live schema):
+
+- **Physical stock:** `tbl_itembranch_stock.itbs_stock` per warehouse (`tbl_branch`). Batches cover only part of it (opening / legacy stock has no batch), so `tbl_item_batch` is not used. The invoice flow deducts it when the invoice is created, so invoiced quantity is already out.
+- **Reserved:** `SUM(tbl_item_batchstock_reserve.itbsr_qty)`, in the warehouse of the reserved batch's stock row. Reservations are deleted when consumed or released, so every row is an active hold; consumed / released quantities are not recorded (the details page shows the invoiced quantity of the order line as "consumed"). **Free = Physical - Reserved.**
+- **Pending reservation:** per line of an **Approved, Processed or Partially Delivered** order (the statuses that may reserve), `max(0, ordered - invoiced) - reserved by the line on the item`, with the rounding rule of `SalesOrderStock.Compute`. Invoices count unless cancelled / rejected or inter-stock transfers. It belongs to the warehouse of the order; reservations in other warehouses still count against the line, so nothing is counted twice across warehouses. **Projected = Free - Pending** (for all warehouses, from the consolidated totals, never by adding warehouse shortages).
+- **Status:** Negative, Shortage (projected < 0), Zero, Pending Demand, Reserved, otherwise Healthy.
+- **Item type** (no raw / finished flag exists): Finished Goods when the item has a BOM, Raw Material when it is a BOM component, otherwise Other. **Category** is the item's stock group and **Brand** its spec brand (`tbl_item_master_spe_values`); there is no barcode column.
+- Orders still on the pre-migration status values (see `sales-order-status-migration.sql`) are not counted as active.
+
 ## Stored procedures
 
 The configured database currently exposes these procedures:

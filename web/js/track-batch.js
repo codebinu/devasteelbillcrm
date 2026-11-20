@@ -6,12 +6,12 @@ var TB = (function () {
         return $("<div/>").text(s == null ? "" : String(s)).html();
     }
 
-    // up to 6 decimals (the batch columns are DECIMAL(10,6)), trailing zeros removed
+    // stock quantities are always shown with exactly 3 decimals
     function qty(v) {
         if (v == null || v === "") return "&mdash;";
         var n = Number(v);
         if (isNaN(n)) return "&mdash;";
-        var parts = n.toFixed(6).replace(/0+$/, "").replace(/\.$/, "").split(".");
+        var parts = n.toFixed(3).split(".");
         parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         return parts.join(".");
     }

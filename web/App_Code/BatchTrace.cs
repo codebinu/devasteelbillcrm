@@ -42,6 +42,12 @@ public static class BatchTrace
     // Returns the user id, or 0 when the caller is not allowed.
     public static int AuthorizedStaffId()
     {
+        return AuthorizedStaffId(PageId);
+    }
+
+    // Same check for another page permission (used by Stock View).
+    public static int AuthorizedStaffId(int pageId)
+    {
         HttpContext ctx = HttpContext.Current;
         HttpCookie n = ctx == null ? null : ctx.Request.Cookies["invntrystaffName"], p = ctx == null ? null : ctx.Request.Cookies["invntrystaffPassword"];
         if (n == null || p == null)
@@ -53,7 +59,7 @@ public static class BatchTrace
         if (dt.Rows.Count == 0)
             return 0;
         int allowed = I(Q("select count(*) from tbl_user_permissions where user_type=@t and page_id=@pg and read_action='1'",
-            P("@t", dt.Rows[0]["user_type"]), P("@pg", PageId)).Rows[0][0]);
+            P("@t", dt.Rows[0]["user_type"]), P("@pg", pageId)).Rows[0][0]);
         return allowed == 0 ? 0 : I(dt.Rows[0]["user_id"]);
     }
 
