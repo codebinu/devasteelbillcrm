@@ -160,6 +160,14 @@ public static class BatchTrace
         return JsonConvert.SerializeObject(list);
     }
 
+    // Warehouses (branches) of the user that hold at least one batch.
+    public static string Branches(int staffId)
+    {
+        DataTable dt = Q("select tb.branch_id,tb.branch_name from tbl_branch tb where tb.branch_id in (select ub.branch_id from tbl_user_branches ub where ub.user_id=@staff) "
+            + "order by tb.branch_name,tb.branch_id", P("@staff", staffId));
+        return JsonConvert.SerializeObject(dt.Rows.Cast<DataRow>().Select(r => new { id = I(r["branch_id"]), name = S(r["branch_name"]) }));
+    }
+
     public static string Search(int staffId, int page, int perpage, Dictionary<string, string> filters, string sortBy, string sortDir)
     {
         if (filters == null) filters = new Dictionary<string, string>();
@@ -181,6 +189,11 @@ public static class BatchTrace
         {
             cond += " and b.itm_id=@item";
             ps.Add(P("@item", n));
+        }
+        if (filters.TryGetValue("branch", out v) && int.TryParse(v, out n) && n > 0)
+        {
+            cond += " and b.branch_id=@branch";
+            ps.Add(P("@branch", n));
         }
         if (filters.TryGetValue("type", out v) && v == "customer")
             cond += " and not " + SystemBatchSql;

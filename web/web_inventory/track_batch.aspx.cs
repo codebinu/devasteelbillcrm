@@ -29,6 +29,21 @@ public partial class web_inventory_track_batch : System.Web.UI.Page
     }
 
     [WebMethod]
+    public static string getBranches()
+    {
+        try
+        {
+            int staff = BatchTrace.AuthorizedStaffId();
+            return staff == 0 ? "[]" : BatchTrace.Branches(staff);
+        }
+        catch (Exception ex)
+        {
+            new LogClass("trackbatcherror").write(ex);
+            return "E";
+        }
+    }
+
+    [WebMethod]
     public static string searchBatches(int page, Dictionary<string, string> filters, int perpage, string sortBy, string sortDir)
     {
         try

@@ -42,8 +42,17 @@
                 if (e.which == 13) { runSearch(); return false; }
             });
             loadItems();
+            loadBranches();
             runSearch();
         });
+
+        function loadBranches() {
+            TB.ajax("track_batch.aspx/getBranches", {}, function (list) {
+                var h = '<option value="">All warehouses</option>';
+                $.each(list, function (i, b) { h += '<option value="' + TB.esc(b.id) + '">' + TB.esc(b.name) + '</option>'; });
+                $("#slBranch").html(h);
+            }, function () { /* the warehouse filter is optional */ });
+        }
 
         function loadItems() {
             TB.ajax("track_batch.aspx/getItems", {}, function (items) {
@@ -62,6 +71,7 @@
             if ($("#txtToDate").val() != "") f.to_date = $("#txtToDate").val();
             if ($("#slType").val() != "") f.type = $("#slType").val();
             if ($("#slItem").val() != "") f.item = $("#slItem").val();
+            if ($("#slBranch").val() != "") f.branch = $("#slBranch").val();
             return f;
         }
 
@@ -73,7 +83,7 @@
 
         function clearFilters() {
             $("#txtSearch, #txtFromDate, #txtToDate").val("");
-            $("#slType, #slItem").val("");
+            $("#slType, #slItem, #slBranch").val("");
             $("#slPerpage").val("25");
             query.sortBy = "date"; query.sortDir = "desc";
             runSearch();
@@ -209,13 +219,19 @@
                                             </select>
                                         </div>
                                         <div class="clearfix"></div>
-                                        <div class="col-md-5 col-sm-6 col-xs-12 form-group">
+                                        <div class="col-md-4 col-sm-6 col-xs-12 form-group">
                                             <label for="slItem">Item</label>
                                             <select class="form-control" id="slItem">
                                                 <option value="">All items</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-7 col-sm-6 col-xs-12 form-group" style="text-align: right; padding-top: 22px;">
+                                        <div class="col-md-3 col-sm-6 col-xs-12 form-group">
+                                            <label for="slBranch">Warehouse</label>
+                                            <select class="form-control" id="slBranch">
+                                                <option value="">All warehouses</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-5 col-sm-12 col-xs-12 form-group" style="text-align: right; padding-top: 22px;">
                                             <button type="button" class="btn btn-default" onclick="clearFilters();"><i class="fa fa-times"></i> Clear Filters</button>
                                             <button type="button" class="btn btn-success" onclick="runSearch();"><i class="fa fa-search"></i> Search</button>
                                         </div>
