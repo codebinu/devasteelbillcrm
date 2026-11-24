@@ -15,7 +15,7 @@ using System.Web;
 //    the order line's reservation of every row (itbs_id / itbh_id / sio_id) from the source warehouse and uses the customer state against the source
 //    warehouse state for CGST/SGST or IGST.
 //  - Saving the invoice does not create the purchase. The user later runs Create Purchase on the invoice (RetryInterStockPurchase), which calls
-//    sp_create_purchase_from_sales: it creates the purchase in the target warehouse (the branch whose cust_id is the invoice customer) against the
+//    sp_create_purchase_from_sales1.0: it creates the purchase in the target warehouse (the branch whose cust_id is the invoice customer) against the
 //    vendor account of the source warehouse (tbl_branch.vn_id). Its items carry the same sio_id, so the received batch is reserved for the same order line.
 //  - Both procedures commit on their own, so the two documents cannot share one database transaction. A failed purchase leaves the invoice as
 //    "Purchase pending" and can be retried. Creation runs under the order lock and a purchase already linked to the invoice is never created twice.
@@ -228,7 +228,7 @@ public static partial class SalesOrderStock
         return p;
     }
 
-    // The target is the warehouse that owns the customer account (sp_create_purchase_from_sales requires exactly one such warehouse).
+    // The target is the warehouse that owns the customer account (sp_create_purchase_from_sales1.0 requires exactly one such warehouse).
     // The customer's state decides CGST/SGST or IGST in the invoice, so it has to agree with the warehouse's state.
     static TransferParty LoadTransferTarget(mySqlConnection db, TransferParty source, int custId)
     {
@@ -633,7 +633,7 @@ public static partial class SalesOrderStock
     }
 
     // A purchase already created for the invoice is found through its sm_id, or through the reference, vendor and warehouse that
-    // sp_create_purchase_from_sales writes (the first covers a purchase whose link update failed).
+    // sp_create_purchase_from_sales1.0 writes (the first covers a purchase whose link update failed).
     static int ExistingTransferPurchase(mySqlConnection db, int smId, TransferParty source, TransferParty target)
     {
         string id = db.SelectScalar("select ifnull(min(pm_id),0) from tbl_purchase_master where sm_id=@s or (pm_ref_no=@s and vn_id=@v and branch_id=@b)",
@@ -651,7 +651,7 @@ public static partial class SalesOrderStock
 
         try
         {
-            using (var cmd = new MySqlCommand("CALL `sp_create_purchase_from_sales`(@psm,@opm,@opres)", con))
+            using (var cmd = new MySqlCommand("CALL `sp_create_purchase_from_sales1.0`(@psm,@opm,@opres)", con))
             {
                 cmd.Parameters.Add(new MySqlParameter("@psm", MySqlDbType.Int32) { Value = smId });
                 cmd.ExecuteNonQuery();
@@ -667,7 +667,7 @@ public static partial class SalesOrderStock
         int created = ReadProcedureOutput(con, "@opm", "@opres", out o);
         if (created <= 0 || o == null || o["success"] == null || !(bool)o["success"])
         {
-            error = ProcedureMessage(o, "sp_create_purchase_from_sales", "a database error occurred");
+            error = ProcedureMessage(o, "sp_create_purchase_from_sales1.0", "a database error occurred");
             return false;
         }
         pmId = created;

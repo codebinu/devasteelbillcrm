@@ -328,12 +328,21 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
     }
 
     [WebMethod]
-    public static StockActionResult ProduceItem(int smoId, int sioId, decimal expectedQty, decimal planQty, decimal expectedProduced)
+    public static StockActionResult ProduceInWarehouse(int smoId, int sioId, int warehouseId, decimal qty, decimal expectedProduced)
     {
         OrderAccess a = OpenOrder(smoId);
         if (a.StaffType == "2")
             return Denied("You do not have permission to move items to production.");
-        return SalesOrderStock.MoveToProduction(smoId, a.BranchId, a.Status, a.StaffId, a.DocBase, sioId, expectedQty, planQty, expectedProduced);
+        return SalesOrderStock.ProduceInWarehouse(smoId, a.BranchId, a.Status, a.StaffId, a.DocBase, sioId, warehouseId, qty, expectedProduced);
+    }
+
+    [WebMethod]
+    public static ProductionPreview PreviewProduction(int smoId, int sioId, int warehouseId, decimal qty)
+    {
+        OrderAccess a = OpenOrder(smoId);
+        if (a.StaffType == "2")
+            return new ProductionPreview { ok = false, message = "You do not have permission to move items to production." };
+        return SalesOrderStock.PreviewProduction(smoId, a.BranchId, a.StaffId, sioId, warehouseId, qty);
     }
 
     [WebMethod]

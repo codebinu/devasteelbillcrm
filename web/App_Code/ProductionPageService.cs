@@ -565,7 +565,7 @@ public static class ProductionPageService
                 // Actions on a line: stock reserved by the user, or production entered by the user (finished batch PRO-<itpm_id>-<sio_id>).
                 where += " and (exists (select 1 from tbl_item_batchstock_reserve ar where ar.sio_id=sio.sio_id and ar.itbrs_by=@actor)"
                     + " or exists (select 1 from tbl_item_batch ab inner join tbl_item_pro_master apm on apm.itpm_id=ab.itbh_created_doc_id"
-                    + " where ab.itbs_id=sio.itbs_id and ab.itbh_custbatchid=concat('PRO-',ab.itbh_created_doc_id,'-',sio.sio_id) and apm.itpm_createdby=@actor))";
+                    + " where ab.itbh_custbatchid=concat('PRO-',ab.itbh_created_doc_id,'-',sio.sio_id) and apm.itpm_createdby=@actor))";
                 ps.Add(new MySqlParameter("@actor", actor));
             }
             DateTime d;
@@ -766,13 +766,13 @@ public static class ProductionPageService
                 + "(select count(*) from tbl_item_pro_items x where x.itpm_id=pm.itpm_id and x.itpi_inputoutput=1) as input_count ";
             string from = " from tbl_sales_items_order sio inner join tbl_sales_master_order smo on smo.smo_id=sio.smo_id"
                 + " inner join tbl_customer tc on tc.cust_id=smo.cust_id"
-                + " inner join tbl_item_batch b on b.itbh_custbatchid=concat('PRO-',b.itbh_created_doc_id,'-',sio.sio_id) and b.itbs_id=sio.itbs_id and b.branch_id=smo.branch_id"
+                + " inner join tbl_item_batch b on b.itbh_custbatchid=concat('PRO-',b.itbh_created_doc_id,'-',sio.sio_id)"
                 + " inner join tbl_item_pro_master pm on pm.itpm_id=b.itbh_created_doc_id"
                 + " inner join tbl_item_pro_items pi on pi.itpm_id=pm.itpm_id and pi.itbh_id=b.itbh_id"
                 + " left join tbl_item_master m on m.itm_id=sio.itm_id"
                 + " left join tbl_item_uom pu on pu.tum_id=m.itsv_uom_purchase"
                 + " left join tbl_user_details cu on cu.user_id=pm.itpm_createdby"
-                + " left join tbl_branch tb on tb.branch_id=smo.branch_id";
+                + " left join tbl_branch tb on tb.branch_id=b.branch_id";
             return Page(new mySqlConnection(), select, from, where, order, ps, page, perpage);
         }
         catch (HttpException)

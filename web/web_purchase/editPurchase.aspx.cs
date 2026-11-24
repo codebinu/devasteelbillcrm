@@ -107,14 +107,14 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
             string itemsJson = JsonConvert.SerializeObject(request.purchase_items, settings);
 
             using (MySqlConnection con = new MySqlConnection(System.Configuration.ConfigurationManager.AppSettings["db_connect_mysql"]))
-            using (MySqlCommand cmd = new MySqlCommand("`sp_save_purchase_entry1.0`", con))
+            using (MySqlCommand cmd = new MySqlCommand("`sp_save_purchase_entry1.1`", con))
             {
                 cmd.CommandType = CommandType.StoredProcedure;
                 con.Open();
                 List<string> spParams = new List<string>();
                 using (MySqlCommand pcmd = new MySqlCommand("select parameter_name from information_schema.parameters where specific_schema=database() and specific_name=@spname and parameter_name is not null order by ordinal_position", con))
                 {
-                    pcmd.Parameters.AddWithValue("@spname", "sp_save_purchase_entry1.0");
+                    pcmd.Parameters.AddWithValue("@spname", "sp_save_purchase_entry1.1");
                     using (MySqlDataReader rd = pcmd.ExecuteReader())
                     {
                         while (rd.Read())
@@ -123,7 +123,7 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
                 }
 
                 if (spParams.Count != 5)
-                    throw new InvalidOperationException("sp_save_purchase_entry1.0 expected 5 parameters but found " + spParams.Count);
+                    throw new InvalidOperationException("sp_save_purchase_entry1.1 expected 5 parameters but found " + spParams.Count);
 
                 cmd.Parameters.Add(new MySqlParameter(spParams[0], MySqlDbType.JSON) { Value = filtersJson });
                 cmd.Parameters.Add(new MySqlParameter(spParams[1], MySqlDbType.JSON) { Value = itemsJson });

@@ -30,6 +30,7 @@ public class ProductionJobRow
     public int materialCount;
     public string materialSummary;
     public string batchNo;
+    public string warehouse;
     public string createdDate;
     public string status;
     public bool canUndo;
@@ -69,6 +70,8 @@ public class ProductionLineRow
     public bool canProduce;
     public string produceMessage;
     public List<string> references = new List<string>();
+    // Quantity produced in each warehouse ("Cochin: 6 Nos"); the line totals above are the sum over all of them.
+    public List<string> warehouses = new List<string>();
 }
 
 // Data for the production entry modal.
@@ -220,6 +223,7 @@ public static partial class SalesOrderStock
                     reserved = R4(reserved),
                     linePending = convertible ? R4(c.Needs) : 0m,
                     batchNo = j.BatchNo,
+                    warehouse = j.BranchName,
                     createdDate = j.Created,
                     status = JobStatusText
                 };
@@ -268,6 +272,8 @@ public static partial class SalesOrderStock
                 var lr = new ProductionLineRow { sioId = l.SioId, sl = lineNo++, itemName = l.Name, itemCode = l.Code, uom = c.UomName ?? "" };
                 if (hasJobs)
                     lr.references = lineRefs;
+                foreach (var byWh in result.rows.Where(x => x.sioId == l.SioId && x.warehouse != null).GroupBy(x => x.warehouse))
+                    lr.warehouses.Add(byWh.Key + ": " + Fmt(byWh.Sum(x => x.produced)) + " " + lr.uom);
                 if (c.Error != null)
                 {
                     lr.status = "Unavailable";
@@ -482,7 +488,7 @@ public static partial class SalesOrderStock
                 outputBatchQty = outBatch
             };
             if (r.BatchBranchId != 0 && r.BatchBranchId != ctx.BranchId)
-                row.issue = "Reserved in another warehouse; the production procedure requires the order's warehouse.";
+                row.issue = "Reserved in another warehouse; this screen produces only in the order's warehouse. Use Produce in the Reserved Items tab, which produces in the warehouse holding the raw material.";
             else if (implied <= 0)
                 row.issue = "The BOM quantity for this component is not valid.";
             else if (implied - c.Needs > Tolerance)
@@ -768,12 +774,12 @@ public static partial class SalesOrderStock
             + "trim(concat_ws(' ',cu.first_name,cu.last_name)) as created_by,sio.sio_id,sio.itm_id,sio.itbs_id,sio.tum_id,sio.sio_finalqty,"
             + "b.itbh_id,b.itbh_no,b.itbh_currentqty,b.branch_id,tb.branch_name,pi.itpi_quantity "
             + "from tbl_sales_items_order sio "
-            + "inner join tbl_item_batch b on b.itbh_custbatchid=concat('PRO-',b.itbh_created_doc_id,'-',sio.sio_id) and b.itbs_id=sio.itbs_id and b.branch_id=@br "
+            + "inner join tbl_item_batch b on b.itbh_custbatchid=concat('PRO-',b.itbh_created_doc_id,'-',sio.sio_id) "
             + "inner join tbl_item_pro_master pm on pm.itpm_id=b.itbh_created_doc_id "
             + "inner join tbl_item_pro_items pi on pi.itpm_id=pm.itpm_id and pi.itbh_id=b.itbh_id and pi.itpi_inputoutput=2 "
             + "left join tbl_user_details cu on cu.user_id=pm.itpm_createdby left join tbl_branch tb on tb.branch_id=b.branch_id "
             + "where sio.smo_id=@o and (@j=0 or pm.itpm_id=@j) order by pm.itpm_id,sio.sio_id",
-            new MySqlParameter[] { new MySqlParameter("@o", smoId), new MySqlParameter("@br", branchId), new MySqlParameter("@j", onlyJob) });
+            new MySqlParameter[] { new MySqlParameter("@o", smoId), new MySqlParameter("@j", onlyJob) });
         var list = new List<JobRaw>();
         var seen = new HashSet<int>();
         foreach (DataRow r in dt.Rows)

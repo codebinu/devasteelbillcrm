@@ -6,18 +6,18 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Data;
 
-// Invokes sp_save_production_entry1.0 and nothing else writes production records.
+// Invokes sp_save_production_entry1.1 and nothing else writes production records.
 // Database access is kept out of the UI; callers pass a ProductionEntryRequest and receive a ProductionEntryResult.
 public static class ProductionService
 {
     // The backticks are required: Connector/NET otherwise splits the name at the "." in "1.0" as schema.procedure.
-    const string ProcedureName = "`sp_save_production_entry1.0`";
+    const string ProcedureName = "`sp_save_production_entry1.1`";
     const decimal MaxOutputQty = 9999.999999m;
 
     // One in-flight production call per sales order inside this process; the procedure also locks the order row.
     static readonly ConcurrentDictionary<int, bool> InFlight = new ConcurrentDictionary<int, bool>();
 
-    // Rows of the order line's reservations that sp_save_production_entry1.0 may consume, flagged when the reserved
+    // Rows of the order line's reservations that sp_save_production_entry1.1 may consume, flagged when the reserved
     // batch belongs to a BOM component of the line item (tbl_item_master_bom, itmbi_type = 1).
     public static ProductionPayloadContext LoadPayloadContext(int smoId, int sioId)
     {
@@ -243,7 +243,7 @@ public static class ProductionService
                 Log(new Exception(json));
                 // 1267 is the collation conflict that currently makes the procedure fail (see production_workflow_reference.md).
                 result.Message = result.ErrorCode == 1267
-                    ? "The production procedure failed because of a database collation error (sp_save_production_entry1.0). No changes were made. Please contact the administrator."
+                    ? "The production procedure failed because of a database collation error (sp_save_production_entry1.1). No changes were made. Please contact the administrator."
                     : "The production entry could not be saved. No changes were made.";
             }
             result.ItpmId = 0;

@@ -443,10 +443,6 @@
                     else if (order_details.order_status == 4 ) {
                         $("#txtLabelStatus").html('<span class="status label label-danger" style="margin-left: 2px; margin-right: 2px; color: #fff;">Cancelled</span>');
                         $("#btnEditOrder").hide();
-                        //$("#divDeliver").show();
-                        $("#divNew").show();
-                     //   $("#divConfirm").show();
-
                     }
                     else if (order_details.order_status == 5) {
                         $("#txtLabelStatus").html('<span class="status label label-danger" style="margin-left: 2px; margin-right: 2px; color: #fff;">Rejected</span>');
@@ -461,7 +457,7 @@
                     }
 
                     orderType = order_details.type;
-                    if (order_details.type == "2") {
+                    if (order_details.type == "2" && order_details.order_status != 4) {
                         
                         $("#btnEditOrder").show();
                     }

@@ -251,6 +251,47 @@ Each production job has an **Undo** action (`SalesOrderStock.UndoProduction`, we
 `itbs_stock` and writes reversing ledger rows (only when the job had ledger rows), then deletes the `tbl_item_pro_master` / `tbl_item_pro_items`
 rows. It is refused once finished stock has been invoiced or used, or is reserved by another order, and only while the order is Approved or Processed.
 
+## 12a. Batch-based raw-material consumption (BOM calculation engine)
+
+Implemented in [`web/App_Code/BomConsumption.cs`](web/App_Code/BomConsumption.cs) (pure calculation, no database) and wired into the **Reserved Items → Produce** path
+(`SalesOrderStock.ProduceInWarehouse` / `PreviewProduction`). The stored-procedure path (§1–§11) still does not read the BOM and is unchanged.
+
+**Configuration.** None. A BOM raw material whose batch UOM is a **Length or Area** unit (coils, sheets) is consumed from the actual batch (`BATCH_WEIGHT_PER_METRE`);
+every other raw material keeps its fixed BOM quantity per finished unit (original behaviour). Each BOM line for such a material counts as one layer per finished unit
+(two lines = a double-skin product); the BOM quantity and UOM columns are not used for it.
+New methods implement `IConsumptionMethod`, are registered with `BomConsumption.Register` and are selected in `SalesOrderStock.ConsumptionMethodFor`.
+
+**Inputs (never purchase tables, never item defaults):**
+
+| Input | Source |
+|---|---|
+| Batch weight | `tbl_item_batch.itbh_kg` (the purchase screen's *Total KG*, for the whole received quantity) |
+| Batch length | `tbl_item_batch.itbh_length` × `itbh_no_piece` (*Length/Unit* × number of units) |
+| Batch stock quantity | `itbh_startqty` (received) and the reservation / `itbh_currentqty` (batch UOM) |
+| Finished width | `tbl_item_master.itsv_spec_width` → `tbl_item_master_spe_values.itsv_name` (text such as `1.10M`; a value without a unit is metres) |
+| Finished UOM kind | sales UOM category in `tbl_item_uom_type` (`Area` → SQMT, `Length` → MTR); the category's default UOM must be SQMT / MTR |
+
+**Formula, per reserved batch:** `kg/m = weight ÷ length`; raw metres per finished unit = `1 ÷ width` (Area) or `1` (Length); `kg per unit = kg/m × metres per unit × layers`;
+`requirement = kg per unit × quantity`. The requirement is converted to the batch's stock UOM with that batch's own ratio (`itbh_startqty ÷ itbh_kg`), so it is deducted from the
+batch it was calculated for (`itbh_currentqty`, `itbs_stock`, reservation row, `tbl_item_pro_items` input row and ledger row per batch). Batches are used in reservation priority
+order, each with its own ratio; no averages. Validation messages name the batch / item when the weight, length, received quantity, width, BOM quantity or UOM kind is missing or invalid,
+and production is refused (never silently approximated).
+
+### Validation of the reference workbook (`CALCULATIONS.xlsx`)
+
+| # | Finding | Effect |
+|---|---|---|
+| 1 | Sheet2 `F5`: *"2.898 / 1.9 (width of finished item) = .055 × 100 = 5.506"*. The finished item is **1.10 M** wide (its own name says `1.10M`); `1.9` is a typo. | Even with 1.9, 2.898 ÷ 1.9 = **1.525**, not 0.055. The printed 0.055 / 5.506 kg cannot be reproduced; 5.5 kg for 100 m² of 0.35 mm steel is also physically implausible. |
+| 2 | Correct result of the workbook's own method: 200 kg ÷ 69 m = 2.8986 kg/m; ÷ 1.10 m = **2.6350 kg/SQMT**; × 100 SQMT = **263.5 kg** (= 90.909 m of coil). | The engine produces these figures (checked). The workbook rounds kg/m to 3 decimals; the engine rounds only at the stock columns. |
+| 3 | The example batch holds only 200 kg / 69 m, which makes **75.9 SQMT**, not 100. | Producing 100 SQMT needs 263.5 kg; the engine reports the batch as insufficient instead of over-deducting. |
+| 4 | Sheet1 feet-and-inch formula `(LENGTH*12)+INCH*0.0254` mixes units (feet×12 = inches, then adds metres). Correct: `(LENGTH*12 + INCH) * 0.0254` m. Cells `G11`, `G17` (INCH column) repeat the feet-inch formula; `E19` (stone coated tile, feet) is empty. | Order-entry conversion only; not used by the engine, which takes the quantity already converted to the sales UOM. Needs fixing in the workbook / sales-order UOM rules. |
+| 5 | Feet are converted with `0.305`; exactly 1 ft = 0.3048 m (0.07 % error). | Engine and `TryParseMetres` use 0.3048 and 0.0254. |
+| 6 | Sheet1 hard-codes a width per product family (1.1, 1.13, 1.08, …) while Sheet2 says the width comes from the Item Master. | The engine only reads `itsv_spec_width`; Smart Clad / Fencing / Decking style items must have a **Length** sales UOM (width factor 1.0). |
+| 7 | Sheet2 lists the coil BOM line in `SQMT` but the consumption is in **KG** (`E3` "200 KG", `C5` "KG"). | Required quantity is shown in kg and in the batch's stock UOM; the BOM UOM column is not used by the calculated method. |
+
+Assumptions to confirm: `itbh_kg` is the weight of the *whole* line (so 3 coils × 69 m with 600 kg gives 2.899 kg/m); the batch's weight-to-quantity ratio is uniform, so partial consumption
+reduces weight and length proportionally; a `Spec Width` without a unit is metres and one ≥ 10 without a unit is rejected as ambiguous.
+
 ## 13. Workflow diagram
 
 ```mermaid

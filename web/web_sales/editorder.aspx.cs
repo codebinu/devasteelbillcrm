@@ -320,8 +320,13 @@ public partial class web_sales_editorder : System.Web.UI.Page
             {
                 // removing old items // reducing stock
 
-                string qry = "select itbs_id,si_qty,si_foc,si_itm_type,itm_name from tbl_sales_items where sm_id='" + ordid + "' and ( si_itm_type='0' or si_itm_type='2')";
+                string qry = "select itbs_id,sum(si_qty) as si_qty,sum(si_foc) as si_foc,max(si_itm_type) as si_itm_type,max(itm_name) as itm_name from tbl_sales_items where sm_id='" + ordid + "' and ( si_itm_type='0' or si_itm_type='2') group by itbs_id";
                 DataTable dt = db.SelectQueryForTransaction(qry);
+                // A sales order invoice gives its stock back per batch (batch, branch stock and ledger); other invoices use the item-level credit below.
+                int cancelStaffId;
+                int.TryParse(userid, out cancelStaffId);
+                if (InvoiceBatchStock.Restore(db, Convert.ToInt32(ordid), cancelStaffId, processDate, status == "4" ? "order cancelled" : "order rejected") > 0)
+                    dt.Clear();
                 int numrows = dt.Rows.Count;
 
                 Int32 oldqty = 0;
@@ -351,12 +356,15 @@ public partial class web_sales_editorder : System.Web.UI.Page
                     // code to record stock transaction end
                 }
                 itbsidString = itbsidString.Trim().TrimStart(',');
-                oldupstockQry += " ELSE itbs_stock END  WHERE itbs_id IN (" + itbsidString + ")";
-                bool oldupstockresult = db.ExecuteQueryForTransaction(oldupstockQry);
+                if (dt.Rows.Count > 0)
+                {
+                    oldupstockQry += " ELSE itbs_stock END  WHERE itbs_id IN (" + itbsidString + ")";
+                    bool oldupstockresult = db.ExecuteQueryForTransaction(oldupstockQry);
 
-                // bulk insert stock transactions
-                sb_bulk_stkTrQry.Length--;
-                db.ExecuteQueryForTransaction(sb_bulk_stkTrQry.ToString());
+                    // bulk insert stock transactions
+                    sb_bulk_stkTrQry.Length--;
+                    db.ExecuteQueryForTransaction(sb_bulk_stkTrQry.ToString());
+                }
 
                 string custid = "";
 
@@ -418,8 +426,13 @@ public partial class web_sales_editorder : System.Web.UI.Page
                 {
                     // removing old items // reducing stock
                     // db.BeginTransaction();
-                    string qry = "select itbs_id,si_qty,si_foc,si_itm_type from tbl_sales_items where sm_id='" + ordid + "' and ( si_itm_type='0' or si_itm_type='2')";
+                    string qry = "select itbs_id,sum(si_qty) as si_qty,sum(si_foc) as si_foc,max(si_itm_type) as si_itm_type from tbl_sales_items where sm_id='" + ordid + "' and ( si_itm_type='0' or si_itm_type='2') group by itbs_id";
                     DataTable dt = db.SelectQueryForTransaction(qry);
+                    // A sales order invoice that was credited back per batch is debited from the same batches again; other invoices use the item-level debit below.
+                    int reactivateStaffId;
+                    int.TryParse(userid, out reactivateStaffId);
+                    if (InvoiceBatchStock.Reapply(db, Convert.ToInt32(ordid), reactivateStaffId, processDate, "invoice made active again") > 0)
+                        dt.Clear();
                     int numrows = dt.Rows.Count;
 
                     Int32 oldqty = 0;
@@ -439,8 +452,11 @@ public partial class web_sales_editorder : System.Web.UI.Page
                         oldupstockQry += " WHEN '" + olditbs + "' THEN itbs_stock - " + oldtotoalqty + "";
                     }
                     itbsidString = itbsidString.Trim().TrimStart(',');
-                    oldupstockQry += " ELSE itbs_stock END  WHERE itbs_id IN (" + itbsidString + ")";
-                    bool oldupstockresult = db.ExecuteQueryForTransaction(oldupstockQry);
+                    if (dt.Rows.Count > 0)
+                    {
+                        oldupstockQry += " ELSE itbs_stock END  WHERE itbs_id IN (" + itbsidString + ")";
+                        bool oldupstockresult = db.ExecuteQueryForTransaction(oldupstockQry);
+                    }
 
                     string custid = "";
                     double totpaidamt = 0.00;
@@ -623,6 +639,28 @@ public partial class web_sales_editorder : System.Web.UI.Page
             DataTable itemsBefrEditDt = db.SelectQueryForTransaction(qry);
             int numrows = itemsBefrEditDt.Rows.Count;
 
+            // Sales order invoices: stock is tied to batches, so items and quantities cannot be edited (cancel and invoice again instead). Prices,
+            // discounts and the note can; the order line (sio_id) and batch (itbh_id, itm_batchno) of every row are kept when the rows are rewritten below.
+            bool linked = soId > 0;
+            DataTable linkedRows = null;
+            if (linked)
+            {
+                linkedRows = db.SelectQueryForTransaction("select si_id,itbs_id,si_qty,si_foc,sio_id,itbh_id,itm_batchno from tbl_sales_items where sm_id='" + editedorder["sm_id"] + "' order by row_no,si_id");
+                bool same = linkedRows.Rows.Count == order_data.Count;
+                for (int k = 0; same && k < linkedRows.Rows.Count; k++)
+                {
+                    DataRow lr = linkedRows.Rows[k];
+                    same = Convert.ToString(lr["itbs_id"]) == Convert.ToString(order_data[k].itbs_id)
+                        && Convert.ToDecimal(lr["si_qty"]) == Convert.ToDecimal(order_data[k].si_qty)
+                        && Convert.ToDecimal(lr["si_foc"]) == Convert.ToDecimal(order_data[k].si_foc);
+                }
+                if (!same)
+                {
+                    db.RollBackTransaction();
+                    return "BLOCKED:The items and quantities of an invoice created from a sales order cannot be edited. Cancel this invoice and create a new one from the sales order.";
+                }
+            }
+
             Int32 oldqty = 0;
             Int32 oldfoc = 0;
             Int32 oldtotoalqty = 0;
@@ -644,8 +682,11 @@ public partial class web_sales_editorder : System.Web.UI.Page
                 
             }
             itbsidString = itbsidString.Trim().TrimStart(',');
-            oldupstockQry += " ELSE itbs_stock END,itm_last_update_date='" + edited_date + "'  WHERE itbs_id IN (" + itbsidString + ")";
-            bool oldupstockresult = db.ExecuteQueryForTransaction(oldupstockQry);
+            if (!linked)
+            {
+                oldupstockQry += " ELSE itbs_stock END,itm_last_update_date='" + edited_date + "'  WHERE itbs_id IN (" + itbsidString + ")";
+                bool oldupstockresult = db.ExecuteQueryForTransaction(oldupstockQry);
+            }
             //end changed by deepika for bulk updation
             string delQry = "DELETE from tbl_sales_items  WHERE sm_id='" + editedorder["sm_id"] + "'";
             bool dresult = db.ExecuteQueryForTransaction(delQry);
@@ -726,13 +767,14 @@ public partial class web_sales_editorder : System.Web.UI.Page
                 si_foc = order_data[i].si_foc;
                 si_discount_rate = order_data[i].si_discount_rate;
                 si_org_price = order_data[i].si_org_price;
-                itm_commision = Convert.ToDouble(dt_itemDetail.Rows[i]["itm_commision"]);
-                si_item_tax = Convert.ToDouble(dt_itemDetail.Rows[i]["tp_tax_percentage"]);
-                si_item_cess = Convert.ToDouble(dt_itemDetail.Rows[i]["tp_cess"]);
-                itm_name = Convert.ToString(dt_itemDetail.Rows[i]["itm_name"]);
-                itm_code = Convert.ToString(dt_itemDetail.Rows[i]["itm_code"]);
-                itm_type = Convert.ToInt32(dt_itemDetail.Rows[i]["itm_type"]);
-                itemId = Convert.ToInt32(dt_itemDetail.Rows[i]["itm_id"]);
+                DataRow itemRow = dt_itemDetail.Select("itbs_id=" + Convert.ToString(order_data[i].itbs_id))[0];
+                itm_commision = Convert.ToDouble(itemRow["itm_commision"]);
+                si_item_tax = Convert.ToDouble(itemRow["tp_tax_percentage"]);
+                si_item_cess = Convert.ToDouble(itemRow["tp_cess"]);
+                itm_name = Convert.ToString(itemRow["itm_name"]);
+                itm_code = Convert.ToString(itemRow["itm_code"]);
+                itm_type = Convert.ToInt32(itemRow["itm_type"]);
+                itemId = Convert.ToInt32(itemRow["itm_id"]);
                 // CALCULATIONS
                 if (branch_tax_method == 0) // no tax
                 {
@@ -864,7 +906,7 @@ public partial class web_sales_editorder : System.Web.UI.Page
                 sm_total = sm_total + si_total;
 
                 // HANDLE STOCK
-                if (order_data[i].si_itm_type != "1" && order_data[i].si_itm_type != "3" && order_data[i].si_itm_type != "4")
+                if (order_data[i].si_itm_type != "1" && order_data[i].si_itm_type != "3" && order_data[i].si_itm_type != "4" && !linked)
                 {
 
                     Int32 item_total_qty = Convert.ToInt32(si_foc) + Convert.ToInt32(si_qty);
@@ -886,6 +928,18 @@ public partial class web_sales_editorder : System.Web.UI.Page
 
             insert_to_sales_items = insert_to_sales_items.Remove(insert_to_sales_items.Trim().Length - 1);
             bool InsertItemresult = db.ExecuteQueryForTransaction(insert_to_sales_items);
+            if (linked)
+            {
+                DataTable newRows = db.SelectQueryForTransaction("select si_id from tbl_sales_items where sm_id='" + editedorder["sm_id"] + "' order by row_no,si_id");
+                if (newRows.Rows.Count != linkedRows.Rows.Count)
+                    throw new InvalidOperationException("The invoice rows could not be matched to the sales order lines.");
+                for (int k = 0; k < newRows.Rows.Count; k++)
+                {
+                    db.ExecuteQueryForTransaction("update tbl_sales_items set sio_id=@sio,itbh_id=@b,itm_batchno=@n where si_id=@id",
+                        new MySqlParameter[] { new MySqlParameter("@sio", linkedRows.Rows[k]["sio_id"]), new MySqlParameter("@b", linkedRows.Rows[k]["itbh_id"]),
+                            new MySqlParameter("@n", linkedRows.Rows[k]["itm_batchno"]), new MySqlParameter("@id", newRows.Rows[k]["si_id"]) });
+                }
+            }
             //end changed by deepika
 
             //Start Round off calculation Done by Deepika
@@ -900,7 +954,8 @@ public partial class web_sales_editorder : System.Web.UI.Page
             sb_bulk_stkTrQry.Append("INSERT INTO `tbl_stock_transactions` (`itbs_id`,`action_type`,`action_ref_id`,`user_id`,`narration`,`dr_qty`,`cr_qty`,`closing_stock`,`date`,`is_reconciliation`) VALUES ");
             foreach (DataRow row in itemsBefrEditDt.Rows)
             {
-                
+                if (linked)
+                    continue;
 
                 oldqty = Convert.ToInt32(row["si_qty"]);
                 oldfoc = Convert.ToInt32(row["si_foc"]);
@@ -953,7 +1008,7 @@ public partial class web_sales_editorder : System.Web.UI.Page
             }
             // crediting new items
             dynamic newItemsList = ((IEnumerable)order_data).Cast<dynamic>()
-                .Where(a =>
+                .Where(a => !linked &&
                 !itemsBefrEditDt.AsEnumerable().Any(b=>
                     b.Field<int>("itbs_id")==Convert.ToInt32(a.itbs_id))
                 ).ToList();

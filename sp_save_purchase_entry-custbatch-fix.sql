@@ -11,7 +11,7 @@
 
 DELIMITER $$
 
-CREATE OR REPLACE PROCEDURE `sp_save_purchase_entry1.0`(
+CREATE OR REPLACE PROCEDURE `sp_save_purchase_entry1.1`(
     IN p_filters JSON,
     IN p_items JSON,
     IN p_current_datetime DATETIME,

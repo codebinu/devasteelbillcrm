@@ -148,9 +148,10 @@ public static partial class SalesOrderStatus
     // The status an order should have given its current stored status and its current valid records. It depends only on those inputs, so
     // repeated evaluation with unchanged data always gives the same result.
     //   Cancelled, On Hold, Draft and New keep their value (an unapproved order is never approved automatically); the same goes for any unknown value.
-    //   Otherwise: Fully Delivered, Partially Delivered (a valid invoice is delivered), Processed (a valid reservation exists), Approved.
-    //   Processed belongs to the sales order and depends only on its reservations, never on its invoices.
-    public static int Calculate(int current, IList<LineQuantity> lines, bool hasDeliveredInvoice, bool hasValidReservation)
+    //   Otherwise: Fully Delivered, Partially Delivered (a valid invoice is delivered), Processed (a valid reservation, a production entry or
+    //   an invoice that is not yet delivered exists), Approved.
+    //   Processed lasts until the first delivered invoice; it never depends on the delivery of an invoice.
+    public static int Calculate(int current, IList<LineQuantity> lines, bool hasDeliveredInvoice, bool hasProcessingRecords)
     {
         if (!IsOperational(current))
             return current;
@@ -158,7 +159,7 @@ public static partial class SalesOrderStatus
             return FullyDelivered;
         if (hasDeliveredInvoice)
             return PartiallyDelivered;
-        if (hasValidReservation)
+        if (hasProcessingRecords)
             return Processed;
         return Approved;
     }

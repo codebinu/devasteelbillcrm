@@ -21,9 +21,7 @@ function loadMenu() {
     htm += '</li>';
 
 
-    htm += '<li><a href="../web_inventory/stock_view.aspx"><i class="fa fa-cubes"></i> <label style="font-size:12px;">Stock View</label></a></li>';
-    htm += '<li><a href="../web_inventory/track_batch.aspx"><i class="fa fa-barcode"></i> <label style="font-size:12px;">Track Batch</label></a></li>';
-
+   
     htm += '<li><a><i class="fa fa-truck"></i><label style="font-size:12px;"> Purchase</label> <span class="fa fa-chevron-down"></span></a>';
     htm += '<ul class="nav child_menu">';
     htm += '<li><a href="../web_purchase/vendors.aspx"><label style="font-size:12px;">Suppliers</label></a></li>';
@@ -82,24 +80,24 @@ function loadMenu() {
     htm += '<li><a href="../web_inventory/billofmaterial.aspx"><label style="font-size:12px;">Bill of Material</label></a></li>';
     htm += '<li><a href="../web_inventory/batchmastermanagement.aspx"><label style="font-size:12px;">Batch Master Management</label></a></li>';
     //htm += '<li><a href="../web_inventory/offers.aspx"><label style="font-size:12px;">Offer</label></a></li>';
-    htm += '<li><a href="../web_inventory/sales_commission.aspx"><label style="font-size:12px;">Sales Commission</label></a></li>';
+    //htm += '<li><a href="../web_inventory/sales_commission.aspx"><label style="font-size:12px;">Sales Commission</label></a></li>';
     htm+='</ul>';
     htm += '</li>';
 
-    htm += '<li><a><i class="fa fa-money"></i> <label style="font-size:12px;">Income</label><span class="fa fa-chevron-down"></span></a>';
-    htm += '<ul class="nav child_menu">';
-    htm += '<li><a href="../web_incomExpense/income.aspx"><label style="font-size:12px;">New Entry</label></a></li>';
-    htm += '<li><a href="../web_incomExpense/listIncomeEntries.aspx"><label style="font-size:12px;">Incomes</label></a></li>';
-    htm += '</ul>';
-    htm += '</li>';
+   // htm += '<li><a><i class="fa fa-money"></i> <label style="font-size:12px;">Income</label><span class="fa fa-chevron-down"></span></a>';
+    //htm += '<ul class="nav child_menu">';
+    //htm += '<li><a href="../web_incomExpense/income.aspx"><label style="font-size:12px;">New Entry</label></a></li>';
+   //htm += '<li><a href="../web_incomExpense/listIncomeEntries.aspx"><label style="font-size:12px;">Incomes</label></a></li>';
+    //htm += '</ul>';
+    //htm += '</li>';
 
-    htm += '<li><a><i class="fa fa-asterisk"></i> <label style="font-size:12px;">Expense</label><span class="fa fa-chevron-down"></span></a>';
-    htm += '<ul class="nav child_menu">';
-    htm += '<li><a href="../web_incomExpense/expense.aspx"><label style="font-size:12px;">New Entry</label></a></li>';
-    htm += '<li><a href="../web_incomExpense/listExpenseEntries.aspx"><label style="font-size:12px;">Expenses</label></a></li>';
+    //htm += '<li><a><i class="fa fa-asterisk"></i> <label style="font-size:12px;">Expense</label><span class="fa fa-chevron-down"></span></a>';
+    //htm += '<ul class="nav child_menu">';
+    //htm += '<li><a href="../web_incomExpense/expense.aspx"><label style="font-size:12px;">New Entry</label></a></li>';
+    //htm += '<li><a href="../web_incomExpense/listExpenseEntries.aspx"><label style="font-size:12px;">Expenses</label></a></li>';
    
-    htm += '</ul>';
-    htm += '</li>';
+    //htm += '</ul>';
+    //htm += '</li>';
 
     htm += '<li><a><i class="fa fa-wrench"></i><label style="font-size:12px;">OP Center</label> <span class="fa fa-chevron-down"></span></a>';
     htm+='<ul class="nav child_menu">';
@@ -118,27 +116,31 @@ function loadMenu() {
     htm+='</li>';
     htm += '<li><a><i class="fa fa-file-text-o"></i><label style="font-size:12px;">Reports</label><span class="fa fa-chevron-down"></span></a>';
     htm += '<ul class="nav child_menu">';
-    htm += '<li><a href="../web_reports/SalesOverview.aspx"><label style="font-size:12px;">Sales Overview</label></a></li>';
-    htm += '<li><a href="../web_reports/profitAndLossReport.aspx"><label style="font-size:12px;">Profit & Loss Report</label></a></li>';
+
+    htm += '<li><a href="../web_reports/stock_view.aspx"><i class="fa fa-cubes"></i> <label style="font-size:12px;">Stock View</label></a></li>';
+    htm += '<li><a href="../web_reports/track_batch.aspx"><i class="fa fa-barcode"></i> <label style="font-size:12px;">Track Batch</label></a></li>';
+
+    //htm += '<li><a href="../web_reports/SalesOverview.aspx"><label style="font-size:12px;">Sales Overview</label></a></li>';
+    //htm += '<li><a href="../web_reports/profitAndLossReport.aspx"><label style="font-size:12px;">Profit & Loss Report</label></a></li>';
     htm += '<li><a href="../web_reports/PandLreport.aspx"><label style="font-size:12px;">Transaction Report</label></a></li>';
-    htm += '<li><a href="../web_reports/performanceReport.aspx"><label style="font-size:12px;">Performance Report</label></a></li>';
+    //htm += '<li><a href="../web_reports/performanceReport.aspx"><label style="font-size:12px;">Performance Report</label></a></li>';
     htm += '<li><a href="../web_reports/customerDetails.aspx"><label style="font-size:12px;">Customer Report</label></a></li>';
     htm += '<li><a href="../web_reports/salesreportsadvance.aspx"><label style="font-size:12px;">Advanced Sales Reports</label></a></li>';
     htm += '<li><a href="../web_reports/CustomerOutstandingReport.aspx"><label style="font-size:12px;">Customer Outstanding Report</label></a></li>';
     htm += '<li><a href="../web_reports/itemsOverView.aspx"><label style="font-size:12px;">Item OverView</label></a></li>';
 	    htm += '<li><a href="../web_reports/CustomeritemsOverView.aspx"><label style="font-size:12px;">Customer Item OverView</label></a></li>';
-    htm += '<li><a href="../web_reports/productOverview.aspx"><label style="font-size:12px;">Product Overview</label></a></li>';
+    //htm += '<li><a href="../web_reports/productOverview.aspx"><label style="font-size:12px;">Product Overview</label></a></li>';
     //htm += '<li><a href="../web_reports/itemreportgraphical.aspx"><label style="font-size:12px;">Graphical Item Report</label></a></li>';
     htm += '<li><a href="../web_reports/salesReturnReportAdvnc.aspx"><label style="font-size:12px;">Sales Return Report</label></a></li>';
-    htm += '<li><a href="../web_reports/creditNoteReport.aspx"><label style="font-size:12px;">Credit/Debit Note Report</label></a></li>';
+    //htm += '<li><a href="../web_reports/creditNoteReport.aspx"><label style="font-size:12px;">Credit/Debit Note Report</label></a></li>';
     //htm += '<li><a href="../web_reports/SaleOrderCancelRejectRpt.aspx"><label style="font-size:12px;">Cancel Reject Report</label></a></li>';
     htm += '<li><a href="../web_reports/purchaseReports.aspx"><label style="font-size:12px;">Purchase Reports</label></a></li>';
     htm += '<li><a href="../web_reports/PurchaseReturnReport.aspx"><label style="font-size:12px;">Purchase Return Reports</label></a></li>';
     htm += '<li><a href="../web_reports/stockTransferReport.aspx"><label style="font-size:12px;">Stock Transfer Reports</label></a></li>';
     htm += '<li><a href="../web_reports/stockTransactionReport.aspx"><label style="font-size:12px;">Stock Transaction Reports</label></a></li>';
     htm += '<li><a href="../web_reports/stockReport.aspx"><label style="font-size:12px;">Stock Report</label></a></li>';
-    htm += '<li><a href="../web_reports/EditHistoryReport.aspx"><label style="font-size:12px;">Edit History Report</label></a></li>';
-    htm += '<li><a href="../web_reports/LedgerReport.aspx"><label style="font-size:12px;">Ledger  Report</label></a></li>';
+    //htm += '<li><a href="../web_reports/EditHistoryReport.aspx"><label style="font-size:12px;">Edit History Report</label></a></li>';
+    //htm += '<li><a href="../web_reports/LedgerReport.aspx"><label style="font-size:12px;">Ledger  Report</label></a></li>';
 
 
     htm += '</ul>';
@@ -146,7 +148,7 @@ function loadMenu() {
     htm += '<li><a><i class="fa fa-wrench"></i><label style="font-size:12px;">Export to Tally</label> <span class="fa fa-chevron-down"></span></a>';
     htm += '<ul class="nav child_menu">';
     htm += ' <li><a href="../web_reports/import_SalesVouchers.aspx"><label style="font-size:12px;">Import Sales vouchers</label></a></li>';
-    htm += '<li><a href="../web_reports/import_receipts.aspx"><label style="font-size:12px;">Import Receipts</label></a></li>';
+    //htm += '<li><a href="../web_reports/import_receipts.aspx"><label style="font-size:12px;">Import Receipts</label></a></li>';
     //htm += '<li><a href="../web_opcenter/leaveManagement.aspx"><label style="font-size:12px;">Leave Management</label></a></li>';
 
     htm += '</ul>';

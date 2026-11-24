@@ -2001,6 +2001,10 @@ var new_class = 0;
                             return;
                         }
                     } 
+                    else if (typeof msg.d === "string" && msg.d.indexOf("BLOCKED:") === 0) {
+                        alert(msg.d.substring(8));
+                        return;
+                    }
                     else {
                         alert("Error!.. Please Try Again...");
                         return;

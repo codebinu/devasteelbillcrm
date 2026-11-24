@@ -203,6 +203,12 @@ public partial class web_sales_manageorders : System.Web.UI.Page
             }
             else
             {
+                if (dt_sm.Rows[0]["sm_delivery_status"].ToString() == "4")
+                {
+                    db.RollBackTransaction();
+                    return "BLOCKED:This order is cancelled. No further action is allowed on a cancelled order.";
+                }
+
                 // previous status is cancelled & changing to new order or delivered
                 // Increase Stock - insert to transaction - change status - update cust_amount with date
                 if (dt_sm.Rows[0]["sm_delivery_status"].ToString() == "4" || dt_sm.Rows[0]["sm_delivery_status"].ToString() == "5")
@@ -218,9 +224,20 @@ public partial class web_sales_manageorders : System.Web.UI.Page
                         }
                     }
                    
-                    string qry = "select itbs_id,si_qty,si_foc,si_itm_type,itm_type,itm_name from tbl_sales_items where sm_id='" + order["sm_id"] + "' and ( si_itm_type='0' or si_itm_type='2') and itm_type='1'";
+                    string qry = "select itbs_id,sum(si_qty) as si_qty,sum(si_foc) as si_foc,max(si_itm_type) as si_itm_type,max(itm_type) as itm_type,max(itm_name) as itm_name from tbl_sales_items where sm_id='" + order["sm_id"] + "' and ( si_itm_type='0' or si_itm_type='2') and itm_type='1' group by itbs_id";
                     DataTable dt = db.SelectQueryForTransaction(qry);
-                    int numrows = dt.Rows.Count;
+                    // A sales order invoice that was credited back per batch is debited from the same batches again; other invoices use the item-level debit below.
+                    bool batchDebited;
+                    try
+                    {
+                        batchDebited = InvoiceBatchStock.Reapply(db, soInvoiceId, soStaffId, action_date, "invoice made active again") > 0;
+                    }
+                    catch (InvalidOperationException ex)
+                    {
+                        db.RollBackTransaction();
+                        return "BLOCKED:" + ex.Message;
+                    }
+                    int numrows = batchDebited ? 0 : dt.Rows.Count;
                     if (numrows > 0)
                     {
                         Int32 oldqty = 0;
@@ -320,9 +337,11 @@ public partial class web_sales_manageorders : System.Web.UI.Page
                     if (order["order_status"].ToString() == "4")
                     {
 
-                        string qry = "select itbs_id,si_qty,si_foc,si_itm_type,itm_type,itm_name from tbl_sales_items where sm_id='" + order["sm_id"] + "' and ( si_itm_type='0' or si_itm_type='2') and itm_type='1'";
+                        string qry = "select itbs_id,sum(si_qty) as si_qty,sum(si_foc) as si_foc,max(si_itm_type) as si_itm_type,max(itm_type) as itm_type,max(itm_name) as itm_name from tbl_sales_items where sm_id='" + order["sm_id"] + "' and ( si_itm_type='0' or si_itm_type='2') and itm_type='1' group by itbs_id";
                         DataTable dt = db.SelectQueryForTransaction(qry);
-                        int numrows = dt.Rows.Count;
+                        // A sales order invoice gives its stock back per batch (batch, branch stock and ledger); other invoices use the item-level credit below.
+                        bool batchCredited = InvoiceBatchStock.Restore(db, soInvoiceId, soStaffId, action_date, "order cancelled") > 0;
+                        int numrows = batchCredited ? 0 : dt.Rows.Count;
                         if (numrows > 0)
                         {
                             Int32 oldqty = 0;
@@ -546,9 +565,10 @@ public partial class web_sales_manageorders : System.Web.UI.Page
                         update_sales_mstr = "UPDATE tbl_sales_master SET sm_delivery_status='5',sm_approved_id='" + order["user_id"] + "',sm_approved_date='" + action_date + "' WHERE sm_id='" + order["sm_id"] + "'";
                         db.ExecuteQueryForTransaction(update_sales_mstr);
 
-                        string qry = "select itbs_id,si_qty,si_foc,si_itm_type,itm_type,itm_name from tbl_sales_items where sm_id='" + order["sm_id"] + "' and ( si_itm_type='0' or si_itm_type='2') and itm_type='1'";
+                        string qry = "select itbs_id,sum(si_qty) as si_qty,sum(si_foc) as si_foc,max(si_itm_type) as si_itm_type,max(itm_type) as itm_type,max(itm_name) as itm_name from tbl_sales_items where sm_id='" + order["sm_id"] + "' and ( si_itm_type='0' or si_itm_type='2') and itm_type='1' group by itbs_id";
                         DataTable dt = db.SelectQueryForTransaction(qry);
-                        int numrows = dt.Rows.Count;
+                        bool batchCredited = InvoiceBatchStock.Restore(db, soInvoiceId, soStaffId, action_date, "order rejected") > 0;
+                        int numrows = batchCredited ? 0 : dt.Rows.Count;
                         if (numrows > 0)
                         {
                             Int32 oldqty = 0;

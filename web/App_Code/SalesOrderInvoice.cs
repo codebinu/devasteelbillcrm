@@ -26,11 +26,21 @@ public static partial class SalesOrderStock
         public string BatchNo, Created;
     }
 
+    sealed class InvoiceAlloc
+    {
+        public int BatchId;
+        public string BatchNo;
+        public decimal Batch; // taken from the batch, in the batch UOM
+        public decimal Qty;   // invoice row quantity, in the order line's UOM
+        public List<KeyValuePair<InvoiceRes, decimal>> Takes = new List<KeyValuePair<InvoiceRes, decimal>>(); // reservation rows and what each gives up
+    }
+
     sealed class InvoiceLineStock
     {
         public SalesOrderInvoiceLine Line;
         public decimal Qty;
         public decimal NeedBatch;
+        public List<InvoiceAlloc> Allocs = new List<InvoiceAlloc>();
     }
 
     static DataTable Sel(mySqlConnection db, bool tx, string sql, params MySqlParameter[] ps)
@@ -403,20 +413,29 @@ public static partial class SalesOrderStock
 
             var link = new SalesOrderInvoiceLink { SmoId = rq.smoId };
             var items = new List<Dictionary<string, string>>();
+            AllocateInvoiceStock(db, picked, factors);
             foreach (InvoiceLineStock p in picked)
             {
-                link.SioIds.Add(p.Line.SioId);
-                items.Add(new Dictionary<string, string>
+                // A product line taken from several batches becomes one invoice row per batch.
+                var parts = p.Line.IsProduct
+                    ? p.Allocs.Select(a => new { Qty = a.Qty, BatchId = a.BatchId }).ToList()
+                    : new[] { new { Qty = p.Qty, BatchId = 0 } }.ToList();
+                foreach (var part in parts)
                 {
-                    { "itbs_id", p.Line.ItbsId.ToString(CultureInfo.InvariantCulture) },
-                    { "si_org_price", Inv(p.Line.OrgPrice) },
-                    { "si_price", Inv(p.Line.Price) },
-                    { "si_qty", p.Qty.ToString(CultureInfo.InvariantCulture) },
-                    { "si_foc", "0" },
-                    { "si_discount_rate", Inv(p.Line.DiscountRate) },
-                    { "si_approval_status", "0" },
-                    { "si_itm_type", "0" }
-                });
+                    link.SioIds.Add(p.Line.SioId);
+                    items.Add(new Dictionary<string, string>
+                    {
+                        { "itbs_id", p.Line.ItbsId.ToString(CultureInfo.InvariantCulture) },
+                        { "si_org_price", Inv(p.Line.OrgPrice) },
+                        { "si_price", Inv(p.Line.Price) },
+                        { "si_qty", part.Qty.ToString(CultureInfo.InvariantCulture) },
+                        { "si_foc", "0" },
+                        { "si_discount_rate", Inv(p.Line.DiscountRate) },
+                        { "si_approval_status", "0" },
+                        { "si_itm_type", "0" },
+                        { "itbh_id", part.BatchId.ToString(CultureInfo.InvariantCulture) }
+                    });
+                }
             }
 
             string note = (rq.note ?? "").Trim();
@@ -472,7 +491,7 @@ public static partial class SalesOrderStock
             VerifyInvoiceTotals(db, smId, rq, picked);
             DateTime invoiceDate = DateTime.ParseExact(db.SelectScalarForTransaction("select date_format(sm_date,'%Y-%m-%d %H:%i:%s') from tbl_sales_master where sm_id=@i",
                 new MySqlParameter[] { new MySqlParameter("@i", smId) }), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
-            ConsumeInvoiceStock(db, invoiceDate, staffId, smId, picked, factors);
+            ConsumeInvoiceStock(db, invoiceDate, staffId, smId, picked);
             // The new invoice and the reservations it consumed change the order's status (the order row is locked above).
             SalesOrderStatus.TryUpdateSalesOrderStatus(db, rq.smoId, staffId);
 
@@ -524,10 +543,11 @@ public static partial class SalesOrderStock
             throw new StockException("The paid amount cannot be greater than the invoice amount (" + net.ToString("0.00", CultureInfo.InvariantCulture) + ").");
     }
 
-    // Takes the invoiced quantity from the order line's own reservations, oldest batch first: the batch quantity is reduced, the reservation
-    // row is reduced (deleted when fully used), branch stock is reduced and a stock ledger row is written per batch. Reservations of other
-    // orders and the reservations of BOM raw materials (other items) are never touched.
-    static void ConsumeInvoiceStock(mySqlConnection db, DateTime date, int staffId, int smId, List<InvoiceLineStock> picked, Dictionary<int, decimal[]> factors)
+    // Takes the invoiced quantity from the order line's own reservations, oldest batch first. The result is p.Allocs, one entry per batch
+    // (all reservation rows the line holds on that batch are merged), so the invoice can carry one row per batch.
+    // The reservation rows are locked here and stay locked until the transaction ends. Reservations of other orders and the
+    // reservations of BOM raw materials (other items) are never touched.
+    static void AllocateInvoiceStock(mySqlConnection db, List<InvoiceLineStock> picked, Dictionary<int, decimal[]> factors)
     {
         List<InvoiceLineStock> products = picked.Where(p => p.Line.IsProduct).ToList();
         if (products.Count == 0)
@@ -568,6 +588,43 @@ public static partial class SalesOrderStock
                 decimal take = Math.Min(res.Qty, need);
                 if (take <= 0)
                     continue;
+                InvoiceAlloc a = p.Allocs.FirstOrDefault(x => x.BatchId == res.BatchId);
+                if (a == null)
+                {
+                    a = new InvoiceAlloc { BatchId = res.BatchId, BatchNo = res.BatchNo };
+                    p.Allocs.Add(a);
+                }
+                a.Batch += take;
+                a.Takes.Add(new KeyValuePair<InvoiceRes, decimal>(res, take));
+                need -= take;
+            }
+            if (need > Tolerance)
+                throw new StockException(p.Line.Name + ": the reserved stock is less than the quantity being invoiced. No changes were made.");
+
+            // The invoice quantity of each batch is its share of the line quantity; the last batch takes the rounding remainder so the rows add up exactly.
+            decimal[] f = factors[p.Line.SioId];
+            decimal assigned = 0m;
+            for (int i = 0; i < p.Allocs.Count; i++)
+            {
+                InvoiceAlloc a = p.Allocs[i];
+                a.Qty = i == p.Allocs.Count - 1 ? p.Qty - assigned : Math.Round(a.Batch * f[1] / f[0], 3, MidpointRounding.AwayFromZero);
+                if (a.Qty <= 0)
+                    throw new StockException(p.Line.Name + ": the quantity is too small to split across the reserved batches. Invoice a larger quantity.");
+                assigned += a.Qty;
+            }
+        }
+    }
+
+    // Reduces the batches and reservations according to the allocation: the batch quantity is reduced, the reservation row is reduced
+    // (deleted when fully used), branch stock is reduced and a stock ledger row is written per batch.
+    static void ConsumeInvoiceStock(mySqlConnection db, DateTime date, int staffId, int smId, List<InvoiceLineStock> picked)
+    {
+        foreach (InvoiceLineStock p in picked.Where(x => x.Line.IsProduct))
+        {
+            foreach (KeyValuePair<InvoiceRes, decimal> t in p.Allocs.SelectMany(a => a.Takes))
+            {
+                InvoiceRes res = t.Key;
+                decimal take = t.Value;
                 if (Exec(db, "update tbl_item_batch set itbh_currentqty=itbh_currentqty-@q where itbh_id=@b and itbh_currentqty>=@q",
                     new MySqlParameter("@q", take), new MySqlParameter("@b", res.BatchId)) != 1)
                     throw new StockException(p.Line.Name + ": batch " + res.BatchNo + " does not have enough stock. No changes were made.");
@@ -579,14 +636,10 @@ public static partial class SalesOrderStock
                 else if (Exec(db, "update tbl_item_batchstock_reserve set itbsr_qty=itbsr_qty-@q where itbsr_id=@r and itbsr_qty>=@q",
                     new MySqlParameter("@q", take), new MySqlParameter("@r", res.ResId)) != 1)
                     throw new StockException(p.Line.Name + ": the reservation changed. Please reload the page.");
-                res.Qty -= take;
-                need -= take;
 
                 AdjustBranchStock(db, res.ItbsId, -take);
                 InsertSalesLedger(db, date, staffId, res, smId, take, p.Line.Name);
             }
-            if (need > Tolerance)
-                throw new StockException(p.Line.Name + ": the reserved stock is less than the quantity being invoiced. No changes were made.");
         }
     }
 

@@ -491,7 +491,7 @@ public partial class web_sales_neworder : System.Web.UI.Page
                 Int32 row_no = 0;
 
                 //start changed by deepika
-                string insert_to_sales_items = "INSERT INTO tbl_sales_items(sm_id,row_no,itbs_id,itm_code,itm_name,itm_batchno,si_org_price,si_price,si_qty,si_total,si_discount_rate,si_discount_amount,si_net_amount,si_foc,si_approval_status,itm_commision,itm_commisionamt,ofr_id,ofritm_id,si_itm_type,si_item_tax,si_item_cgst,si_item_sgst,si_item_igst,si_item_utgst,si_item_cess,si_tax_excluded_total,si_tax_amount,itm_type" + (link == null ? "" : ",sio_id") + ") VALUES ";
+                string insert_to_sales_items = "INSERT INTO tbl_sales_items(sm_id,row_no,itbs_id,itm_code,itm_name,itm_batchno,si_org_price,si_price,si_qty,si_total,si_discount_rate,si_discount_amount,si_net_amount,si_foc,si_approval_status,itm_commision,itm_commisionamt,ofr_id,ofritm_id,si_itm_type,si_item_tax,si_item_cgst,si_item_sgst,si_item_igst,si_item_utgst,si_item_cess,si_tax_excluded_total,si_tax_amount,itm_type" + (link == null ? "" : ",sio_id,itbh_id") + ") VALUES ";
                 string itbsidString = "";
 
                 foreach (var items in order_data)
@@ -540,13 +540,14 @@ public partial class web_sales_neworder : System.Web.UI.Page
                     else
                     {
                        
-                        itm_commision = Convert.ToDouble(dt_itemDetail.Rows[j]["itm_commision"]);
-                        si_item_tax = Convert.ToDouble(dt_itemDetail.Rows[j]["tp_tax_percentage"]);
-                        si_item_cess = Convert.ToDouble(dt_itemDetail.Rows[j]["tp_cess"]);
-                        itm_name = Convert.ToString(dt_itemDetail.Rows[j]["itm_name"]);
-                        itm_code = Convert.ToString(dt_itemDetail.Rows[j]["itm_code"]);
-                        itm_type= Convert.ToInt32(dt_itemDetail.Rows[j]["itm_type"]);
-                        itemId= Convert.ToInt32(dt_itemDetail.Rows[j]["itm_id"]);
+                        DataRow itemRow = dt_itemDetail.Select("itbs_id=" + Convert.ToString(order_data[i].itbs_id))[0];
+                        itm_commision = Convert.ToDouble(itemRow["itm_commision"]);
+                        si_item_tax = Convert.ToDouble(itemRow["tp_tax_percentage"]);
+                        si_item_cess = Convert.ToDouble(itemRow["tp_cess"]);
+                        itm_name = Convert.ToString(itemRow["itm_name"]);
+                        itm_code = Convert.ToString(itemRow["itm_code"]);
+                        itm_type= Convert.ToInt32(itemRow["itm_type"]);
+                        itemId= Convert.ToInt32(itemRow["itm_id"]);
                         j = j + 1;
                     }
                     // CALCULATIONS
@@ -652,7 +653,17 @@ public partial class web_sales_neworder : System.Web.UI.Page
 
                     // INSERTING INTO TBL_SALES_ITEMS
                     
-                    insert_to_sales_items += " (" + "'" + sm_id + "','" + row_no + "', '" + order_data[i].itbs_id + "', '" + itm_code + "', '" + itm_name + "', '0', '" + si_org_price + "', '" + order_data[i].si_price + "', '" + si_qty + "', '" + si_total + "', '" + si_discount_rate + "', '" + si_discount_amount + "', '" + si_net_amount + "', '" + si_foc + "', '" + order_data[i].si_approval_status + "', '" + itm_commision + "', '" + itm_commisionamt + "', '0', '0','" + order_data[i].si_itm_type + "', '" + si_item_tax + "', '" + si_item_cgst + "', '" + si_item_sgst + "', '" + si_item_igst + "', '" + si_item_utgst + "', '" + si_item_cess + "', '" + (si_net_amount - tax_amount) + "', '" + tax_amount + "',"+itm_type+(link == null ? "" : "," + link.SioIds[i])+"),";
+                    // Sales order invoices carry the batch the quantity was taken from (one row per batch); itm_batchno holds the same value as itbh_id.
+                    string rowBatchId = "0";
+                    if (link != null)
+                    {
+                        string v;
+                        if (item_details[i].TryGetValue("itbh_id", out v) && !string.IsNullOrEmpty(v))
+                            rowBatchId = Convert.ToInt32(v).ToString();
+                    }
+                    string rowBatchNo = rowBatchId;
+
+                    insert_to_sales_items += " (" + "'" + sm_id + "','" + row_no + "', '" + order_data[i].itbs_id + "', '" + itm_code + "', '" + itm_name + "', '" + rowBatchNo + "', '" + si_org_price + "', '" + order_data[i].si_price + "', '" + si_qty + "', '" + si_total + "', '" + si_discount_rate + "', '" + si_discount_amount + "', '" + si_net_amount + "', '" + si_foc + "', '" + order_data[i].si_approval_status + "', '" + itm_commision + "', '" + itm_commisionamt + "', '0', '0','" + order_data[i].si_itm_type + "', '" + si_item_tax + "', '" + si_item_cgst + "', '" + si_item_sgst + "', '" + si_item_igst + "', '" + si_item_utgst + "', '" + si_item_cess + "', '" + (si_net_amount - tax_amount) + "', '" + tax_amount + "',"+itm_type+(link == null ? "" : "," + link.SioIds[i] + "," + rowBatchId)+"),";
 
                     //  }
 

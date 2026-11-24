@@ -84,10 +84,12 @@ public static partial class SalesOrderStatus
         if (!IsOperational(current))
             return current;
         // One query for every invoice linked to the order, whatever its status: it gives the delivered flag and tells whether any exists.
-        DataTable inv = Query(db, tx, "select count(*) as any_invoice,ifnull(sum(sm.sm_delivery_status=" + InvoiceDelivered + "),0) as delivered "
+        DataTable inv = Query(db, tx, "select count(*) as any_invoice,ifnull(sum(sm.sm_delivery_status=" + InvoiceDelivered + "),0) as delivered,"
+            + "ifnull(sum(ifnull(sm.sm_delivery_status,0) not in (" + InvoiceCancelled + "," + InvoiceRejected + ")),0) as valid "
             + "from tbl_sales_master sm where sm.sm_refid=@o and sm.sm_is_inter_stock_transfer_invoice=0", smoId);
         bool anyInvoice = inv.Rows.Count > 0 && Int(inv.Rows[0]["any_invoice"]) > 0;
         bool delivered = anyInvoice && Int(inv.Rows[0]["delivered"]) > 0;
+        bool validInvoice = anyInvoice && Int(inv.Rows[0]["valid"]) > 0;
 
         // A delivered order with no linked invoice at all (cancelled ones count as linked) was delivered before invoices were linked to
         // orders; there is nothing to recalculate it from, so it keeps its status.
@@ -98,7 +100,12 @@ public static partial class SalesOrderStatus
         List<LineQuantity> lines = anyInvoice ? ReadLines(db, tx, smoId) : new List<LineQuantity>();
         bool reserved = Count(db, tx, "select count(*) from tbl_item_batchstock_reserve r inner join tbl_sales_items_order sio on sio.sio_id=r.sio_id "
             + "where sio.smo_id=@o and r.itbsr_qty>0", smoId) > 0;
-        return Calculate(current, lines, delivered, reserved);
+        // A production entry (finished batch PRO-<itpm_id>-<sio_id>) also puts the order in progress, even when nothing is reserved any more.
+        bool produced = !reserved && Count(db, tx, "select count(*) from tbl_item_pro_items pi inner join tbl_item_batch pb on pb.itbh_id=pi.itbh_id "
+            + "inner join tbl_sales_items_order sio on pb.itbh_custbatchid=concat('PRO-',pi.itpm_id,'-',sio.sio_id) "
+            + "where sio.smo_id=@o and pi.itpi_inputoutput=2", smoId) > 0;
+        // Invoicing consumes the reservation, so an invoice that is not cancelled or rejected keeps the order Processed until one is delivered.
+        return Calculate(current, lines, delivered, reserved || produced || validInvoice);
     }
 
     // Recalculates inside the caller's open transaction, after the caller's own change succeeded. Locks the order row, recalculates from
