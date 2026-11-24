@@ -110,8 +110,6 @@
             #produceModal .pc-dot { display: inline-block; margin-right: 6px; }
             #produceModal .pc-act { grid-column: 1 / -1; }
         }
-        #tabReserved .bom-produce-btn { white-space: nowrap; }
-        #tabReserved .raw-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
         #tabReserved .link-action { display: block; font-size: 11px; margin-top: 2px; white-space: nowrap; }
         #tabReserved .raw-table .link-action { display: inline-block; margin-right: 8px; }
         #tabReserved .release-batch { font-size: 11px; white-space: nowrap; }
@@ -458,15 +456,14 @@
                     + (canPick ? '' : ' disabled') + ' title="Choose the warehouse, batches and quantities to reserve"><i class="fa fa-lock"></i> Reserve</button>';
             }
 
-            // Produce stays disabled until every raw material of the BOM is reserved; the reason is shown under the button.
+            // Always clickable: the production modal sets the planned quantity and shows what raw material is still missing; the reason is shown under the button.
             function produceButton(row) {
                 if (!row.hasBom) {
                     return '';
                 }
                 var reason = !row.canProduce && row.productionMessage && (row.produceQty > 0 || row.required > 0) ? row.productionMessage : '';
                 return '<button type="button" class="btn btn-sm btn-success produce-btn" data-sio="' + row.sioId + '"'
-                    + (row.canProduce ? ' title="Produce in the warehouse(s) where the raw material is reserved"' : ' disabled title="' + escAttr(reason || 'Production is not possible yet') + '"')
-                    + '><i class="fa fa-cogs"></i> Produce</button>'
+                    + ' title="Set the quantity to produce and review the raw material"><i class="fa fa-cogs"></i> Produce</button>'
                     + (reason ? '<span class="sub-note text-danger produce-reason">' + esc(reason) + '</span>' : '');
             }
 
@@ -485,9 +482,6 @@
                             ? 'Bill of materials (' + count + ') &mdash; raw material needed if you produce the <strong>' + num(row.produceQty) + uom + '</strong> still to be supplied'
                             : 'Bill of materials (' + count + ')'));
                 // Always shown with the BOM, whatever the raw material availability; the production modal explains what is still missing.
-                var produceBtn = '<button type="button" class="btn btn-sm btn-success bom-produce-btn" data-sio="' + row.sioId + '"'
-                    + (canAct ? ' title="Set the quantity to produce and review the raw material"' : ' disabled title="You do not have permission to produce"')
-                    + '><i class="fa fa-cogs"></i> Produce</button>';
                 var body = $.map(row.bom, function (c) {
                     var u = ' ' + esc(c.uom);
                     var name = '<strong>' + esc(c.name) + '</strong>' + (c.code ? ' <span class="text-muted">(' + esc(c.code) + ')</span>' : '');
@@ -515,7 +509,7 @@
                         + '<td>' + state + '</td><td><div class="res-actions">' + actions + '</div></td></tr>';
                 }).join('');
                 return '<tr class="raw-row"><td></td><td colspan="10">'
-                    + '<div class="raw-top"><div class="raw-head">' + head + '</div><div class="raw-produce">' + produceBtn + '</div></div>'
+                    + '<div class="raw-head">' + head + '</div>'
                     + '<table class="table table-bordered raw-table"><thead><tr><th>Raw material</th><th class="num">Needed</th><th class="num">Reserved</th><th class="num">Available</th><th>Status</th><th>Actions</th></tr></thead>'
                     + '<tbody>' + body + '</tbody></table></td></tr>';
             }
@@ -1171,7 +1165,7 @@
                 runStockAction('UnreserveBatch', { sioId: parseInt(b.attr('data-sio'), 10), batchId: parseInt(b.attr('data-batch'), 10) },
                     'Release ' + num(b.attr('data-qty')) + ' ' + b.attr('data-uom') + ' reserved in batch ' + b.attr('data-no') + '? Stock quantities are not changed.');
             });
-            $('#tabReserved').on('click', '.produce-btn, .bom-produce-btn', function () {
+            $('#tabReserved').on('click', '.produce-btn', function () {
                 openProduceModal(parseInt($(this).attr('data-sio'), 10));
             });
 
