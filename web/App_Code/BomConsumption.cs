@@ -262,6 +262,13 @@ public static class BomConsumption
         return ConsumptionBasis.Unsupported;
     }
 
+    // Raw materials received by length, area or weight (coils in KG) are consumed from the actual batch: kg per metre = batch kg / batch length.
+    public static bool IsBatchMeasured(string uomTypeName)
+    {
+        return BasisOf(uomTypeName) != ConsumptionBasis.Unsupported
+            || string.Equals((uomTypeName ?? "").Trim(), "Weight", StringComparison.OrdinalIgnoreCase);
+    }
+
     // The calculation is done in metres and square metres, so the default UOM of the Area / Length category has to be one of those.
     public static string CheckBaseUnit(ConsumptionBasis basis, string defaultUomName)
     {

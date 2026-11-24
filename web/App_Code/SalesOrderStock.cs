@@ -1273,7 +1273,8 @@ public static partial class SalesOrderStock
                     InputPurchaseTum = I(r["itsv_uom_purchase"]),
                     InputItbsId = I(r["itbs_id"])
                 };
-                row.Method = ConsumptionMethodFor(s, row);
+                Line fin = s.Lines.FirstOrDefault(x => x.ItmId == output);
+                row.Method = ConsumptionMethodFor(s, row, fin == null ? 0 : fin.SalesTum);
                 list.Add(row);
                 if (row.InputItbsId > 0)
                     itbsIds.Add(row.InputItbsId);
@@ -1604,15 +1605,25 @@ public static partial class SalesOrderStock
     }
 
     // No per-line setting is needed: a raw material that is received by length or area (coils, sheets - its batch UOM is a Length or Area unit) is
-    // consumed from the actual batch's weight and length; every other raw material keeps the fixed BOM quantity.
-    static string ConsumptionMethodFor(Snapshot s, BomRow b)
+    // consumed from the actual batch's weight and length. A raw material received by weight (KG coil) uses the same calculation only when the finished
+    // good is a Length or Area item (the width converts it); a finished good sold by weight keeps the fixed BOM quantity. Anything else is fixed too.
+    static string ConsumptionMethodFor(Snapshot s, BomRow b, int finishedTum)
     {
         Uom u;
         UomCategory cat;
         int tum = b.InputPurchaseTum > 0 ? b.InputPurchaseTum : b.InputSalesTum;
-        if (tum > 0 && s.Uoms.TryGetValue(tum, out u) && s.UomCategories.TryGetValue(u.TypeId, out cat)
-            && BomConsumption.BasisOf(cat.Name) != ConsumptionBasis.Unsupported)
+        if (tum <= 0 || !s.Uoms.TryGetValue(tum, out u) || !s.UomCategories.TryGetValue(u.TypeId, out cat))
+            return "";
+        if (BomConsumption.BasisOf(cat.Name) != ConsumptionBasis.Unsupported)
             return BomConsumption.MethodBatchWeightPerMetre;
+        if (BomConsumption.IsBatchMeasured(cat.Name))
+        {
+            Uom fu;
+            UomCategory fcat;
+            if (finishedTum > 0 && s.Uoms.TryGetValue(finishedTum, out fu) && s.UomCategories.TryGetValue(fu.TypeId, out fcat)
+                && BomConsumption.BasisOf(fcat.Name) != ConsumptionBasis.Unsupported)
+                return BomConsumption.MethodBatchWeightPerMetre;
+        }
         return "";
     }
 
