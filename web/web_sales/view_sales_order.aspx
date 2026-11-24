@@ -46,27 +46,32 @@
         #produceModal .pc-qty-input { display: inline-flex; align-items: center; gap: 6px; }
         #produceModal .pc-qty-input .form-control { width: 140px; height: 34px; text-align: right; }
         #produceModal .pc-qty-hint { font-size: 12px; color: #6b7785; }
-        #produceModal .pc-heading { margin: 0 0 6px 0; font-size: 13px; font-weight: 600; color: #2a3f54; }
+        #produceModal .pc-heading { margin: 22px 0 10px 0; font-size: 15px; font-weight: 600; color: #2a3f54; }
+        #produceModal .pc-heading:first-child, #produceModal .pc-alert + .pc-heading { margin-top: 6px; }
+        #produceModal .pc-k { margin-bottom: 4px; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #8a95a3; }
+        #produceModal .pc-res-row { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 6px 0; font-size: 13px; color: #2a3f54; }
+        #produceModal .pc-res-name { flex: 1 1 auto; min-width: 0; word-break: break-word; }
+        #produceModal .pc-deduct { margin-top: 14px; padding: 10px 14px; background: #f6f9fc; border-radius: 3px; }
         #produceModal .pc-table { margin-bottom: 12px; }
         #produceModal .pc-table > thead > tr > th { background: #f1f3f6; color: #4a5766; font-size: 12px; font-weight: 600; vertical-align: middle; }
         #produceModal .pc-table > tbody > tr > td { font-size: 13px; vertical-align: middle; }
         #produceModal .pc-table .num { text-align: right; white-space: nowrap; }
         #produceModal .pc-table .sub-note { display: block; color: #777; font-size: 11px; }
         #produceModal .pc-alert { margin-bottom: 12px; }
-        #produceModal .pc-wh { margin-bottom: 14px; padding: 10px 12px; border: 1px solid #d9e0e8; border-left: 4px solid #5cb85c; background: #fff; }
-        #produceModal .pc-wh-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 12px; margin-bottom: 8px; font-size: 14px; }
-        #produceModal .pc-wh-max { font-size: 12px; color: #4a5766; }
-        #produceModal .pc-wh-action { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; font-size: 13px; }
+        #produceModal .pc-wh { margin-bottom: 14px; padding: 16px 18px; border: 1px solid #d9e0e8; border-left: 4px solid #5cb85c; background: #fff; }
+        #produceModal .pc-wh-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 4px 12px; margin-bottom: 12px; font-size: 15px; }
+        #produceModal .pc-wh-max { font-size: 13px; color: #4a5766; }
+        #produceModal .pc-wh-action { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid #eef0f3; font-size: 14px; }
         #produceModal .pc-wh-action label { margin: 0; font-weight: 600; color: #2a3f54; }
-        #produceModal .pc-wh-action .form-control { width: 130px; text-align: right; }
-        #produceModal .pc-calc { margin-top: 10px; }
-        #produceModal .pc-calc .pc-table { margin-bottom: 4px; }
+        #produceModal .pc-wh-action .form-control { width: 130px; height: 36px; text-align: right; }
+        #produceModal .pc-wh-action .btn { height: 36px; padding: 6px 20px; font-weight: 600; }
+        #produceModal .pc-calc { margin-top: 0; }
+        #produceModal .pc-calc .pc-table { margin: 8px 0 4px; }
         #produceModal .pc-calc .pc-mat > td { background: #f7f9fb; font-weight: 600; }
-        #produceModal .pc-heading-note { margin-left: 6px; font-size: 12px; font-weight: 400; color: #8a95a3; }
         #produceModal .pc-bom { margin-bottom: 20px; }
-        #produceModal .pc-bom-head, #produceModal .pc-mat-main { display: grid; grid-template-columns: minmax(0, 2.8fr) repeat(4, minmax(0, 1.05fr)) 96px 76px; column-gap: 12px; align-items: center; }
+        #produceModal .pc-bom-head, #produceModal .pc-mat-main { display: grid; grid-template-columns: minmax(0, 3fr) repeat(2, minmax(0, 1fr)) minmax(0, 1.4fr) 76px; column-gap: 16px; align-items: center; }
         #produceModal .pc-bom-head { padding: 0 4px 8px; border-bottom: 1px solid #e3e7ec; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: #8a95a3; }
-        #produceModal .pc-bom-head > div:nth-child(n+2):nth-child(-n+5) { text-align: right; }
+        #produceModal .pc-bom-head > div:nth-child(n+2):nth-child(-n+3) { text-align: right; }
         #produceModal .pc-mat-row { padding: 14px 4px; border-bottom: 1px solid #eef0f3; }
         #produceModal .pc-mat-row:last-child { border-bottom: 0; }
         #produceModal .pc-mat-title { font-size: 14px; font-weight: 600; line-height: 1.35; color: #2a3f54; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; word-break: break-word; }
@@ -140,22 +145,25 @@
         #batchModal .modal-footer .btn { min-width: 84px; height: 34px; margin: 0 0 0 8px; }
         #batchModal .modal-footer .btn-link { min-width: 0; color: #a94442; }
         #batchModal .pick-totals { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 20px; text-align: left; font-weight: 400; color: #6b7785; line-height: 20px; }
-        #batchModal .pick-totals .pt-item strong { margin-left: 4px; font-size: 14px; color: #2a3f54; }
+        #batchModal .pick-totals #batchTotals { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 0; }
+        #batchModal .pick-totals .pt-item { white-space: nowrap; margin-right: 20px; }
+        #batchModal .pick-totals .pt-item + .pt-item { padding-left: 20px; border-left: 1px solid #dfe3e8; }
+        #batchModal .pick-totals .pt-item strong { margin-left: 6px; font-size: 14px; color: #2a3f54; }
         #batchModal .pick-totals .pt-item strong.text-success { color: #1a7f4b; }
         #batchModal .pick-totals .pt-item strong.text-warning { color: #b26a00; }
         #batchModal .pick-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; }
         #batchModal.processing .modal-body, #batchModal.processing .modal-footer .pick-totals { opacity: .6; }
-        #batchModal .pick-summary { display: flex; flex-wrap: wrap; gap: 12px 24px; margin-bottom: 16px; }
-        #batchModal .pick-items { flex: 1 1 260px; min-width: 0; }
-        #batchModal .pick-info { margin-bottom: 10px; }
-        #batchModal .pick-k { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .3px; color: #8a94a0; }
-        #batchModal .pick-v { display: block; font-size: 14px; font-weight: 600; color: #2a3f54; word-break: break-word; }
-        #batchModal .pick-metrics { flex: 1 1 320px; display: flex; gap: 8px; }
-        #batchModal .pick-metric { flex: 1 1 0; min-width: 0; padding: 8px 10px; background: #f6f7f9; border: 1px solid #e6e9ed; border-radius: 3px; }
-        #batchModal .pick-metric .pick-n { display: block; margin-top: 2px; font-size: 15px; font-weight: 600; color: #2a3f54; white-space: nowrap; }
-        #batchModal .pick-metric .pick-n small { font-size: 11px; font-weight: 400; color: #6b7785; }
-        #batchModal .pick-metric-main { background: #eef5fc; border-color: #b9d4ee; }
-        #batchModal .pick-metric-main .pick-n { font-size: 18px; color: #1f6fb5; }
+        #batchModal .pick-summary { display: flex; flex-direction: column; gap: 12px; margin-bottom: 18px; }
+        #batchModal .pick-metrics { display: flex; gap: 12px; }
+        #batchModal .pick-metric { flex: 1 1 0; min-width: 0; padding: 10px 14px; background: #f6f7f9; border: 1px solid #e6e9ed; border-left: 4px solid #c3cad3; border-radius: 3px; }
+        #batchModal .pick-metric .pick-n { display: block; margin-top: 4px; font-size: 20px; line-height: 24px; font-weight: 600; color: #2a3f54; white-space: nowrap; }
+        #batchModal .pick-metric .pick-n small { margin-left: 2px; font-size: 12px; font-weight: 400; color: #6b7785; }
+        #batchModal .pick-metric-main { background: #eef5fc; border-color: #b9d4ee; border-left-color: #1f6fb5; }
+        #batchModal .pick-metric-main .pick-n { color: #1f6fb5; }
+        #batchModal .pick-items { display: flex; flex-wrap: wrap; gap: 12px 24px; padding: 10px 14px; border: 1px solid #e6e9ed; border-radius: 3px; }
+        #batchModal .pick-info { flex: 1 1 260px; min-width: 0; }
+        #batchModal .pick-k { display: block; margin-bottom: 2px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; color: #8a94a0; }
+        #batchModal .pick-v { display: block; font-size: 13px; line-height: 18px; font-weight: 600; color: #2a3f54; word-break: break-word; }
         #batchModal .pick-section { margin-bottom: 16px; }
         #batchModal .pick-heading { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; color: #2a3f54; }
         #batchModal #batchWarehouse { height: 36px; }
@@ -751,25 +759,17 @@
                         return '<div>' + esc(a.warehouse || '-') + (a.batchNo ? ' &middot; Batch ' + esc(a.batchNo) : '') + ' <span class="pc-det-qty">' + num(a.qty) + ' ' + esc(a.uom) + '</span></div>';
                     });
                     var st = produceStatus(c);
+                    var statusText = st.text === 'Short' ? 'Short by ' + num(c.shortage) + ' ' + c.uom : st.text;
                     var tone = { 'label-danger': 'bad', 'label-warning': 'warn', 'label-success': 'ok', 'label-info': 'info' }[st.cls] || 'muted';
                     var statusTip = c.surplus > 0 ? num(c.surplus) + ' ' + c.uom + ' reserved more than needed; the extra stays reserved until you produce more or release it' : '';
-                    var rate = c.method
-                        ? 'About ' + num(c.perUnit) + ' ' + c.uom + ' for each ' + r.uom + ', calculated from the weight and length of the batches (' + c.method + '). Exact figures use the batches you reserve.'
-                        : '';
-                    var sub = !c.method && c.perUnit > 0 ? '<div class="pc-mat-sub">' + num(c.perUnit) + ' ' + esc(c.uom) + ' per ' + esc(r.uom) + '</div>' : '';
-                    if (c.method) {
-                        sub = '<div class="pc-mat-sub">From batch weight &amp; length <i class="fa fa-info-circle pc-tip" title="' + escAttr(rate) + '"></i></div>';
-                    }
                     var reservedOk = c.required > 0 && c.shortage <= 0 && c.remaining <= 0;
                     var act = c.canPick ? reserveButton(true, r.sioId, c.itmId, c.name, c.uom) : '';
                     return '<div class="pc-mat-row"><div class="pc-mat-main">'
                         + '<div class="pc-mat-name"><div class="pc-mat-title" title="' + escAttr(c.name) + '">' + esc(c.name) + '</div>'
-                        + (c.code ? '<div class="pc-mat-sub">' + esc(c.code) + '</div>' : '') + sub + '</div>'
-                        + '<div class="pc-q" data-label="Required">' + num(c.required) + u + '</div>'
+                        + (c.code ? '<div class="pc-mat-sub">' + esc(c.code) + '</div>' : '') + '</div>'
+                        + '<div class="pc-q" data-label="Needed">' + num(c.required) + u + '</div>'
                         + '<div class="pc-q' + (reservedOk ? ' pc-ok' : '') + '" data-label="Reserved">' + num(c.reserved) + u + '</div>'
-                        + '<div class="pc-q" data-label="Available">' + num(c.free) + u + '</div>'
-                        + '<div class="pc-q' + (c.shortage > 0 ? ' pc-bad' : ' pc-none') + '" data-label="Shortage">' + (c.shortage > 0 ? num(c.shortage) + u : '&ndash;') + '</div>'
-                        + '<div class="pc-status pc-' + tone + '" data-label="Status"' + (statusTip ? ' title="' + escAttr(statusTip) + '"' : '') + '><span class="pc-dot"></span>' + esc(st.text) + '</div>'
+                        + '<div class="pc-status pc-' + tone + '" data-label="Status"' + (statusTip ? ' title="' + escAttr(statusTip) + '"' : '') + '><span class="pc-dot"></span>' + esc(statusText) + '</div>'
                         + '<div class="pc-act' + (c.remaining > 0 ? ' pc-act-need' : '') + '">' + act + '</div></div>'
                         + (allocs.length ? '<details class="pc-details"><summary>Reserved in ' + allocs.length + ' batch' + (allocs.length > 1 ? 'es' : '') + '</summary>' + allocs.join('') + '</details>' : '')
                         + '</div>';
@@ -782,18 +782,17 @@
                 if (warehouseCount > 1) {
                     html += '<div class="alert alert-info pc-alert">Raw material is reserved in more than one warehouse. Each warehouse is produced separately, using only the raw material reserved in it.</div>';
                 }
-                html += '<div class="pc-heading">Production by warehouse</div>' + warehouseProductionHtml(r);
-                html += '<div class="pc-heading">BOM requirements for ' + num(qty) + uom + ' <span class="pc-heading-note">all warehouses</span></div>'
-                    + '<div class="pc-bom"><div class="pc-bom-head"><div>Raw material</div><div>Required</div><div>Reserved</div><div>Available</div><div>Shortage</div><div>Status</div><div></div></div>'
+                html += '<div class="pc-heading">1. Produce in a warehouse</div>' + warehouseProductionHtml(r);
+                html += '<div class="pc-heading">2. Raw material needed for ' + num(qty) + uom + '</div>'
+                    + '<div class="pc-bom"><div class="pc-bom-head"><div>Raw material</div><div>Needed</div><div>Reserved</div><div>Status</div><div></div></div>'
                     + rows + '</div>';
-                html += '<div class="pc-heading">Sales order production</div>'
+                html += '<div class="pc-heading">3. Order progress</div>'
                     + '<table class="table table-bordered table-condensed pc-table"><tbody>'
                     + '<tr><td>Ordered</td><td class="num">' + num(r.ordered) + uom + '</td></tr>'
-                    + '<tr><td>Produced (all warehouses)</td><td class="num"><strong>' + num(r.produced) + uom + '</strong> (' + num(r.producedPct) + '%)</td></tr>'
+                    + '<tr><td>Produced so far</td><td class="num"><strong>' + num(r.produced) + uom + '</strong> (' + num(r.producedPct) + '%)</td></tr>'
                     + $.map(r.warehouses || [], function (w) { return w.produced > 0 ? '<tr><td>&nbsp;&nbsp;Produced in ' + esc(w.warehouse) + '</td><td class="num">' + num(w.produced) + uom + '</td></tr>' : ''; }).join('')
                     + '</tbody></table>'
-                    + '<p class="text-muted" style="font-size: 12px; margin: 8px 0 0 0;">Finished goods stay in the warehouse where they were produced and are reserved for this order from there. '
-                    + 'Raw material is deducted once, only from the producing warehouse; whatever is not used stays reserved for later production.</p>';
+                    + '<p class="text-muted" style="font-size: 12px; margin: 8px 0 0 0;">Finished goods stay in the warehouse where they were produced. Raw material that is not used stays reserved for later production.</p>';
                 return html;
             }
 
@@ -813,12 +812,13 @@
                         var batches = $.map(m.batches || [], function (b) {
                             var calc = m.method && b.kgPerMetre > 0
                                 ? ' &middot; ' + num(b.kgPerMetre) + ' kg/m &middot; ' + num(b.kgPerUnit) + ' kg per ' + esc(r.uom) + ' &middot; makes ' + num(b.makes) + uom : '';
-                            return '<span class="sub-note">Batch ' + esc(b.batchNo) + ': ' + num(b.qty) + u + calc + '</span>';
+                            return '<div>Batch ' + esc(b.batchNo) + ': ' + num(b.qty) + u + calc + '</div>';
                         }).join('');
-                        return '<tr><td><strong>' + esc(m.name) + '</strong>' + (m.code ? ' <span class="text-muted">(' + esc(m.code) + ')</span>' : '')
-                            + '<span class="sub-note">' + (m.method ? 'Calculated from each batch\'s weight and length (' + esc(m.method) + ')' : 'Uses ' + num(m.perUnit) + u + ' for each ' + esc(r.uom)) + '</span></td>'
-                            + '<td class="num">' + num(m.reserved) + u + batches + '</td>'
-                            + '<td class="num">' + num(m.supports) + uom + '</td></tr>';
+                        var how = m.method ? 'Calculated from each batch\'s weight and length (' + esc(m.method) + ')' : 'Uses ' + num(m.perUnit) + u + ' for each ' + esc(r.uom);
+                        return '<div class="pc-res-row"><div class="pc-res-name"><strong>' + esc(m.name) + '</strong>' + (m.code ? ' <span class="text-muted">(' + esc(m.code) + ')</span>' : '')
+                            + '<div class="pc-mat-sub">Enough for ' + num(m.supports) + uom + '</div></div>'
+                            + '<div class="pc-q">' + num(m.reserved) + u + '</div></div>'
+                            + '<details class="pc-details"><summary>How this is calculated</summary><div>' + how + '</div>' + batches + '</details>';
                     }).join('');
                     var head = '<strong>' + esc(w.warehouse) + '</strong>' + (w.isHome ? ' <span class="label label-default">Order warehouse</span>' : '')
                         + (w.produced > 0 ? ' <span class="text-muted">&middot; produced here: ' + num(w.produced) + uom + '</span>' : '');
@@ -827,15 +827,13 @@
                         action = '<div class="pc-wh-action"><label>Quantity to produce</label> '
                             + '<input type="number" class="form-control wh-qty" data-branch="' + w.branchId + '" min="0" max="' + w.maxQty + '" step="any" value="' + escAttr(value) + '" />'
                             + ' <strong>' + esc(r.uom) + '</strong> '
-                            + '<button type="button" class="btn btn-success wh-produce" data-branch="' + w.branchId + '"><i class="fa fa-cogs"></i> Produce in ' + esc(w.warehouse) + '</button></div>';
+                            + '<button type="button" class="btn btn-success wh-produce" data-branch="' + w.branchId + '"><i class="fa fa-cogs"></i> Produce</button></div>';
                     } else {
                         action = '<div class="text-muted pc-wh-action">' + esc(w.message || (w.materials.length ? 'Production is not available for this warehouse.' : 'No raw material is reserved in this warehouse.')) + '</div>';
                     }
                     return '<div class="pc-wh">'
-                        + '<div class="pc-wh-head">' + head + '<span class="pc-wh-max">Maximum producible: <strong>' + num(w.maxQty) + uom + '</strong></span></div>'
-                        + (w.materials.length
-                            ? '<table class="table table-bordered table-condensed pc-table"><thead><tr><th>Reserved raw material</th><th class="num">Reserved here</th><th class="num">Makes</th></tr></thead><tbody>' + mats + '</tbody></table>'
-                            : '')
+                        + '<div class="pc-wh-head">' + head + '<span class="pc-wh-max">You can make up to <strong>' + num(w.maxQty) + uom + '</strong></span></div>'
+                        + (w.materials.length ? '<div class="pc-k">Raw material reserved here</div><div class="pc-res">' + mats + '</div>' : '')
                         + action
                         + (warehouseHasCalc(w) ? '<div class="pc-calc" data-branch="' + w.branchId + '"></div>' : '') + '</div>';
                 }).join('');
@@ -880,10 +878,16 @@
                     }).join('');
                     return head + batches;
                 }).join('');
-                return '<div class="pc-heading">Raw material to be deducted for ' + num(p.qty) + uom + ' in ' + esc(p.warehouse) + '</div>'
+                var summary = $.map(p.materials, function (m) {
+                    var u = ' ' + esc(m.uom);
+                    var used = $.map(m.batches, function (b) { return '<div class="pc-mat-sub">From batch ' + esc(b.batchNo) + ': ' + num(b.qty) + u + '</div>'; }).join('');
+                    return '<div class="pc-res-row"><div class="pc-res-name"><strong>' + esc(m.name) + '</strong>' + used + '</div><div class="pc-q">' + num(m.required) + u + '</div></div>';
+                }).join('');
+                return '<div class="pc-deduct"><div class="pc-k">Raw material that will be used for ' + num(p.qty) + uom + '</div><div class="pc-res">' + summary + '</div>'
+                    + '<details class="pc-details"><summary>Show calculation details</summary>'
                     + '<table class="table table-bordered table-condensed pc-table"><thead><tr><th>Raw material / batch</th><th class="num">kg per metre</th><th class="num">kg per ' + esc(r.uom)
                     + '</th><th class="num">Length</th><th class="num">Weight</th><th class="num">Deducted from stock</th></tr></thead><tbody>' + rows + '</tbody></table>'
-                    + '<p class="text-muted" style="font-size: 12px; margin: 0;">Each batch is calculated on its own weight and length. This is what will be deducted when you confirm.</p>';
+                    + '<p class="text-muted" style="font-size: 12px; margin: 0;">Each batch is calculated on its own weight and length.</p></details></div>';
             }
 
             // Asks the server what producing the typed quantity would consume, batch by batch, and shows it under the warehouse before the user confirms.
@@ -998,9 +1002,8 @@
                 $('#produceModalSubtitle').text(r.itemName + (r.itemCode ? ' (' + r.itemCode + ')' : '') + ' \u00b7 Sales Order #' + $('#tabReserved').attr('data-order-id'));
                 $('#produceQtyUom').text(r.uom);
                 $('#produceQtyInput').attr('placeholder', qty > 0 ? qty : '');
-                $('#produceQtyHint').html('Planning for <strong>' + esc(num(qty)) + ' ' + esc(r.uom) + '</strong> &mdash; '
-                    + (r.planQty > 0 ? 'custom quantity. Clear the field to use the suggested quantity.' : 'suggested quantity for this order. Type a quantity to change it.')
-                    + ' This sets the raw material to reserve; production itself is entered per warehouse below.');
+                $('#produceQtyHint').html(r.planQty > 0 ? 'Custom quantity. Clear the field to use the suggested <strong>' + esc(num(qty)) + ' ' + esc(r.uom) + '</strong>.'
+                    : 'Suggested for this order. Type a different quantity to change it.');
                 $('#produceModalContent').html(produceContentHtml(r));
                 loadAllPreviews();
                 updateProduceButtons();
@@ -1250,13 +1253,13 @@
                 function metric(cls, k, v) { return '<div class="pick-metric ' + cls + '"><span class="pick-k">' + k + '</span><span class="pick-n">' + num(v) + ' <small>' + esc(d.uom) + '</small></span></div>'; }
                 $('#batchModalTitle').text(d.isComponent ? 'Reserve Raw Material' : 'Reserve Stock');
                 $('#batchModalSubtitle').text(d.itemName || '');
-                var summary = '<div class="pick-summary"><div class="pick-items">'
-                    + info('Item', esc(d.itemName) + (d.itemCode ? ' <span class="text-muted">(' + esc(d.itemCode) + ')</span>' : ''))
-                    + (d.isComponent ? info('BOM component of', esc(d.parentName)) : '')
-                    + '</div><div class="pick-metrics">'
+                var summary = '<div class="pick-summary"><div class="pick-metrics">'
                     + metric('', d.isComponent ? 'Required for production' : 'Ordered', d.required)
                     + metric('', 'Already reserved', d.reservedThis)
                     + metric('pick-metric-main', 'Remaining to reserve', d.remaining)
+                    + '</div><div class="pick-items">'
+                    + info('Item', esc(d.itemName) + (d.itemCode ? ' <span class="text-muted">(' + esc(d.itemCode) + ')</span>' : ''))
+                    + (d.isComponent ? info('BOM component of', esc(d.parentName)) : '')
                     + '</div></div>';
                 var wh = '<div class="pick-section"><label class="pick-heading" for="batchWarehouse">Select Warehouse</label>'
                     + '<select id="batchWarehouse" class="form-control">' + (warehouseOptions || '<option value="0">No warehouse available</option>') + '</select></div>'
@@ -2446,7 +2449,7 @@
                                 <div class="modal-body">
                                     <div id="produceModalMessage" role="status" aria-live="polite"></div>
                                     <div class="pc-qty-box">
-                                        <label for="produceQtyInput">Planned quantity</label>
+                                        <label for="produceQtyInput">Planned quantity <small class="text-muted" style="font-weight: 400;">(decides how much raw material is needed)</small></label>
                                         <span class="pc-qty-input"><input type="number" id="produceQtyInput" class="form-control" min="0" step="any" /> <strong id="produceQtyUom"></strong></span>
                                         <span class="pc-qty-hint" id="produceQtyHint"></span>
                                     </div>
