@@ -287,6 +287,17 @@
                 return (Number(value) || 0).toFixed(2);
             }
 
+            // The status badge, status table and actions are rendered by the server, so reload (staying on this tab) when a stock action changed the status.
+            function reloadIfStatusChanged(d) {
+                var shown = parseInt($('#tabReserved').attr('data-status'), 10);
+                if (d && d.ok && d.status >= 0 && d.status !== shown) {
+                    location.hash = '#tabReserved';
+                    location.reload();
+                    return true;
+                }
+                return false;
+            }
+
             function showReservedMessage(ok, text) {
                 $('#reservedMessage').html('<div class="alert ' + (ok ? 'alert-success' : 'alert-danger') + '">' + esc(text) + '</div>');
             }
@@ -537,6 +548,7 @@
                             delete uiState.plan[data.sioId];
                         }
                         showReservedMessage(!!d.ok, d.message || 'The request could not be completed.');
+                        reloadIfStatusChanged(d);
                     },
                     error: function () {
                         showReservedMessage(false, 'The request failed. Please check the grid and try again.');
@@ -951,7 +963,10 @@
                         } else if (pick === req) {
                             loadPicker({ ok: false, text: d.message || 'The request could not be completed.' });
                         }
-                        loadReserved();
+                        if (reloadIfStatusChanged(d)) {
+                            return;
+                        }
+                        loadReserved(d.ok === true);
                     },
                     error: function () {
                         reservedBusy = false;
@@ -1682,7 +1697,7 @@
                                                 </table>
                                             </div>
                                         </div>
-                                        <div class="tab-pane" id="tabReserved" data-order-id="<%= Enc(Order["smo_id"]) %>">
+                                        <div class="tab-pane" id="tabReserved" data-order-id="<%= Enc(Order["smo_id"]) %>" data-status="<%= Enc(Order["smo_delivery_status"]) %>">
                                             <div id="reservedMessage" role="status" aria-live="polite"></div>
                                             <div id="reservedLoading" class="tab-empty">Open this tab to load reserved items.</div>
                                             <div id="reservedGrid" style="display: none; overflow-x: auto;">

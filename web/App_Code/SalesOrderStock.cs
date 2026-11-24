@@ -136,6 +136,8 @@ public class StockActionResult
 {
     public bool ok;
     public string message;
+    // Sales order status after the operation (-1 when unknown); the page reloads when it differs from the status it was rendered with.
+    public int status = -1;
 }
 
 // Reserve / unreserve / produce logic for a sales order. Accounting model (verified against the live schema):
@@ -724,6 +726,8 @@ public static partial class SalesOrderStock
             started = false;
             result.ok = true;
             result.message = message;
+            try { result.status = SalesOrderStatus.Read(smoId); }
+            catch (Exception ex) { new LogClass("salesorderstockerror").write(ex); }
         }
         catch (StockException ex)
         {
