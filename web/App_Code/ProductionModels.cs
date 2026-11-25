@@ -13,7 +13,7 @@ public class ProductionEntryRequest
     // p_itbsr_id: tbl_item_batchstock_reserve.itbsr_id of the input (raw-material) reservation to consume.
     public int ReservationId { get; set; }
 
-    // p_output_qty: DECIMAL(10,6), stored as the finished batch quantity without UOM conversion.
+    // p_output_qty: DECIMAL(18,6), stored as the finished batch quantity without UOM conversion.
     public decimal OutputQty { get; set; }
 
     // p_user_id

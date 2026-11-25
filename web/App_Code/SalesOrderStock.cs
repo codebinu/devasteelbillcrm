@@ -1145,7 +1145,7 @@ public static partial class SalesOrderStock
 
     static int Exec(mySqlConnection db, string sql, params MySqlParameter[] ps)
     {
-        // The stock/batch quantity columns are DECIMAL(10,6). A value with more decimals is rounded by the database with a warning,
+        // The stock/batch quantity columns are DECIMAL(18,6). A value with more decimals is rounded by the database with a warning,
         // which makes row_count() return -1 even though the row was updated, so quantities are rounded here first.
         foreach (MySqlParameter p in ps)
             if (p.Value is decimal)
@@ -1966,7 +1966,7 @@ public static partial class SalesOrderStock
                 new MySqlParameter("@b", batchId), new MySqlParameter("@io", inputOutput), new MySqlParameter("@q", qty), new MySqlParameter("@c", cost) });
     }
 
-    // itbs_stock is DECIMAL(10,6) (max 9999.999999). In non-strict SQL mode an out-of-range update is silently clamped and
+    // itbs_stock is DECIMAL(18,6) (max 999999999999.999999). In non-strict SQL mode an out-of-range update is silently clamped and
     // row_count() returns -1, so a negative count means the new balance does not fit the column. The row is read first so the
     // message names the item, warehouse and figures instead of a generic range error.
     static void AdjustBranchStock(mySqlConnection db, int itbsId, decimal delta)
@@ -1979,8 +1979,8 @@ public static partial class SalesOrderStock
         decimal current = D(cur.Rows[0]["q"]);
         string what = S(cur.Rows[0]["itm_name"]) + " in the " + S(cur.Rows[0]["branch_name"]) + " warehouse";
         decimal next = current + delta;
-        if (next > 9999.999999m)
-            throw new StockException("Unable to update branch stock of " + what + ": " + Fmt(current) + " + " + Fmt(delta) + " exceeds the maximum the stock column can hold (9999.999999). No changes were saved.");
+        if (next > 999999999999.999999m)
+            throw new StockException("Unable to update branch stock of " + what + ": " + Fmt(current) + " + " + Fmt(delta) + " exceeds the maximum the stock column can hold (999999999999.999999). No changes were saved.");
         if (Exec(db, "update tbl_itembranch_stock set itbs_stock=coalesce(itbs_stock,0)+@d where itbs_id=@i",
             new MySqlParameter("@d", delta), new MySqlParameter("@i", itbsId)) < 0)
             throw new StockException(next < 0

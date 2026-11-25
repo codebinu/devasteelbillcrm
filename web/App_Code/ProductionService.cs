@@ -12,7 +12,8 @@ public static class ProductionService
 {
     // The backticks are required: Connector/NET otherwise splits the name at the "." in "1.0" as schema.procedure.
     const string ProcedureName = "`sp_save_production_entry1.1`";
-    const decimal MaxOutputQty = 9999.999999m;
+    // Largest value of the DECIMAL(18,6) quantity columns.
+    const decimal MaxOutputQty = 999999999999.999999m;
 
     // One in-flight production call per sales order inside this process; the procedure also locks the order row.
     static readonly ConcurrentDictionary<int, bool> InFlight = new ConcurrentDictionary<int, bool>();
@@ -109,7 +110,7 @@ public static class ProductionService
         if (r.OutputQty <= 0)
             return "Enter a production quantity greater than zero.";
         if (r.OutputQty > MaxOutputQty || Math.Round(r.OutputQty, 6) != r.OutputQty)
-            return "The production quantity must be at most 9999.999999 with up to 6 decimals.";
+            return "The production quantity must be at most 999999999999.999999 with up to 6 decimals.";
         return null;
     }
 
