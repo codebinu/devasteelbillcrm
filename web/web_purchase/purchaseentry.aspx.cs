@@ -62,9 +62,13 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
     {
         mySqlConnection db = new mySqlConnection();
         DataTable dt = new DataTable();
-        string query = "select vn_name,vn_city,vn_phone1,vn_email from tbl_vendor where vn_id=" + vendorId + "";
-        //    query = query + " order by tbl_branch.branch_id";
+        int vendorIdNum;
+        if (!int.TryParse(vendorId, out vendorIdNum))
+            return "N";
+        string query = "select vn_name,vn_address,vn_city,vn_state,vn_phone1,vn_phone2,vn_email,vn_gst,vn_pan,IFNULL(vn_balance,0) as vn_balance from tbl_vendor where vn_id=" + vendorIdNum;
         dt = db.SelectQuery(query);
+        if (dt.Rows.Count == 0)
+            return "N";
         return JsonConvert.SerializeObject(dt, Formatting.Indented);
     }
 
@@ -216,8 +220,9 @@ public partial class web_purchase_purchaseentry : System.Web.UI.Page
     {
         mySqlConnection db = new mySqlConnection();
         DataTable dt = new DataTable();
-        string query = "select tis.itm_id,tis.itm_code,tis.itm_name,tp_tax_percentage,tp_cess,tis.itbs_purchase_price,tp_tax_title,itm.itsv_uom_purchase from tbl_itembranch_stock tis inner join"
+        string query = "select tis.itm_id,tis.itm_code,tis.itm_name,tp_tax_percentage,tp_cess,tis.itbs_purchase_price,        tp_tax_title,itm.itsv_uom_purchase,spw.itst_name,spw.itsv_name from tbl_itembranch_stock tis inner join"
             + " tbl_tax_profile tp on tp.tp_tax_code=tis.tp_tax_code inner join tbl_item_master itm on itm.itm_id=tis.itm_id"
+                    + " left join tbl_item_master_spe_values spw on itm.itsv_spec_width=spw.itsv_id"
         + "  where itbs_id=" + itemId + "";
         //    query = query + " order by tbl_branch.branch_id";
         dt = db.SelectQuery(query);

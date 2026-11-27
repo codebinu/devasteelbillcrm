@@ -107,17 +107,117 @@
             $("#itemSpec_FinalQtyUom").text(name ? " (" + name + ")" : "");
         }
 
+        var SPEC_UNIT_METRES = { MM: 0.001, CM: 0.01, MT: 1, FT: 0.3048, Inch: 0.0254 };
+
+        // Unit of an Item Master width such as 1.10M, 8 FEET, 12' or 50"; no unit means metres, unknown units return null.
+        function specUnitKey(u) {
+            var s = $.trim(u).toUpperCase();
+            if (s === "") return "MT";
+            if (s === "MM") return "MM";
+            if (s === "CM") return "CM";
+            if (/^(M|MT|MTR|MTRS|METER|METERS|METRE|METRES)$/.test(s)) return "MT";
+            if (/^(FT|FEET|FOOT|')$/.test(s)) return "FT";
+            if (/^(IN|INCH|INCHES|")$/.test(s)) return "Inch";
+            return null;
+        }
+
+        // Linear unit of an area UOM name (SQMT -> MT, SQFT -> FT, SQINCH -> Inch); "" if the name isn't recognised.
+        function specLinearUnit(areaName) {
+            var s = $.trim(areaName).toUpperCase().replace(/^SQ\.?\s*/, "").replace(/[\s.]/g, "");
+            if (/^(M|MT|MTR|MTRS|METER|METERS|METRE|METRES)$/.test(s)) return "MT";
+            if (/^(FT|FEET|FOOT)$/.test(s)) return "FT";
+            if (/^(IN|INCH|INCHES)$/.test(s)) return "Inch";
+            return "";
+        }
+
+        // Keeps only the number from Item Master widths like 1.20M, 12' or 50"; the unit is remembered so Width can follow the selected UOM.
+        function specWidthFromItem(item) {
+            if (!item || $.trim(item.itst_name).toLowerCase() !== "width") return null;
+            var wm = String(item.itsv_name || "").match(/(\d+(?:\.\d+)?|\.\d+)\s*([A-Za-z'"]*)/);
+            return wm ? { text: wm[1], unit: specUnitKey(wm[2]) } : null;
+        }
+
+        // Rows loaded from the grid don't carry the spec width, so fetch it for the item being edited.
+        function specFetchSpecWidth(itbsId) {
+            var cur = specItem;
+            if (!cur || !itbsId) return;
+            $.ajax({
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                url: "editPurchase.aspx/selectOrderItem",
+                data: "{'itemId':'" + itbsId + "'}",
+                dataType: "json",
+                success: function (msg) {
+                    var o = JSON.parse(msg.d);
+                    if (specItem === cur && o.length) cur.specWidth = specWidthFromItem(o[0]);
+                }
+            });
+        }
+
+        // Re-expresses the item's spec width in the linear unit of the selected area UOM (e.g. 1.10M -> 3.609 for SQFT).
+        function specApplySpecWidth() {
+            var sw = specItem && specItem.specWidth;
+            if (!sw) return;
+            var uomId = $("#itemSpec_Uom").val(), val = sw.text;
+            if (sw.unit && uomId && uomId != "-1" && UomConversion.getRequirements(uomId).width) {
+                var tu = specLinearUnit($("#itemSpec_Uom option:selected").text());
+                if (tu && tu !== sw.unit) {
+                    val = (parseFloat(sw.text) * SPEC_UNIT_METRES[sw.unit] / SPEC_UNIT_METRES[tu]).toFixed(3);
+                }
+            }
+            $("#itemSpec_Width").val(val);
+        }
+
+        // Length is entered in the selected UOM's linear unit (Length UOM itself; area UOMs use MT/FT/Inch); returns metres or null.
+        function specLengthInMetres(len, uomId) {
+            var u = (uomId && uomId != "-1") ? UomConversion.findUom(uomId) : null;
+            var type = u ? UomConversion.findType(u.tum_type_id) : null;
+            var typeName = type ? String(type.tumt_name || "").toLowerCase() : "";
+            if (typeName === "length") {
+                var meter = null;
+                $.each(UomConversion.getCompatibleUoms(u.tum_id), function (i, c) {
+                    if (/^(m|mtr|mtrs|meter|meters|metre|metres)$/i.test($.trim(c.tum_name))) { meter = c; return false; }
+                });
+                if (!meter) return null;
+                var r = UomConversion.convert(len, u.tum_id, meter.tum_id);
+                return r.error ? null : r.value;
+            }
+            if (typeName === "area") {
+                var lu = specLinearUnit(u.tum_name);
+                if (lu === "FT") return len * 0.3048;
+                if (lu === "Inch") return len * 0.0254;
+            }
+            return len;
+        }
+
+        // Meter KG = Total KG / (Qty x Length in metres), 3 decimals; "" unless Length and Total KG are valid.
+        function specMeterKg() {
+            var len = parseFloat($("#itemSpec_Length").val()), kg = parseFloat($("#itemSpec_TotalKg").val());
+            var qty = parseFloat($("#itemSpec_Qty").val());
+            if (!(qty > 0)) qty = 1;
+            var m = (len > 0 && kg > 0) ? specLengthInMetres(len, $("#itemSpec_Uom").val()) : null;
+            var v = (m > 0) ? kg / (qty * m) : NaN;
+            return isFinite(v) ? v.toFixed(3) : "";
+        }
+
         function updateSpecDimLabels() {
             var uomId = $("#itemSpec_Uom").val();
             var name = "";
             if (uomId && uomId != "-1") {
                 name = $.trim($("#itemSpec_Uom option:selected").text());
             }
-            var suffix = name ? " (" + name + ")" : "";
+            var r = (uomId && uomId != "-1") ? UomConversion.getRequirements(uomId) : { length: false };
+            // Area UOMs take Length/Width in their linear unit: SQMT -> MT, SQFT -> FT, SQINCH -> Inch
+            var linear = name;
+            if (r.width && name) {
+                var lu = specLinearUnit(name);
+                if (lu) linear = lu;
+            }
+            var suffix = linear ? " (" + linear + ")" : "";
             $("label[for='itemSpec_Length']").text("Length/Unit" + suffix);
             $("label[for='itemSpec_Width']").text("Width/Unit" + suffix);
-            var r = (uomId && uomId != "-1") ? UomConversion.getRequirements(uomId) : { length: false };
-            $("label[for='itemSpec_TotalKg']").text("Total KG" + (r.length ? " *" : ""));
+            var mkg = specMeterKg();
+            $("label[for='itemSpec_TotalKg']").text("Total KG" + (r.length ? " *" : "") + (mkg ? " (Meter KG: " + mkg + ")" : ""));
         }
 
         function fillItemSpecUom(uom_type) {
@@ -345,6 +445,13 @@
                     $("#txtEntryRefNo").val(entry_details.pm_invoice_no);
                     $("#txtVendorName").text(entry_details.vn_name);
                     $("#txtVendorId").text(entry_details.vn_id);
+                    var vPhones = [entry_details.vn_phone1, entry_details.vn_phone2].filter(function (p) { return p && String(p).trim() !== ""; });
+                    $("#txtVendorPhone").text(vPhones.length ? vPhones.join(", ") : "-");
+                    $("#txtVendorEmail").text(entry_details.vn_email || "-");
+                    $("#txtVendorGst").text(entry_details.vn_gst || "-");
+                    $("#txtVendorPan").text(entry_details.vn_pan || "-");
+                    var vAddr = [entry_details.vn_address, entry_details.vn_city, entry_details.vn_state].filter(function (p) { return p && String(p).trim() !== ""; }).join(", ");
+                    $("#txtVendorAddress").text(vAddr || "-");
                     $("#txtEntryDate").val(entry_details.date);
                     $("#lblEntryDateTime").text(entry_details.date_time ? "(" + entry_details.date_time + ")" : "");
                     roundOffValue=entry_details.roundOff;
@@ -604,6 +711,8 @@
             var rate = parseFloat(item.tp_tax_percentage);
             $("#itemSpec_TaxPerc").text(isNaN(rate) ? "" : rate);
             $("#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width,#itemSpec_TotalKg,#itemSpec_FinalQty,#itemSpec_Discount,#itemSpec_CostWith,#itemSpec_CostWithout,#itemSpec_VendorBatch,#itemSpec_NetCost").val("");
+            if (specItem) specItem.specWidth = specWidthFromItem(item);
+            if (specItem && specItem.specWidth) $("#itemSpec_Width").val(specItem.specWidth.text);
             var pp = parseFloat(item.itbs_purchase_price);
             $("#itemSpec_Price").val(isNaN(pp) ? "" : specRoundTo(pp, 2));
             specRecalcFinal();
@@ -691,6 +800,7 @@
             });
             specRecalcFinal();
             itemSpecCalc();
+            specFetchSpecWidth(d.id);
         }
 
         // UOM values (quantity, length, width, kg) keep 3 decimals; amounts keep 2.
@@ -835,7 +945,8 @@
         });
         $(document).on("input", ".itemspec-calc", itemSpecCalc);
         $(document).on("input", "#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width", function () { specRecalcFinal(); itemSpecCalc(); });
-        $(document).on("change", "#itemSpec_Uom", function () { specRecalcFinal(); itemSpecCalc(); });
+        $(document).on("input", "#itemSpec_TotalKg", updateSpecDimLabels);
+        $(document).on("change", "#itemSpec_Uom", function () { specApplySpecWidth(); specRecalcFinal(); itemSpecCalc(); });
 
         //changing each value in table
         function modifyValues(thisRowId, valueType) {
@@ -1409,6 +1520,7 @@
                         $("#itemSpec_Uom").val("-1");
                     }
                     specShowDefUom(defName);
+                    specApplySpecWidth();
                     specRecalcFinal();
                     itemSpecCalc();
                     popupclose('popupItems');
@@ -1459,7 +1571,8 @@
 
             var filters = {};
             filters.pm_id = num(purchaseId);
-            filters.pm_ref_no = txt($("#txtEntryRefNo").val());
+            // pm_ref_no must stay equal to pm_id (the purchase list filters on pm_id = pm_ref_no); null keeps the stored value on edit
+            filters.pm_ref_no = null;
             filters.invoiceno = txt($("#txtEntryRefNo").val());
             filters.vendorId = $("#txtVendorId").text();
             filters.userid = $.cookie("invntrystaffId");
@@ -2052,6 +2165,21 @@
                                         <div class="col-md-3 col-sm-6 col-xs-12 form-group">
                                             <div class="bd-caption">Supplier Balance</div>
                                             <div class="bd-value" style="font-size: 18px; font-weight: 700;"><span id="txtBalance">0</span></div>
+                                        </div>
+                                    </div>
+                                    <div class="row invoice-info" id="divVendorDetails" style="font-size: 12px; margin-bottom: 8px;">
+                                        <div class="col-sm-3 invoice-col">
+                                            <b>Phone: </b><label id="txtVendorPhone" style="font-weight: normal;">-</label>
+                                            <br />
+                                            <b>Email: </b><label id="txtVendorEmail" style="font-weight: normal;">-</label>
+                                        </div>
+                                        <div class="col-sm-3 invoice-col">
+                                            <b>GST: </b><label id="txtVendorGst" style="font-weight: normal;">-</label>
+                                            <br />
+                                            <b>PAN: </b><label id="txtVendorPan" style="font-weight: normal;">-</label>
+                                        </div>
+                                        <div class="col-sm-6 invoice-col">
+                                            <b>Address: </b><label id="txtVendorAddress" style="font-weight: normal;">-</label>
                                         </div>
                                     </div>
                                     <div class="bd-tax">

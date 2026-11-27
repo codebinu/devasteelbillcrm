@@ -2119,7 +2119,7 @@
                                                             <th>Item Code</th>
                                                             <th>Item Name</th>
                                                             <th style="text-align: right;">Qty</th>
-                                                            <th>Size (L x W)</th>
+                                                            <th>Length</th>
                                                             <th>UOM</th>
                                                             <th style="text-align: right;">Final Qty</th>
                                                             <th>Final UOM</th>

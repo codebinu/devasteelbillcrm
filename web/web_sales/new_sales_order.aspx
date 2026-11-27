@@ -133,7 +133,7 @@
                 if (i >= 0 && v.length - i - 1 > d) this.value = v.substring(0, i + 1 + d);
             });
             $(document).on("input", "#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width,#itemSpec_Price,#itemSpec_Discount", function () { specRecalc(); });
-            $(document).on("change", "#itemSpec_Uom", function () { specRecalc(); });
+            $(document).on("change", "#itemSpec_Uom", function () { specApplySpecWidth(); specRecalc(); });
             renderItems();
         });
 
@@ -441,8 +441,48 @@
                 modalState($tb, 4, 'Could not select the item. Please try again.', true);
             });
         }
+        var SPEC_UNIT_METRES = { MM: 0.001, CM: 0.01, MT: 1, FT: 0.3048, Inch: 0.0254 };
+        // Unit of an Item Master width such as 1.10M, 8 FEET, 12' or 50"; no unit means metres, unknown units return null.
+        function specUnitKey(u) {
+            var s = $.trim(u).toUpperCase();
+            if (s === "") return "MT";
+            if (s === "MM") return "MM";
+            if (s === "CM") return "CM";
+            if (/^(M|MT|MTR|MTRS|METER|METERS|METRE|METRES)$/.test(s)) return "MT";
+            if (/^(FT|FEET|FOOT|')$/.test(s)) return "FT";
+            if (/^(IN|INCH|INCHES|")$/.test(s)) return "Inch";
+            return null;
+        }
+        // Linear unit of an area UOM name (SQMT -> MT, SQFT -> FT, SQINCH -> Inch); "" if the name isn't recognised.
+        function specLinearUnit(areaName) {
+            var s = $.trim(areaName).toUpperCase().replace(/^SQ\.?\s*/, "").replace(/[\s.]/g, "");
+            if (/^(M|MT|MTR|MTRS|METER|METERS|METRE|METRES)$/.test(s)) return "MT";
+            if (/^(FT|FEET|FOOT)$/.test(s)) return "FT";
+            if (/^(IN|INCH|INCHES)$/.test(s)) return "Inch";
+            return "";
+        }
+        // Keeps only the number from widths like 1.20M, 12' or 50"; the unit is remembered so Width can follow the selected UOM.
+        function specWidthFromItem(item) {
+            if (!item || $.trim(item.itst_name).toLowerCase() !== "width") return null;
+            var wm = String(item.itsv_name || "").match(/(\d+(?:\.\d+)?|\.\d+)\s*([A-Za-z'"]*)/);
+            return wm ? { text: wm[1], unit: specUnitKey(wm[2]) } : null;
+        }
+        // Re-expresses the item's spec width in the linear unit of the selected area UOM (e.g. 1.10M -> 3.609 for SQFT).
+        function specApplySpecWidth() {
+            var sw = specItem && specItem.specWidth;
+            if (!sw) return;
+            var uomId = $("#itemSpec_Uom").val(), val = sw.text;
+            if (sw.unit && uomId && uomId != "-1" && UomConversion.getRequirements(uomId).width) {
+                var tu = specLinearUnit($("#itemSpec_Uom option:selected").text());
+                if (tu && tu !== sw.unit) {
+                    val = (parseFloat(sw.text) * SPEC_UNIT_METRES[sw.unit] / SPEC_UNIT_METRES[tu]).toFixed(3);
+                }
+            }
+            $("#itemSpec_Width").val(val);
+        }
         function selectItem(it) {
             specItem = it; editIndex = -1;
+            specItem.specWidth = specWidthFromItem(it);
             $("#itemSpec_Panel").show();
             $("#itemSpec_Name").text(it.label);
             $("#itemSpec_Code").text(it.itm_code);
@@ -455,6 +495,7 @@
             $("#itemSpec_Price").val(amt2(it.price));
             $("#btnSpecAdd").html('<i class="fa fa-plus"></i> Add Item');
             fillUom(true);
+            specApplySpecWidth();
             $("#itemSpec_Qty").focus();
             specRecalc();
         }
@@ -464,7 +505,7 @@
             $("#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width,#itemSpec_Discount,#itemSpec_Price,#itemSpec_FinalQty,#itemSpec_Net").val("");
             $("#btnSpecAdd").html('<i class="fa fa-plus"></i> Add Item');
             fillUom();
-            $("#itemSpec_FinalQtyErr,#itemSpec_LineErr").text("");
+            $("#itemSpec_FinalQtyErr,#itemSpec_LineErr,#itemSpec_SqftPrice,#itemSpec_SqftPriceDisc").text("");
         }
         function fillUom(useDefault) {
             var $d = $("#itemSpec_Uom"), prev = useDefault ? null : $d.val(), data = uomData;
@@ -495,8 +536,25 @@
             var ta = nb * tax / 100; ta = ta + ta * cess / 100;
             return { total: rnd(real), disc: rnd(disc), tax: rnd(ta), net: rnd(nb + ta) };
         }
+        // Price is per the item's sales UOM; for area UOMs (SQMT, SQFT, SQINCH) show the same price per square foot.
+        function specUpdateSqftPrice() {
+            var $l = $("#itemSpec_SqftPrice").text(""), $d = $("#itemSpec_SqftPriceDisc").text("");
+            var uomId = $("#itemSpec_Uom").val();
+            if (!specItem || !uomId || uomId == "-1" || !UomConversion.getRequirements(uomId).width) return;
+            var def = UomConversion.findUom(specItem.defUomId), sqft = null;
+            $.each(UomConversion.getCompatibleUoms(specItem.defUomId), function (i, c) {
+                if (UomConversion.getRequirements(c.tum_id).width && specLinearUnit(c.tum_name) === "FT") { sqft = c; return false; }
+            });
+            var price = parseFloat($("#itemSpec_Price").val());
+            var fs = sqft ? parseFloat(sqft.tum_convertion_fac) : 0, fd = def ? parseFloat(def.tum_convertion_fac) : 0;
+            if (isNaN(price) || !(fs > 0) || !(fd > 0)) return;
+            var sqftPrice = price * fs / fd, disc = num($("#itemSpec_Discount").val());
+            $l.text("SQFT Price: " + amt2(sqftPrice));
+            if (disc > 0 && disc <= 100) $d.text("SQFT Price after discount: " + amt2(sqftPrice * (100 - disc) / 100));
+        }
         function specRecalc() {
             if (!specItem) return;
+            specUpdateSqftPrice();
             var uomId = $("#itemSpec_Uom").val();
             var req = (uomId && uomId != "-1") ? UomConversion.getRequirements(uomId) : { length: false, width: false };
             $("#itemSpec_Length").prop("disabled", !req.length);
@@ -569,7 +627,7 @@
             $.each(soItems, function (i, l) {
                 var a = lineAmounts(l.finalQty, l.price, l.discount, num(l.tax), num(l.cess));
                 t.total += a.total; t.disc += a.disc; t.tax += a.tax; t.net += a.net;
-                var dims = (l.length ? qty3(l.length) : "") + (l.width ? " x " + qty3(l.width) : "");
+                var dims = l.length ? qty3(l.length) : "";
                 var fu = l.defUomId && UomConversion.findUom(l.defUomId), finalUom = fu && fu.tum_name ? " " + esc(fu.tum_name) : "";
                 $b.append('<tr><td>' + (i + 1) + '</td><td>' + esc(l.code) + '</td><td>' + esc(l.name) + '</td><td>' + esc(l.uomName) + '</td>'
                     +                     '<td class="text-right">' + qty3(l.no_piece) + '</td><td>' + esc(dims) + '</td>'
@@ -776,8 +834,16 @@
                                         <div class="col-sm-3 col-xs-6 form-group"><label>Line Net</label><input type="number" class="form-control" id="itemSpec_Net" readonly="readonly" tabindex="-1" /></div>
                                     </div>
                                     <div class="so-err" id="itemSpec_LineErr" style="margin-bottom: 8px;"></div>
-                                    <button type="button" id="btnSpecAdd" class="btn btn-success" onclick="addOrUpdateItem();"><i class="fa fa-plus"></i> Add Item</button>
-                                    <button type="button" class="btn btn-default" onclick="clearSpec();">Cancel</button>
+                                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                                        <div>
+                                            <span id="itemSpec_SqftPrice" class="text-info" style="font-size: 15px; font-weight: bold;"></span>
+                                            <span id="itemSpec_SqftPriceDisc" class="text-success" style="font-size: 15px; font-weight: bold; margin-left: 16px;"></span>
+                                        </div>
+                                        <div>
+                                            <button type="button" class="btn btn-default" onclick="clearSpec();">Cancel</button>
+                                            <button type="button" id="btnSpecAdd" class="btn btn-success" onclick="addOrUpdateItem();"><i class="fa fa-plus"></i> Add Item</button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -792,7 +858,7 @@
                             <div class="x_content" style="overflow-x: auto;">
                                 <table class="table table-striped table-bordered" id="tblSoItems">
                                     <thead>
-                                        <tr><th>#</th><th>Code</th><th>Item</th><th>UOM</th><th>Qty</th><th>Length x Width</th><th>Final Qty</th><th>Price</th><th>Disc</th><th>Tax %</th><th>Tax</th><th>Net</th><th></th></tr>
+                                        <tr><th>#</th><th>Code</th><th>Item</th><th>UOM</th><th>Qty</th><th>Length</th><th>Final Qty</th><th>Price</th><th>Disc</th><th>Tax %</th><th>Tax</th><th>Net</th><th></th></tr>
                                     </thead>
                                     <tbody></tbody>
                                 </table>

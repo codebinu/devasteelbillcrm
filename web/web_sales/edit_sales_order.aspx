@@ -451,6 +451,47 @@
                 recalcAll();
             });
 
+            var SPEC_UNIT_METRES = { MM: 0.001, CM: 0.01, MT: 1, FT: 0.3048, Inch: 0.0254 };
+            // Unit of an Item Master width such as 1.10M, 8 FEET, 12' or 50"; no unit means metres, unknown units return null.
+            function specUnitKey(u) {
+                var s = $.trim(u).toUpperCase();
+                if (s === '') return 'MT';
+                if (s === 'MM') return 'MM';
+                if (s === 'CM') return 'CM';
+                if (/^(M|MT|MTR|MTRS|METER|METERS|METRE|METRES)$/.test(s)) return 'MT';
+                if (/^(FT|FEET|FOOT|')$/.test(s)) return 'FT';
+                if (/^(IN|INCH|INCHES|")$/.test(s)) return 'Inch';
+                return null;
+            }
+            // Linear unit of an area UOM name (SQMT -> MT, SQFT -> FT, SQINCH -> Inch); '' if the name isn't recognised.
+            function specLinearUnit(areaName) {
+                var s = $.trim(areaName).toUpperCase().replace(/^SQ\.?\s*/, '').replace(/[\s.]/g, '');
+                if (/^(M|MT|MTR|MTRS|METER|METERS|METRE|METRES)$/.test(s)) return 'MT';
+                if (/^(FT|FEET|FOOT)$/.test(s)) return 'FT';
+                if (/^(IN|INCH|INCHES)$/.test(s)) return 'Inch';
+                return '';
+            }
+            // Keeps only the number from widths like 1.20M, 12' or 50"; the unit is remembered so Width can follow the line's UOM.
+            function specWidthFromItem(item) {
+                if (!item || $.trim(item.specType).toLowerCase() !== 'width') return null;
+                var wm = String(item.specValue || '').match(/(\d+(?:\.\d+)?|\.\d+)\s*([A-Za-z'"]*)/);
+                return wm ? { text: wm[1], unit: specUnitKey(wm[2]) } : null;
+            }
+            // Re-expresses the item's spec width in the linear unit of the line's selected area UOM (e.g. 1.10M -> 3.609 for SQFT).
+            function applyRowSpecWidth($tr) {
+                var sw = $tr.data('specWidth');
+                if (!sw) return;
+                var uomId = $tr.find('.f-uom').val(), val = sw.text;
+                if (sw.unit && uomId && UomConversion.getRequirements(uomId).width) {
+                    var tu = specLinearUnit($tr.find('.f-uom option:selected').text());
+                    if (tu && tu !== sw.unit) {
+                        val = (parseFloat(sw.text) * SPEC_UNIT_METRES[sw.unit] / SPEC_UNIT_METRES[tu]).toFixed(3);
+                    }
+                }
+                $tr.find('.f-wid').val(val);
+            }
+            $('#itemsTable').on('change', '.f-uom', function () { applyRowSpecWidth($(this).closest('tr')); recalcAll(); });
+
             // Adds a new line for a searched item; its values are entered like any other line and the server recalculates them on save.
             function addItem(item) {
                 var exists = false;
@@ -489,6 +530,8 @@
                 td().css('text-align', 'right').append('<b class="c-net"></b>');
                 $('<button type="button" class="btn btn-danger btn-xs btn-remove" title="Remove item"><i class="fa fa-trash"></i></button>').appendTo(td());
                 $tr.data('sig', '');
+                $tr.data('specWidth', specWidthFromItem(item));
+                applyRowSpecWidth($tr);
                 $('#itemsTable tbody').append($tr);
                 structureChanged = true;
                 renumber();

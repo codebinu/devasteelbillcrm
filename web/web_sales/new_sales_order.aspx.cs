@@ -85,9 +85,10 @@ public partial class web_sales_new_sales_order : System.Web.UI.Page
     public static string searchItems(string variable, int branchId, int custType, int allowZeroStockOrder)
     {
         mySqlConnection db = new mySqlConnection();
-        string sql = "SELECT tis.itbs_id,tis.itm_id,tis.itm_code,tis.itm_name,tis.itbs_stock,itm_mrp,tp.tp_tax_percentage,tp.tp_cess,tp.tp_tax_title,im.itsv_uom_sales,"
+        string sql = "SELECT tis.itbs_id,tis.itm_id,tis.itm_code,tis.itm_name,tis.itbs_stock,itm_mrp,tp.tp_tax_percentage,tp.tp_cess,tp.tp_tax_title,im.itsv_uom_sales,spw.itst_name,spw.itsv_name,"
             + "(select tip_price from tbl_item_pricelist tip where tip.tpm_id=@tpm and tip.itbs_id=tis.itbs_id limit 1) as classPrice "
             + "from tbl_itembranch_stock tis inner join tbl_tax_profile tp on tp.tp_tax_code=tis.tp_tax_code inner join tbl_item_master im on im.itm_id=tis.itm_id "
+            + "left join tbl_item_master_spe_values spw on im.itsv_spec_width=spw.itsv_id "
             + "where tis.itm_name like @name and tis.branch_id=@branch and tis.itbs_available=1 and tis.itm_code not in ('1234567891234')"
             + (allowZeroStockOrder == 0 ? " and tis.itbs_stock>0" : "") + " ORDER BY itm_rating asc limit 0,20";
         DataTable dt = db.SelectQuery(sql, new MySqlParameter[] {
@@ -111,6 +112,8 @@ public partial class web_sales_new_sales_order : System.Web.UI.Page
                 tax = r["tp_tax_percentage"] == DBNull.Value ? 0 : Convert.ToDecimal(r["tp_tax_percentage"]),
                 cess = r["tp_cess"] == DBNull.Value ? 0 : Convert.ToDecimal(r["tp_cess"]),
                 defUomId = r["itsv_uom_sales"] == DBNull.Value ? 0 : Convert.ToInt32(r["itsv_uom_sales"]),
+                itst_name = r["itst_name"] == DBNull.Value ? "" : Convert.ToString(r["itst_name"]),
+                itsv_name = r["itsv_name"] == DBNull.Value ? "" : Convert.ToString(r["itsv_name"]),
                 price = r["classPrice"] != DBNull.Value ? Convert.ToDecimal(r["classPrice"]) : (r["itm_mrp"] == DBNull.Value ? 0 : Convert.ToDecimal(r["itm_mrp"]))
             });
         }

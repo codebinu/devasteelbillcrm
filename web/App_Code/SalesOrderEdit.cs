@@ -53,6 +53,8 @@ public sealed class SalesOrderEditItem
     public decimal cess;
     public int uomId;
     public decimal price;
+    public string specType;
+    public string specValue;
 }
 
 public sealed class EditUom
@@ -219,9 +221,10 @@ public static class SalesOrderEdit
         int allowZero = I(db.SelectScalar("select ss_allow_zero_stock_order from tbl_system_settings"));
         int priceClass = PriceClass(db, false, o.Rows[0]);
         string like = "%" + (term ?? "").Trim().Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
-        DataTable dt = db.SelectQuery("select tis.itbs_id,tis.itm_code,tis.itm_name,tis.itbs_stock,tis.itm_mrp,tp.tp_tax_percentage,tp.tp_cess,im.itsv_uom_sales,"
+        DataTable dt = db.SelectQuery("select tis.itbs_id,tis.itm_code,tis.itm_name,tis.itbs_stock,tis.itm_mrp,tp.tp_tax_percentage,        tp.tp_cess,im.itsv_uom_sales,spw.itst_name,spw.itsv_name,"
             + "(select tip_price from tbl_item_pricelist tip where tip.tpm_id=@tpm and tip.itbs_id=tis.itbs_id limit 1) as classPrice "
             + "from tbl_itembranch_stock tis inner join tbl_tax_profile tp on tp.tp_tax_code=tis.tp_tax_code inner join tbl_item_master im on im.itm_id=tis.itm_id "
+                    + "left join tbl_item_master_spe_values spw on im.itsv_spec_width=spw.itsv_id "
             + "where (tis.itm_name like @t or tis.itm_code like @t) and tis.branch_id=@b and tis.itbs_available=1 and tis.itm_code not in ('1234567891234')"
             + (allowZero == 0 ? " and tis.itbs_stock>0" : "") + " order by tis.itm_name limit 20",
             new MySqlParameter[] { new MySqlParameter("@tpm", priceClass), new MySqlParameter("@t", like), new MySqlParameter("@b", I(o.Rows[0]["branch_id"])) });
@@ -230,7 +233,8 @@ public static class SalesOrderEdit
             {
                 itbsId = I(r["itbs_id"]), code = Convert.ToString(r["itm_code"]), name = Convert.ToString(r["itm_name"]),
                 stock = D(r["itbs_stock"]), tax = D(r["tp_tax_percentage"]), cess = D(r["tp_cess"]), uomId = I(r["itsv_uom_sales"]),
-                price = r["classPrice"] != DBNull.Value ? D(r["classPrice"]) : D(r["itm_mrp"])
+                price = r["classPrice"] != DBNull.Value ? D(r["classPrice"]) : D(r["itm_mrp"]),
+                specType = Convert.ToString(r["itst_name"]), specValue = Convert.ToString(r["itsv_name"])
             });
         return list;
     }

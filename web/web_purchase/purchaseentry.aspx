@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeFile="purchaseentry.aspx.cs" Inherits="web_purchase_purchaseentry" %>
+<%@ Page Language="C#" AutoEventWireup="true" CodeFile="purchaseentry.aspx.cs" Inherits="web_purchase_purchaseentry" %>
 
 <!DOCTYPE html>
 
@@ -82,17 +82,85 @@ function loadUomTypes() {
             });
         }
 
+        // Linear unit of an area UOM name (SQMT -> MT, SQFT -> FT, SQINCH -> Inch); "" if the name isn't recognised.
+        function specLinearUnit(areaName) {
+            var s = $.trim(areaName).toUpperCase().replace(/^SQ\.?\s*/, "").replace(/[\s.]/g, "");
+            if (/^(M|MT|MTR|MTRS|METER|METERS|METRE|METRES)$/.test(s)) return "MT";
+            if (/^(FT|FEET|FOOT)$/.test(s)) return "FT";
+            if (/^(IN|INCH|INCHES)$/.test(s)) return "Inch";
+            return "";
+        }
+
+        var SPEC_UNIT_METRES = { MM: 0.001, CM: 0.01, MT: 1, FT: 0.3048, Inch: 0.0254 };
+
+        // Unit of an Item Master width such as 1.10M, 8 FEET, 12' or 50"; no unit means metres, unknown units return null.
+        function specUnitKey(u) {
+            var s = $.trim(u).toUpperCase();
+            if (s === "") return "MT";
+            if (s === "MM") return "MM";
+            if (s === "CM") return "CM";
+            if (/^(M|MT|MTR|MTRS|METER|METERS|METRE|METRES)$/.test(s)) return "MT";
+            if (/^(FT|FEET|FOOT|')$/.test(s)) return "FT";
+            if (/^(IN|INCH|INCHES|")$/.test(s)) return "Inch";
+            return null;
+        }
+
+        // Keeps only the number from Item Master widths like 1.20M, 12' or 50"; the unit is remembered so Width can follow the selected UOM.
+        function specWidthFromItem(item) {
+            if (!item || $.trim(item.itst_name).toLowerCase() !== "width") return null;
+            var wm = String(item.itsv_name || "").match(/(\d+(?:\.\d+)?|\.\d+)\s*([A-Za-z'"]*)/);
+            return wm ? { text: wm[1], unit: specUnitKey(wm[2]) } : null;
+        }
+
+        // Rows loaded from the grid don't carry the spec width, so fetch it for the item being edited.
+        function specFetchSpecWidth(itbsId) {
+            var cur = specItem;
+            if (!cur || !itbsId) return;
+            $.ajax({
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                url: "purchaseentry.aspx/selectOrderItem",
+                data: "{'itemId':'" + itbsId + "'}",
+                dataType: "json",
+                success: function (msg) {
+                    var o = JSON.parse(msg.d);
+                    if (specItem === cur && o.length) cur.specWidth = specWidthFromItem(o[0]);
+                }
+            });
+        }
+
+        // Re-expresses the item's spec width in the linear unit of the selected area UOM (e.g. 1.10M -> 3.609 for SQFT).
+        function specApplySpecWidth() {
+            var sw = specItem && specItem.specWidth;
+            if (!sw) return;
+            var uomId = $("#itemSpec_Uom").val(), val = sw.text;
+            if (sw.unit && uomId && uomId != "-1" && UomConversion.getRequirements(uomId).width) {
+                var tu = specLinearUnit($("#itemSpec_Uom option:selected").text());
+                if (tu && tu !== sw.unit) {
+                    val = (parseFloat(sw.text) * SPEC_UNIT_METRES[sw.unit] / SPEC_UNIT_METRES[tu]).toFixed(3);
+                }
+            }
+            $("#itemSpec_Width").val(val);
+        }
+
         function updateSpecDimLabels() {
             var uomId = $("#itemSpec_Uom").val();
             var name = "";
             if (uomId && uomId != "-1") {
                 name = $.trim($("#itemSpec_Uom option:selected").text());
             }
-            var suffix = name ? " (" + name + ")" : "";
+            var r = (uomId && uomId != "-1") ? UomConversion.getRequirements(uomId) : { length: false };
+            // Area UOMs take Length/Width in their linear unit: SQMT -> MT, SQFT -> FT, SQINCH -> Inch
+            var linear = name;
+            if (r.width && name) {
+                var lu = specLinearUnit(name);
+                if (lu) linear = lu;
+            }
+            var suffix = linear ? " (" + linear + ")" : "";
             $("label[for='itemSpec_Length']").text("Length/Unit" + suffix);
             $("label[for='itemSpec_Width']").text("Width/Unit" + suffix);
-            var r = (uomId && uomId != "-1") ? UomConversion.getRequirements(uomId) : { length: false };
-            $("label[for='itemSpec_TotalKg']").text("Total KG" + (r.length ? " *" : ""));
+            var mkg = specMeterKg();
+            $("label[for='itemSpec_TotalKg']").text("Total KG" + (r.length ? " *" : "") + (mkg ? " (Meter KG: " + mkg + ")" : ""));
         }
 
         function specApplyFieldRules() {
@@ -100,6 +168,38 @@ function loadUomTypes() {
             var req = (uomId && uomId != "-1") ? UomConversion.getRequirements(uomId) : { length: false, width: true, kg: true };
             $("#itemSpec_Length,#itemSpec_TotalKg").prop("disabled", false);
             $("#itemSpec_Width").prop("disabled", !req.width);
+        }
+
+        // Length is entered in the selected UOM's linear unit (Length UOM itself; SQMT -> metres, SQFT -> feet); returns metres or null.
+        function specLengthInMetres(len, uomId) {
+            var u = (uomId && uomId != "-1") ? UomConversion.findUom(uomId) : null;
+            var type = u ? UomConversion.findType(u.tum_type_id) : null;
+            var typeName = type ? String(type.tumt_name || "").toLowerCase() : "";
+            if (typeName === "length") {
+                var meter = null;
+                $.each(UomConversion.getCompatibleUoms(u.tum_id), function (i, c) {
+                    if (/^(m|mtr|mtrs|meter|meters|metre|metres)$/i.test($.trim(c.tum_name))) { meter = c; return false; }
+                });
+                if (!meter) return null;
+                var r = UomConversion.convert(len, u.tum_id, meter.tum_id);
+                return r.error ? null : r.value;
+            }
+            if (typeName === "area") {
+                var lu = specLinearUnit(u.tum_name);
+                if (lu === "FT") return len * 0.3048;
+                if (lu === "Inch") return len * 0.0254;
+            }
+            return len;
+        }
+
+        // Meter KG = Total KG / (Qty x Length in metres), 3 decimals; "" unless Length and Total KG are valid.
+        function specMeterKg() {
+            var len = parseFloat($("#itemSpec_Length").val()), kg = parseFloat($("#itemSpec_TotalKg").val());
+            var qty = parseFloat($("#itemSpec_Qty").val());
+            if (!(qty > 0)) qty = 1;
+            var m = (len > 0 && kg > 0) ? specLengthInMetres(len, $("#itemSpec_Uom").val()) : null;
+            var v = (m > 0) ? kg / (qty * m) : NaN;
+            return isFinite(v) ? v.toFixed(3) : "";
         }
 
         function specRecalcFinal() {
@@ -515,12 +615,19 @@ function fillItemSpecUom(uom_type) {
                     Unloading();
                     if (msg.d != "N") {
                         var obj = JSON.parse(msg.d);
-                        console.log(obj[0].cust_name);
+                        var v = obj[0];
                         $("#txtvendorId").text(vendorid);
-                        $("#textName").text(obj[0].vn_name);
-                        $("#txtCity").text(obj[0].vn_city);
-                        $("#txtPhone").text(obj[0].vn_phone1);
-                        $("#txtEmail").text(obj[0].vn_email);
+                        $("#textName").text(v.vn_name);
+                        var phones = [v.vn_phone1, v.vn_phone2].filter(function (p) { return p && String(p).trim() !== ""; });
+                        $("#txtPhone").text(phones.length ? phones.join(", ") : "-");
+                        $("#txtEmail").text(v.vn_email || "-");
+                        $("#txtVendorGst").text(v.vn_gst || "-");
+                        $("#txtVendorPan").text(v.vn_pan || "-");
+                        var addr = [v.vn_address, v.vn_city, v.vn_state].filter(function (p) { return p && String(p).trim() !== ""; }).join(", ");
+                        $("#txtVendorAddress").text(addr || "-");
+                        var bal = parseFloat(v.vn_balance) || 0;
+                        // vn_balance is credit minus debit: positive means we owe the supplier
+                        $("#txtVendorBalance").text(bal.toFixed(2)).css("color", bal > 0 ? "red" : "green");
                         $("#divVendorDetails").show();
                     } else {
                         alert("No data found");
@@ -593,6 +700,7 @@ function fillItemSpecUom(uom_type) {
 						$("#itemSpec_Uom").val("-1");
 					}
 					specShowDefUom(defName);
+					specApplySpecWidth();
 					specRecalcFinal();
 					itemSpecCalc();
 					popupclose('popupItems');
@@ -633,6 +741,7 @@ function fillItemSpecUom(uom_type) {
 			});
 			specRecalcFinal();
 			itemSpecCalc();
+			specFetchSpecWidth(d.id);
 		}
 
 		function specUomName(id) {
@@ -798,6 +907,8 @@ function fillItemSpecUom(uom_type) {
             $("#itemSpec_TaxPerc").text(isNaN(rate) ? "" : rate);
             $("#itemSpec_SysBatch").text("");
             $("#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width,#itemSpec_TotalKg,#itemSpec_FinalQty,#itemSpec_Discount,#itemSpec_CostWith,#itemSpec_CostWithout,#itemSpec_VendorBatch,#itemSpec_NetCost").val("");
+            if (specItem) specItem.specWidth = specWidthFromItem(item);
+            if (specItem && specItem.specWidth) $("#itemSpec_Width").val(specItem.specWidth.text);
             var pp = parseFloat(item.itbs_purchase_price);
             $("#itemSpec_Price").val(isNaN(pp) ? "" : specRoundTo(pp, 2));
             specRecalcFinal();
@@ -838,7 +949,8 @@ function fillItemSpecUom(uom_type) {
         });
         $(document).on("input", ".itemspec-calc", itemSpecCalc);
         $(document).on("input", "#itemSpec_Qty,#itemSpec_Length,#itemSpec_Width", function () { specRecalcFinal(); itemSpecCalc(); });
-        $(document).on("change", "#itemSpec_Uom", function () { specRecalcFinal(); itemSpecCalc(); });
+        $(document).on("input", "#itemSpec_TotalKg", updateSpecDimLabels);
+        $(document).on("change", "#itemSpec_Uom", function () { specApplySpecWidth(); specRecalcFinal(); itemSpecCalc(); });
         $(document).on("change", "#warehousediv", function () { $(this).attr("title", $.trim($(this).find("option:selected").text())); });
         // Default purchase date follows the selected warehouse's branch time zone (not the browser clock); a date the user picked is left alone.
         var autoPurchaseDate = null;
@@ -2147,22 +2259,31 @@ function fillItemSpecUom(uom_type) {
                                     </span>
                                 </div>
                             </div>
-                            <div id="divVendorDetails" style="display: none; border-left: 1px solid #bebebe; border-right: 1px solid #bebebe;">
-                                <div class="col-md-12 col-sm-12 col-xs-12" style="line-height: 32px;">
-
-                                    <span class="myorderMData">#<a class="" style="color: inherit; margin-bottom: 0px;" id="txtvendorId" onclick="gotoVendor()"></a>
-                                        <label class="" style="margin-bottom: 0px; padding-left: 5px; padding-right: 5px; font-size: 14px;"><a id="textName">ITC</a></label>
-                                        <label class="" style="font-weight: normal; margin-left: 40px;"><span class="fa fa-map-marker myicons" title="City"></span><a id="txtCity">trivandrum</a></label>
-                                        <label class="" style="margin-left: 10px; font-weight: normal; margin-left: 20px;"><span class="fa fa-mobile myicons" title="Phone Number"></span><a id="txtPhone">12312123</a></label>
-                                        <label class="pull-right" style="color: aliceblue; font-size: 10px;" onclick="changevendor()"><a href="#" style="color: #0e9cff; text-decoration: underline;">Change Supplier</a></label>
-                                    </span>
-
-
+                            <div class="row invoice-info" id="divVendorDetails" style="display: none; font-size: 12px; font-weight: normal;">
+                                <div class="col-sm-12 invoice-col">
+                                    <div class="pull-left">
+                                        <b style="font-size: 14px;">#<a id="txtvendorId" style="color: inherit; cursor: pointer;" onclick="gotoVendor()"></a></b>
+                                        <label id="textName" style="font-size: 14px; padding-bottom: 5px;"></label>
+                                    </div>
+                                    <button type="button" class="btn btn-warning pull-right" style="font-size: 11px; padding: 4px; font-weight: bold; margin: 0;" onclick="changevendor()">Change Supplier</button>
+                                    <div class="clearfix"></div>
                                 </div>
-                                <div class="col-md-3 col-sm-12 col-xs-12" style="display: none;">
+                                <div class="col-sm-6 invoice-col">
+                                    <b>Phone: </b><label id="txtPhone" style="font-weight: normal;"></label>
+                                    <br />
+                                    <b>Email: </b><label id="txtEmail" style="font-weight: normal;"></label>
                                 </div>
-                                <div class="cl"></div>
-
+                                <div class="col-sm-3 invoice-col">
+                                    <b>GST:</b> <label id="txtVendorGst" style="font-weight: normal;"></label>
+                                    <br />
+                                    <b>PAN:</b> <label id="txtVendorPan" style="font-weight: normal;"></label>
+                                </div>
+                                <div class="col-sm-3 invoice-col">
+                                    <b>A/C Balance:</b> <label id="txtVendorBalance" style="font-size: 14px; font-weight: bold; color: red;">0</label>
+                                </div>
+                                <div class="col-sm-12 invoice-col">
+                                    <b>Address:</b> <label id="txtVendorAddress" style="font-weight: normal;"></label>
+                                </div>
                             </div>
                             <div class="col-md-2 col-sm-6 col-xs-4 pull-right" style="padding-right: 0px;" id="btnAddvendor">
                                 <div class="" style="font-size: 24px;" title="Add Supplier">

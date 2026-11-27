@@ -140,7 +140,7 @@ public partial class web_sales_view_sales_order : System.Web.UI.Page
                 if (hasPiece && r["sio_no_piece"] != DBNull.Value && Dec(r["sio_no_piece"]) > 0)
                     r["cust_qty"] = Dec(r["sio_no_piece"]).ToString("0.000");
                 decimal custLen = hasCustLen ? Dec(r["sio_length_cust_fraction"]) : 0, custWid = hasCustWid ? Dec(r["sio_width_cust_fraction"]) : 0;
-                r["cust_size"] = custLen > 0 ? custLen.ToString("0.000") + (custWid > 0 ? " x " + custWid.ToString("0.000") : "") : "";
+                r["cust_size"] = custLen > 0 ? custLen.ToString("0.000") : "";
                 string cu;
                 if (hasCustUom && r["tum_id_cust"] != DBNull.Value && uomNames.TryGetValue(Convert.ToInt32(r["tum_id_cust"]), out cu))
                     r["cust_uom"] = cu;

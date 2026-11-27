@@ -144,6 +144,13 @@
                     $("#txtEntryRefNo").text(entry_details.pm_invoice_no);
                     $("#txtVendorName").text(entry_details.vn_name);
                     $("#txtVendorId").text(entry_details.vn_id);
+                    var vPhones = [entry_details.vn_phone1, entry_details.vn_phone2].filter(function (p) { return p && String(p).trim() !== ""; });
+                    $("#txtVendorPhone").text(vPhones.length ? vPhones.join(", ") : "-");
+                    $("#txtVendorEmail").text(entry_details.vn_email || "-");
+                    $("#txtVendorGst").text(entry_details.vn_gst || "-");
+                    $("#txtVendorPan").text(entry_details.vn_pan || "-");
+                    var vAddr = [entry_details.vn_address, entry_details.vn_city, entry_details.vn_state].filter(function (p) { return p && String(p).trim() !== ""; }).join(", ");
+                    $("#txtVendorAddress").text(vAddr || "-");
                     $("#txtEntryDate").text(entry_details.date);
                     $("#txtTotalCurrentAmount").val('0');
                     $("#cbCashPayment").removeProp("checked");
@@ -788,6 +795,22 @@
 
 
                                         <!-- /.col -->
+                                    </div>
+                                    <!-- Supplier details -->
+                                    <div class="row invoice-info" id="divVendorDetails" style="font-size: 12px; margin-top: 8px;">
+                                        <div class="col-sm-3 invoice-col">
+                                            <b>Phone: </b><label id="txtVendorPhone" style="font-weight: normal;">-</label>
+                                            <br />
+                                            <b>Email: </b><label id="txtVendorEmail" style="font-weight: normal;">-</label>
+                                        </div>
+                                        <div class="col-sm-3 invoice-col">
+                                            <b>GST: </b><label id="txtVendorGst" style="font-weight: normal;">-</label>
+                                            <br />
+                                            <b>PAN: </b><label id="txtVendorPan" style="font-weight: normal;">-</label>
+                                        </div>
+                                        <div class="col-sm-6 invoice-col">
+                                            <b>Address: </b><label id="txtVendorAddress" style="font-weight: normal;">-</label>
+                                        </div>
                                     </div>
                                     <!-- /.row -->
                                 </div>

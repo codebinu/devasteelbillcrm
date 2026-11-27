@@ -37,7 +37,7 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
         sb.Append("\"items\":");
         sb.Append(JsonConvert.SerializeObject(dtItems, Formatting.Indented));
         sb.Append(",");
-        string previouspaidqry = "select tv.vn_name,pm.vn_id,vn_balance,branch_name,pm_invoice_no,concat(tu.first_name,' ',tu.last_name) as user,"
+        string previouspaidqry = "select tv.vn_name,tv.vn_address,tv.vn_city,tv.vn_state,tv.vn_phone1,tv.vn_phone2,tv.vn_email,tv.vn_gst,tv.vn_pan,pm.vn_id,vn_balance,branch_name,pm_invoice_no,concat(tu.first_name,' ',tu.last_name) as user,"
         +" pm_netamount as net_amount,sum(cr)-sum(dr) as pm_balance,pm_netamount-(sum(cr)-sum(dr)) as pm_paidamount,"
         +" pm_tax_amount as tax_amount,pm_ref_no,DATE_FORMAT(pm_date,'%Y-%m-%d') AS date,IF(TIME(pm_date)='00:00:00','',DATE_FORMAT(pm_date,'%d-%b-%Y %h:%i %p')) AS date_time,pm_note,"
         + " pm_total,pm_discount_rate,pm_discount_amount,pm_roundoff as roundOff,pm.branch_id,pm.branch_tax_method,pm_tax_excluded_amt,pm.branch_tax_inclusive"
@@ -1147,8 +1147,9 @@ public partial class web_purchase_editPurchase : System.Web.UI.Page
     {
         mySqlConnection db = new mySqlConnection();
         DataTable dt = new DataTable();
-        string query = "select tis.itm_id,tis.itm_code,tis.itm_name,tp_tax_percentage,tp_cess,tis.itbs_purchase_price,tp_tax_title,itm.itsv_uom_purchase from tbl_itembranch_stock tis inner join"
+        string query = "select tis.itm_id,tis.itm_code,tis.itm_name,tp_tax_percentage,tp_cess,tis.itbs_purchase_price,        tp_tax_title,itm.itsv_uom_purchase,spw.itst_name,spw.itsv_name from tbl_itembranch_stock tis inner join"
             + " tbl_tax_profile tp on tp.tp_tax_code=tis.tp_tax_code inner join tbl_item_master itm on itm.itm_id=tis.itm_id"
+                    + " left join tbl_item_master_spe_values spw on itm.itsv_spec_width=spw.itsv_id"
         + "  where itbs_id=" + itemId + "";
         //    query = query + " order by tbl_branch.branch_id";
         dt = db.SelectQuery(query);
